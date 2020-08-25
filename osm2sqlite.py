@@ -83,7 +83,7 @@ if ( __name__ == "__main__"):
     db.execute('DROP TABLE IF EXISTS node_tags')
     db.execute('''
     CREATE TABLE node_tags (
-     node_id INTEGER,              --  node ID
+     node_id INTEGER,              -- node ID
      key     TEXT,                 -- tag key
      value   TEXT                  -- tag value
     )
