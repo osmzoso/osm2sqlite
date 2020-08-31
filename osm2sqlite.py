@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# Import of OpenStreetMap data in XML format into a SQLite database
+# Read OpenStreetMap data in XML format into a SQLite database
 #
-import xml.sax, sqlite3, time, sys
+import xml.sax, sqlite3, time, sys, os
 
 class OsmHandler( xml.sax.ContentHandler ):
     def __init__(self):
@@ -59,49 +59,48 @@ class OsmHandler( xml.sax.ContentHandler ):
 # Main
 #
 if ( __name__ == "__main__"):
-
-    # read filename
+    # file name of the database
+    filename_db = 'osm.sqlite3'
+    # read the file name of the osm xml data
     if len(sys.argv) > 1:
-        filename = sys.argv[1]
+        filename_xml = sys.argv[1]
     else:
         print('No file name specified')
         sys.exit(1)
-    # time measurement
-    start_time = time.time()
+    # delete old database file if exists
+    if os.path.exists(filename_db):
+        os.remove(filename_db)
+        print('existing database file '+filename_db+' removed')
     # connect to the database
-    db_connect = sqlite3.connect('osm.sqlite3')
+    db_connect = sqlite3.connect(filename_db)
     db = db_connect.cursor()   # new database cursor
     # create all tables
-    db.execute('DROP TABLE IF EXISTS nodes')
     db.execute('''
     CREATE TABLE nodes (
-     node_id INTEGER PRIMARX KEY,  -- node ID
-     lat     REAL,                 -- latitude
-     lon     REAL                  -- longitude
+     node_id     INTEGER PRIMARY KEY,  -- node ID
+     lat         REAL,                 -- latitude
+     lon         REAL                  -- longitude
     )
     ''')
-    db.execute('DROP TABLE IF EXISTS node_tags')
     db.execute('''
     CREATE TABLE node_tags (
-     node_id INTEGER,              -- node ID
-     key     TEXT,                 -- tag key
-     value   TEXT                  -- tag value
+     node_id     INTEGER,              -- node ID
+     key         TEXT,                 -- tag key
+     value       TEXT                  -- tag value
     )
     ''')
-    db.execute('DROP TABLE IF EXISTS way_tags')
     db.execute('''
     CREATE TABLE way_tags (
-     way_id INTEGER,               -- way ID
-     key    TEXT,                  -- tag key
-     value  TEXT                   -- tag value
+     way_id      INTEGER,              -- way ID
+     key         TEXT,                 -- tag key
+     value       TEXT                  -- tag value
     )
     ''')
-    db.execute('DROP TABLE IF EXISTS way_nodes')
     db.execute('''
     CREATE TABLE way_nodes (
-     way_id      INTEGER,          -- way ID
-     local_order INTEGER,          -- nodes sorting
-     node_id     INTEGER           -- node ID
+     way_id      INTEGER,              -- way ID
+     local_order INTEGER,              -- nodes sorting
+     node_id     INTEGER               -- node ID
     )
     ''')
     # create an XMLReader
@@ -111,11 +110,15 @@ if ( __name__ == "__main__"):
     # override the default ContentHandler
     handler = OsmHandler()
     parser.setContentHandler(handler)
-    # parse osm data
-    parser.parse(filename)
+    # parse osm xml data
+    print( time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
+     'reading xml data from '+filename_xml+'...')
+    parser.parse(filename_xml)
     # write data to database
     db_connect.commit()
     # create index
+    print( time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
+     'creating index...')
     db.execute('CREATE INDEX node_tags__node_id ON node_tags (node_id)')
     db.execute('CREATE INDEX node_tags__key     ON node_tags (key)')
     db.execute('CREATE INDEX way_tags__way_id   ON way_tags (way_id)')
@@ -123,4 +126,5 @@ if ( __name__ == "__main__"):
     db.execute('CREATE INDEX way_nodes__way_id  ON way_nodes (way_id)')
     db.execute('CREATE INDEX way_nodes__node_id ON way_nodes (node_id)')
     #
-    print('run time:', round((time.time() - start_time)/60,2), 'min' )
+    print( time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
+     'reading finished')
