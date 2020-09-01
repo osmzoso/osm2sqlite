@@ -2,18 +2,14 @@
 
 Read OpenStreetMap data in XML format into a SQLite database
 
-With
+The command
 
     python osm2sqlite.py input_xml.osm
 
-a database **osm.sqlite3** is created.
+creates a database **osm.sqlite3** with the following tables:
 
 
-
-## Tables and Indexes in the database
-
-
-Table **nodes**:
+## Table nodes
 
 name        | type                | description
 ------------|---------------------|------------------
@@ -22,7 +18,7 @@ lat         | REAL                | latitude
 lon         | REAL                | longitude
 
 
-Table **node_tags**:
+## Table node_tags
 
 name        | type                | description
 ------------|---------------------|------------------
@@ -34,7 +30,7 @@ value       | TEXT                | tag value
 - INDEX node_tags__key     ON node_tags (key)
 
 
-Table **way_tags**:
+## Table way_tags
 
 name        | type                | description
 ------------|---------------------|------------------
@@ -46,7 +42,7 @@ value       | TEXT                | tag value
 - INDEX way_tags__key      ON way_tags (key)
 
 
-Table **way_nodes**:
+## Table way_nodes
 
 name        | type                | description
 ------------|---------------------|------------------
@@ -59,8 +55,7 @@ node_id     | INTEGER             | node ID
 
 
 
-## Spatial Index
-
+# Spatial Index
 
 Additionally a R*Tree index _highway_ is created for
 all ways with key='highway'.
