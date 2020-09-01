@@ -125,6 +125,22 @@ if ( __name__ == "__main__"):
     db.execute('CREATE INDEX way_tags__key      ON way_tags (key)')
     db.execute('CREATE INDEX way_nodes__way_id  ON way_nodes (way_id)')
     db.execute('CREATE INDEX way_nodes__node_id ON way_nodes (node_id)')
-    #
+    # create spatial index
+    print( time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
+     'creating R*Tree "highway"...')
+    db.execute('''
+    CREATE VIRTUAL TABLE highway USING rtree( way_id,min_lat, max_lat,min_lon, max_lon )
+    ''')
+    db.execute('''
+    INSERT INTO highway (way_id,min_lat,       max_lat,       min_lon,       max_lon)
+    SELECT      way_tags.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)
+    FROM      way_tags
+    LEFT JOIN way_nodes ON way_tags.way_id=way_nodes.way_id
+    LEFT JOIN nodes     ON way_nodes.node_id=nodes.node_id
+    WHERE way_tags.key='highway'
+    GROUP BY way_tags.way_id
+    ''')
+    db_connect.commit()
+    # finish
     print( time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
      'reading finished')
