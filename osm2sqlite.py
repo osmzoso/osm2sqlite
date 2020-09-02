@@ -16,7 +16,7 @@ class OsmHandler( xml.sax.ContentHandler ):
         self.tag_v = ''
         # tag <way>
         self.tag_way_active = 0
-        self.way_local_order = 0
+        self.way_node_order = 0
         self.way_id = ''
         self.way_node_id = ''
 
@@ -43,9 +43,9 @@ class OsmHandler( xml.sax.ContentHandler ):
             self.way_id = attributes['id']
         if tag == 'nd':
             way_node_id = attributes['ref']
-            self.way_local_order += 1
-            db.execute('INSERT INTO way_nodes (way_id,local_order,node_id) VALUES (?,?,?)',
-             (self.way_id,self.way_local_order,way_node_id))
+            self.way_node_order += 1
+            db.execute('INSERT INTO way_nodes (way_id,node_order,node_id) VALUES (?,?,?)',
+             (self.way_id,self.way_node_order,way_node_id))
 
     # call when an element ends
     def endElement(self, tag):
@@ -53,7 +53,7 @@ class OsmHandler( xml.sax.ContentHandler ):
             self.tag_node_active = 0
         elif tag == 'way':
             self.tag_way_active = 0
-            self.way_local_order = 0
+            self.way_node_order = 0
 
 #
 # Main
@@ -90,17 +90,17 @@ if ( __name__ == "__main__"):
     )
     ''')
     db.execute('''
+    CREATE TABLE way_nodes (
+     way_id      INTEGER,              -- way ID
+     node_order  INTEGER,              -- node order
+     node_id     INTEGER               -- node ID
+    )
+    ''')
+    db.execute('''
     CREATE TABLE way_tags (
      way_id      INTEGER,              -- way ID
      key         TEXT,                 -- tag key
      value       TEXT                  -- tag value
-    )
-    ''')
-    db.execute('''
-    CREATE TABLE way_nodes (
-     way_id      INTEGER,              -- way ID
-     local_order INTEGER,              -- nodes sorting
-     node_id     INTEGER               -- node ID
     )
     ''')
     # create an XMLReader

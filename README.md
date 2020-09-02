@@ -11,7 +11,7 @@ creates a database **osm.sqlite3** with the following tables:
 
 ## nodes
 
-name        | type                | description
+column      | type                | description
 ------------|---------------------|------------------
 node_id     | INTEGER PRIMARY KEY | node ID
 lat         | REAL                | latitude
@@ -20,7 +20,7 @@ lon         | REAL                | longitude
 
 ## node_tags
 
-name        | type                | description
+column      | type                | description
 ------------|---------------------|------------------
 node_id     | INTEGER             | node ID
 key         | TEXT                | tag key
@@ -32,10 +32,10 @@ value       | TEXT                | tag value
 
 ## way_nodes
 
-name        | type                | description
+column      | type                | description
 ------------|---------------------|------------------
 way_id      | INTEGER             | way ID
-local_order | INTEGER             | node order
+node_order  | INTEGER             | node order
 node_id     | INTEGER             | node ID
 
 - INDEX way_nodes__way_id  ON way_nodes (way_id)
@@ -44,7 +44,7 @@ node_id     | INTEGER             | node ID
 
 ## way_tags
 
-name        | type                | description
+column      | type                | description
 ------------|---------------------|------------------
 way_id      | INTEGER             | way ID
 key         | TEXT                | tag key
@@ -59,6 +59,17 @@ value       | TEXT                | tag value
 
 Additionally a R*Tree index _highway_ is created for
 all ways with key='highway'.
+
+``` sql
+--
+-- Boundingbox (Reiskirchen im Saarland, Sportplatz)
+--
+-- bbox_min_lon:  7.3298550-0.0018 (X)
+-- bbox_max_lon:  7.3298550+0.0018
+-- bbox_min_lat: 49.3558703-0.0018 (Y)
+-- bbox_max_lat: 49.3558703+0.0018
+--
+```
 
 Find all elements of the index that are contained within an area:
 
@@ -76,4 +87,4 @@ WHERE max_lon>= 7.3298550-0.0018 AND min_lon<= 7.3298550+0.0018
  AND  max_lat>=49.3558703-0.0018 AND min_lat<=49.3558703+0.0018
 ```
 
-[https://www.sqlite.org/rtree.html](https://www.sqlite.org/rtree.html)
+See [https://www.sqlite.org/rtree.html](https://www.sqlite.org/rtree.html)
