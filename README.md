@@ -6,7 +6,7 @@ The command `python osm2sqlite.py input.osm` creates a
 database **osm.sqlite3** with the tables below.
 
 Time measurement (Intel Core i5 1.6 GHz, 16 GB RAM):  
-germany-latest.osm - 2 h 20 min  
+germany-latest.osm - about 3 hours
 
 
 ## nodes

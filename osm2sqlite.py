@@ -125,6 +125,7 @@ if ( __name__ == "__main__"):
     db.execute('CREATE INDEX way_tags__key      ON way_tags (key)')
     db.execute('CREATE INDEX way_nodes__way_id  ON way_nodes (way_id)')
     db.execute('CREATE INDEX way_nodes__node_id ON way_nodes (node_id)')
+    db_connect.commit()
     # create spatial index
     print( time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
      'creating R*Tree "highway"...')
