@@ -35,8 +35,8 @@ value       | TEXT                | tag value
 column      | type                | description
 ------------|---------------------|------------------
 way_id      | INTEGER             | way ID
-node_order  | INTEGER             | node order
 node_id     | INTEGER             | node ID
+node_order  | INTEGER             | node order
 
 - INDEX way_nodes__way_id  ON way_nodes (way_id)
 - INDEX way_nodes__node_id ON way_nodes (node_id)

@@ -44,8 +44,8 @@ class OsmHandler( xml.sax.ContentHandler ):
         if tag == 'nd':
             way_node_id = attributes['ref']
             self.way_node_order += 1
-            db.execute('INSERT INTO way_nodes (way_id,node_order,node_id) VALUES (?,?,?)',
-             (self.way_id,self.way_node_order,way_node_id))
+            db.execute('INSERT INTO way_nodes (way_id,node_id,node_order) VALUES (?,?,?)',
+             (self.way_id,way_node_id,self.way_node_order))
 
     # call when an element ends
     def endElement(self, tag):
@@ -74,33 +74,51 @@ if ( __name__ == "__main__"):
     # connect to the database
     db_connect = sqlite3.connect(filename_db)
     db = db_connect.cursor()   # new database cursor
+    # start
+    print( time.strftime('%H:%M:%S', time.localtime()), 'reading '+filename_xml+'...')
     # create all tables
     db.execute('''
     CREATE TABLE nodes (
-     node_id     INTEGER PRIMARY KEY,  -- node ID
-     lat         REAL,                 -- latitude
-     lon         REAL                  -- longitude
+     node_id      INTEGER PRIMARY KEY,  -- node ID
+     lat          REAL,                 -- latitude
+     lon          REAL                  -- longitude
     )
     ''')
     db.execute('''
     CREATE TABLE node_tags (
-     node_id     INTEGER,              -- node ID
-     key         TEXT,                 -- tag key
-     value       TEXT                  -- tag value
+     node_id      INTEGER,              -- node ID
+     key          TEXT,                 -- tag key
+     value        TEXT                  -- tag value
     )
     ''')
     db.execute('''
     CREATE TABLE way_nodes (
-     way_id      INTEGER,              -- way ID
-     node_order  INTEGER,              -- node order
-     node_id     INTEGER               -- node ID
+     way_id       INTEGER,              -- way ID
+     node_id      INTEGER,              -- node ID
+     node_order   INTEGER               -- node order
     )
     ''')
     db.execute('''
     CREATE TABLE way_tags (
-     way_id      INTEGER,              -- way ID
-     key         TEXT,                 -- tag key
-     value       TEXT                  -- tag value
+     way_id       INTEGER,              -- way ID
+     key          TEXT,                 -- tag key
+     value        TEXT                  -- tag value
+    )
+    ''')
+    db.execute('''
+    CREATE TABLE relation_members (
+     relation_id  INTEGER,              -- relation ID
+     type         TEXT,                 -- type (node or way)
+     ref          INTEGER,              -- ID (node or way ID)
+     role         TEXT,                 -- role (from via to)
+     member_order INTEGER               -- member order
+    )
+    ''')
+    db.execute('''
+    CREATE TABLE relation_tags (
+     relation_id  INTEGER,              -- relation ID
+     key          TEXT,                 -- tag key
+     value        TEXT                  -- tag value
     )
     ''')
     # create an XMLReader
@@ -111,14 +129,11 @@ if ( __name__ == "__main__"):
     handler = OsmHandler()
     parser.setContentHandler(handler)
     # parse osm xml data
-    print( time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
-     'reading xml data from '+filename_xml+'...')
     parser.parse(filename_xml)
     # write data to database
     db_connect.commit()
     # create index
-    print( time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
-     'creating index...')
+    print( time.strftime('%H:%M:%S', time.localtime()), 'creating index...')
     db.execute('CREATE INDEX node_tags__node_id ON node_tags (node_id)')
     db.execute('CREATE INDEX node_tags__key     ON node_tags (key)')
     db.execute('CREATE INDEX way_tags__way_id   ON way_tags (way_id)')
@@ -127,8 +142,7 @@ if ( __name__ == "__main__"):
     db.execute('CREATE INDEX way_nodes__node_id ON way_nodes (node_id)')
     db_connect.commit()
     # create spatial index
-    print( time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
-     'creating R*Tree "highway"...')
+    print( time.strftime('%H:%M:%S', time.localtime()), 'creating R*Tree "highway"...')
     db.execute('''
     CREATE VIRTUAL TABLE highway USING rtree( way_id,min_lat, max_lat,min_lon, max_lon )
     ''')
@@ -143,5 +157,4 @@ if ( __name__ == "__main__"):
     ''')
     db_connect.commit()
     # finish
-    print( time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
-     'reading finished')
+    print( time.strftime('%H:%M:%S', time.localtime()), 'reading finished')
