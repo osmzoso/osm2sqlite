@@ -2,11 +2,11 @@
 
 Read OpenStreetMap data in XML format into a SQLite database
 
-The command
-``` bash
-python osm2sqlite.py input.osm
-```
-creates a database **osm.sqlite3** with the following tables:
+The command `python osm2sqlite.py input.osm` creates a
+database **osm.sqlite3** with the tables below.
+
+Time measurement (Intel Core i5 1.6 GHz, 16 GB RAM):  
+germany-latest.osm - 2 h 20 min  
 
 
 ## nodes
@@ -87,4 +87,10 @@ WHERE max_lon>= 7.3298550-0.0018 AND min_lon<= 7.3298550+0.0018
  AND  max_lat>=49.3558703-0.0018 AND min_lat<=49.3558703+0.0018
 ```
 
-See [https://www.sqlite.org/rtree.html](https://www.sqlite.org/rtree.html)
+Limit of a bounding box:
+
+``` sql
+SELECT * FROM highway WHERE way_id=79235038
+```
+
+See also [https://www.sqlite.org/rtree.html](https://www.sqlite.org/rtree.html)
