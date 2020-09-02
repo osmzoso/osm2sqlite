@@ -3,13 +3,13 @@
 Read OpenStreetMap data in XML format into a SQLite database
 
 The command
-
-    python osm2sqlite.py input_xml.osm
-
+``` bash
+python osm2sqlite.py input.osm
+```
 creates a database **osm.sqlite3** with the following tables:
 
 
-## Table nodes
+## nodes
 
 name        | type                | description
 ------------|---------------------|------------------
@@ -18,7 +18,7 @@ lat         | REAL                | latitude
 lon         | REAL                | longitude
 
 
-## Table node_tags
+## node_tags
 
 name        | type                | description
 ------------|---------------------|------------------
@@ -30,7 +30,19 @@ value       | TEXT                | tag value
 - INDEX node_tags__key     ON node_tags (key)
 
 
-## Table way_tags
+## way_nodes
+
+name        | type                | description
+------------|---------------------|------------------
+way_id      | INTEGER             | way ID
+local_order | INTEGER             | node order
+node_id     | INTEGER             | node ID
+
+- INDEX way_nodes__way_id  ON way_nodes (way_id)
+- INDEX way_nodes__node_id ON way_nodes (node_id)
+
+
+## way_tags
 
 name        | type                | description
 ------------|---------------------|------------------
@@ -42,20 +54,26 @@ value       | TEXT                | tag value
 - INDEX way_tags__key      ON way_tags (key)
 
 
-## Table way_nodes
-
-name        | type                | description
-------------|---------------------|------------------
-way_id      | INTEGER             | way ID
-local_order | INTEGER             | nodes sorting
-node_id     | INTEGER             | node ID
-
-- INDEX way_nodes__way_id  ON way_nodes (way_id)
-- INDEX way_nodes__node_id ON way_nodes (node_id)
-
-
 
 # Spatial Index
 
 Additionally a R*Tree index _highway_ is created for
 all ways with key='highway'.
+
+Find all elements of the index that are contained within an area:
+
+``` sql
+SELECT way_id FROM highway
+WHERE min_lon>= 7.3298550-0.0018 AND max_lon<= 7.3298550+0.0018
+ AND  min_lat>=49.3558703-0.0018 AND max_lat<=49.3558703+0.0018
+```
+
+Find all bounding boxes that overlap the area:
+
+``` sql
+SELECT way_id FROM highway
+WHERE max_lon>= 7.3298550-0.0018 AND min_lon<= 7.3298550+0.0018
+ AND  max_lat>=49.3558703-0.0018 AND min_lat<=49.3558703+0.0018
+```
+
+[https://www.sqlite.org/rtree.html](https://www.sqlite.org/rtree.html)
