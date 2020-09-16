@@ -1,9 +1,12 @@
 # osm2sqlite
 
-Read OpenStreetMap data in XML format into a SQLite database
+Reads OpenStreetMap data in XML format into a SQLite database.
 
-The command `python osm2sqlite.py input.osm` creates a
-database **osm.sqlite3** with the tables below.
+With the command
+```shell
+python osm2sqlite.py input.osm
+```
+a new database **osm.sqlite3** with the tables below is created.
 
 Time measurement (Intel Core i5 1.6 GHz, 16 GB RAM):  
 germany-latest.osm - about 3 hours
