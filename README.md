@@ -1,15 +1,15 @@
 # osm2sqlite
 
-Reads OpenStreetMap data in XML format into a SQLite database.
+Reads [OpenStreetMap data in XML format](https://wiki.openstreetmap.org/wiki/OSM_XML) into a SQLite database.
 
-With the command
+The command
 ```shell
 python osm2sqlite.py input.osm
 ```
-a new database **osm.sqlite3** with the tables below is created.
+creates a new database **osm.sqlite3** with the tables below.
 
-Time measurement (Intel Core i5 1.6 GHz, 16 GB RAM):  
-germany-latest.osm - about 3 hours
+> Time measurement (Intel Core i5 1.6 GHz, 16 GB RAM):  
+> germany-latest.osm - about 3 hours
 
 
 ## nodes
@@ -58,7 +58,7 @@ value       | TEXT                | tag value
 
 
 
-# Spatial Index
+### Spatial Index
 
 Additionally a R*Tree index _highway_ is created for
 all ways with key='highway'.
