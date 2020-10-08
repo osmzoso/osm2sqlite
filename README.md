@@ -57,10 +57,31 @@ value       | TEXT                | tag value
 - INDEX way_tags__key      ON way_tags (key)
 
 
+## relation_members
+
+column       | type                | description
+-------------|---------------------|------------------
+relation_id  | INTEGER             | relation ID
+type         | TEXT                | type (node or way)
+ref          | INTEGER             | ID (node or way ID)
+role         | TEXT                | role (from via to)
+member_order | INTEGER             | member order
+
+
+## relation_tags
+
+column       | type                | description
+-------------|---------------------|------------------
+relation_id  | INTEGER             | relation ID
+key          | TEXT                | tag key
+value        | TEXT                | tag value
+
+
+---
 
 ### Spatial Index
 
-Additionally a R*Tree index _highway_ is created for
+Additionally a [R*Tree index](https://www.sqlite.org/rtree.html) _highway_ is created for
 all ways with key='highway'.
 
 ``` sql
@@ -96,4 +117,3 @@ Limit of a bounding box:
 SELECT * FROM highway WHERE way_id=79235038
 ```
 
-See also [https://www.sqlite.org/rtree.html](https://www.sqlite.org/rtree.html)

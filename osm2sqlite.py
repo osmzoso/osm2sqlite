@@ -19,6 +19,9 @@ class OsmHandler( xml.sax.ContentHandler ):
         self.way_node_order = 0
         self.way_id = ''
         self.way_node_id = ''
+        # tag <relation>
+        self.tag_relation_active = 0
+        self.relation_id = ''
 
     # call when an element starts
     def startElement(self, tag, attributes):
@@ -38,6 +41,9 @@ class OsmHandler( xml.sax.ContentHandler ):
             elif self.tag_way_active == 1:
                 db.execute('INSERT INTO way_tags (way_id,key,value) VALUES (?,?,?)',
                  (self.way_id,self.tag_k,self.tag_v))
+            elif self.tag_relation_active == 1:
+                db.execute('INSERT INTO relation_tags (relation_id,key,value) VALUES (?,?,?)',
+                 (self.relation_id,self.tag_k,self.tag_v))
         if tag == 'way':
             self.tag_way_active = 1
             self.way_id = attributes['id']
@@ -46,6 +52,9 @@ class OsmHandler( xml.sax.ContentHandler ):
             self.way_node_order += 1
             db.execute('INSERT INTO way_nodes (way_id,node_id,node_order) VALUES (?,?,?)',
              (self.way_id,way_node_id,self.way_node_order))
+        if tag == 'relation':
+            self.tag_relation_active = 1
+            self.relation_id = attributes['id']
 
     # call when an element ends
     def endElement(self, tag):
@@ -54,6 +63,8 @@ class OsmHandler( xml.sax.ContentHandler ):
         elif tag == 'way':
             self.tag_way_active = 0
             self.way_node_order = 0
+        elif tag == 'relation':
+            self.tag_relation_active = 0
 
 #
 # Main
