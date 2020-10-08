@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# Read OpenStreetMap data in XML format into a SQLite database
+# Reads OpenStreetMap data in XML format into a SQLite database
 #
 import xml.sax, sqlite3, time, sys, os
 
@@ -32,7 +32,7 @@ class OsmHandler( xml.sax.ContentHandler ):
             self.node_lon = attributes['lon']
             db.execute('INSERT INTO nodes (node_id,lat,lon) VALUES (?,?,?)',
              (self.node_id,self.node_lat,self.node_lon))
-        if tag == 'tag':
+        elif tag == 'tag':
             self.tag_k =  attributes['k']
             self.tag_v =  attributes['v']
             if self.tag_node_active == 1:
@@ -44,17 +44,23 @@ class OsmHandler( xml.sax.ContentHandler ):
             elif self.tag_relation_active == 1:
                 db.execute('INSERT INTO relation_tags (relation_id,key,value) VALUES (?,?,?)',
                  (self.relation_id,self.tag_k,self.tag_v))
-        if tag == 'way':
+        elif tag == 'way':
             self.tag_way_active = 1
             self.way_id = attributes['id']
-        if tag == 'nd':
+        elif tag == 'nd':
             way_node_id = attributes['ref']
             self.way_node_order += 1
             db.execute('INSERT INTO way_nodes (way_id,node_id,node_order) VALUES (?,?,?)',
              (self.way_id,way_node_id,self.way_node_order))
-        if tag == 'relation':
+        elif tag == 'relation':
             self.tag_relation_active = 1
             self.relation_id = attributes['id']
+        elif tag == 'member':
+            member_type = attributes['type']
+            member_ref  = attributes['ref']
+            member_role = attributes['role']
+            db.execute('INSERT INTO relation_members (relation_id,type,ref,role) VALUES (?,?,?,?)',
+             (self.relation_id,member_type,member_ref,member_role))
 
     # call when an element ends
     def endElement(self, tag):
@@ -151,6 +157,10 @@ if ( __name__ == "__main__"):
     db.execute('CREATE INDEX way_tags__key      ON way_tags (key)')
     db.execute('CREATE INDEX way_nodes__way_id  ON way_nodes (way_id)')
     db.execute('CREATE INDEX way_nodes__node_id ON way_nodes (node_id)')
+    db.execute('CREATE INDEX relation_members__relation_id ON relation_members ( relation_id )')
+    db.execute('CREATE INDEX relation_members__type        ON relation_members ( type, ref )')
+    db.execute('CREATE INDEX relation_tags__relation_id    ON relation_tags ( relation_id )')
+    db.execute('CREATE INDEX relation_tags__key            ON relation_tags ( key )')
     db_connect.commit()
     # create spatial index
     print( time.strftime('%H:%M:%S', time.localtime()), 'creating R*Tree "highway"...')

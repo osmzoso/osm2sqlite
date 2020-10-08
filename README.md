@@ -6,7 +6,8 @@ The command
 ```shell
 python osm2sqlite.py input.osm
 ```
-creates a new database **osm.sqlite3** with the tables below.
+reads the file *input.osm* and creates
+a new database **osm.sqlite3** with the tables below.
 
 > Time measurement (Intel Core i5 1.6 GHz, 16 GB RAM):  
 > germany-latest.osm - about 3 hours
@@ -67,6 +68,9 @@ ref          | INTEGER             | ID (node or way ID)
 role         | TEXT                | role (from via to)
 member_order | INTEGER             | member order
 
+- INDEX relation_members__relation_id ON relation_members ( relation_id )
+- INDEX relation_members__type        ON relation_members ( type, ref )
+
 
 ## relation_tags
 
@@ -75,6 +79,9 @@ column       | type                | description
 relation_id  | INTEGER             | relation ID
 key          | TEXT                | tag key
 value        | TEXT                | tag value
+
+- INDEX relation_tags__relation_id    ON relation_tags ( relation_id )
+- INDEX relation_tags__key            ON relation_tags ( key )
 
 
 ---
@@ -116,4 +123,11 @@ Limit of a bounding box:
 ``` sql
 SELECT * FROM highway WHERE way_id=79235038
 ```
+
+
+---
+
+### Examples for database queries
+
+TODO
 
