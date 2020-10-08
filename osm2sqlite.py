@@ -6,21 +6,22 @@ import xml.sax, sqlite3, time, sys, os
 
 class OsmHandler( xml.sax.ContentHandler ):
     def __init__(self):
-        # tag <node>
+        # element <node>
         self.tag_node_active = 0
         self.node_id = ''
         self.node_lat = ''
         self.node_lon  = ''
-        # tag <tag>
+        # element <tag>
         self.tag_k = ''
         self.tag_v = ''
-        # tag <way>
+        # element <way>
         self.tag_way_active = 0
         self.way_node_order = 0
         self.way_id = ''
         self.way_node_id = ''
-        # tag <relation>
+        # element <relation>
         self.tag_relation_active = 0
+        self.relation_member_order = 0
         self.relation_id = ''
 
     # call when an element starts
@@ -59,8 +60,9 @@ class OsmHandler( xml.sax.ContentHandler ):
             member_type = attributes['type']
             member_ref  = attributes['ref']
             member_role = attributes['role']
-            db.execute('INSERT INTO relation_members (relation_id,type,ref,role) VALUES (?,?,?,?)',
-             (self.relation_id,member_type,member_ref,member_role))
+            self.relation_member_order += 1
+            db.execute('INSERT INTO relation_members (relation_id,type,ref,role,member_order) VALUES (?,?,?,?,?)',
+             (self.relation_id,member_type,member_ref,member_role,self.relation_member_order))
 
     # call when an element ends
     def endElement(self, tag):
@@ -71,6 +73,7 @@ class OsmHandler( xml.sax.ContentHandler ):
             self.way_node_order = 0
         elif tag == 'relation':
             self.tag_relation_active = 0
+            self.relation_member_order = 0
 
 #
 # Main
@@ -125,9 +128,9 @@ if ( __name__ == "__main__"):
     db.execute('''
     CREATE TABLE relation_members (
      relation_id  INTEGER,              -- relation ID
-     type         TEXT,                 -- type (node or way)
-     ref          INTEGER,              -- ID (node or way ID)
-     role         TEXT,                 -- role (from via to)
+     type         TEXT,                 -- type ('node','way','relation')
+     ref          INTEGER,              -- node, way or relation ID
+     role         TEXT,                 -- describes a particular feature
      member_order INTEGER               -- member order
     )
     ''')
@@ -179,3 +182,4 @@ if ( __name__ == "__main__"):
     db_connect.commit()
     # finish
     print( time.strftime('%H:%M:%S', time.localtime()), 'reading finished')
+

@@ -15,20 +15,20 @@ a new database **osm.sqlite3** with the tables below.
 
 ## nodes
 
-column      | type                | description
-------------|---------------------|------------------
-node_id     | INTEGER PRIMARY KEY | node ID
-lat         | REAL                | latitude
-lon         | REAL                | longitude
+column       | type                | description
+-------------|---------------------|-------------------------------------
+node_id      | INTEGER PRIMARY KEY | node ID
+lat          | REAL                | latitude
+lon          | REAL                | longitude
 
 
 ## node_tags
 
-column      | type                | description
-------------|---------------------|------------------
-node_id     | INTEGER             | node ID
-key         | TEXT                | tag key
-value       | TEXT                | tag value
+column       | type                | description
+-------------|---------------------|-------------------------------------
+node_id      | INTEGER             | node ID
+key          | TEXT                | tag key
+value        | TEXT                | tag value
 
 - INDEX node_tags__node_id ON node_tags (node_id)
 - INDEX node_tags__key     ON node_tags (key)
@@ -36,11 +36,11 @@ value       | TEXT                | tag value
 
 ## way_nodes
 
-column      | type                | description
-------------|---------------------|------------------
-way_id      | INTEGER             | way ID
-node_id     | INTEGER             | node ID
-node_order  | INTEGER             | node order
+column       | type                | description
+-------------|---------------------|-------------------------------------
+way_id       | INTEGER             | way ID
+node_id      | INTEGER             | node ID
+node_order   | INTEGER             | node order
 
 - INDEX way_nodes__way_id  ON way_nodes (way_id)
 - INDEX way_nodes__node_id ON way_nodes (node_id)
@@ -48,11 +48,11 @@ node_order  | INTEGER             | node order
 
 ## way_tags
 
-column      | type                | description
-------------|---------------------|------------------
-way_id      | INTEGER             | way ID
-key         | TEXT                | tag key
-value       | TEXT                | tag value
+column       | type                | description
+-------------|---------------------|-------------------------------------
+way_id       | INTEGER             | way ID
+key          | TEXT                | tag key
+value        | TEXT                | tag value
 
 - INDEX way_tags__way_id   ON way_tags (way_id)
 - INDEX way_tags__key      ON way_tags (key)
@@ -61,11 +61,11 @@ value       | TEXT                | tag value
 ## relation_members
 
 column       | type                | description
--------------|---------------------|------------------
+-------------|---------------------|-------------------------------------
 relation_id  | INTEGER             | relation ID
-type         | TEXT                | type (node or way)
-ref          | INTEGER             | ID (node or way ID)
-role         | TEXT                | role (from via to)
+type         | TEXT                | type ('node','way','relation')
+ref          | INTEGER             | node, way or relation ID
+role         | TEXT                | describes a particular feature
 member_order | INTEGER             | member order
 
 - INDEX relation_members__relation_id ON relation_members ( relation_id )
@@ -75,7 +75,7 @@ member_order | INTEGER             | member order
 ## relation_tags
 
 column       | type                | description
--------------|---------------------|------------------
+-------------|---------------------|-------------------------------------
 relation_id  | INTEGER             | relation ID
 key          | TEXT                | tag key
 value        | TEXT                | tag value
