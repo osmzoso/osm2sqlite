@@ -18,8 +18,8 @@ a new database **osm.sqlite3** with the tables below.
 column       | type                | description
 -------------|---------------------|-------------------------------------
 node_id      | INTEGER PRIMARY KEY | node ID
-lat          | REAL                | latitude
 lon          | REAL                | longitude
+lat          | REAL                | latitude
 
 
 ## node_tags

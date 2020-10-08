@@ -9,8 +9,8 @@ class OsmHandler( xml.sax.ContentHandler ):
         # element <node>
         self.tag_node_active = 0
         self.node_id = ''
-        self.node_lat = ''
         self.node_lon  = ''
+        self.node_lat = ''
         # element <tag>
         self.tag_k = ''
         self.tag_v = ''
@@ -29,10 +29,10 @@ class OsmHandler( xml.sax.ContentHandler ):
         if tag == 'node':
             self.tag_node_active = 1
             self.node_id  = attributes['id']
-            self.node_lat = attributes['lat']
             self.node_lon = attributes['lon']
-            db.execute('INSERT INTO nodes (node_id,lat,lon) VALUES (?,?,?)',
-             (self.node_id,self.node_lat,self.node_lon))
+            self.node_lat = attributes['lat']
+            db.execute('INSERT INTO nodes (node_id,lon,lat) VALUES (?,?,?)',
+             (self.node_id,self.node_lon,self.node_lat))
         elif tag == 'tag':
             self.tag_k =  attributes['k']
             self.tag_v =  attributes['v']
@@ -100,8 +100,8 @@ if ( __name__ == "__main__"):
     db.execute('''
     CREATE TABLE nodes (
      node_id      INTEGER PRIMARY KEY,  -- node ID
-     lat          REAL,                 -- latitude
-     lon          REAL                  -- longitude
+     lon          REAL,                 -- longitude
+     lat          REAL                  -- latitude
     )
     ''')
     db.execute('''
