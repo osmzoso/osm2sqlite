@@ -88,40 +88,46 @@ value        | TEXT                | tag value
 
 ### Spatial Index
 
-Additionally a [R*Tree index](https://www.sqlite.org/rtree.html) _highway_ is created for
-all ways with key='highway'.
+Additionally a [R*Tree index](https://www.sqlite.org/rtree.html) **highway** is created for
+all ways with *key='highway'*.
+
+Here are some examples for querying this index:
 
 ``` sql
 --
 -- Boundingbox (Reiskirchen im Saarland, Sportplatz)
 --
--- bbox_min_lon:  7.3298550-0.0018 (X)
--- bbox_max_lon:  7.3298550+0.0018
--- bbox_min_lat: 49.3558703-0.0018 (Y)
--- bbox_max_lat: 49.3558703+0.0018
+-- min_lon (x1):  7.3280550
+-- min_lat (y1): 49.3540703
+-- max_lon (x2):  7.3316550
+-- max_lat (y2): 49.3576703
 --
 ```
 
-Find all elements of the index that are contained within an area:
+Find all elements of the index (ways) that are contained within the boundingbox:
 
 ``` sql
-SELECT way_id FROM highway
-WHERE min_lon>= 7.3298550-0.0018 AND max_lon<= 7.3298550+0.0018
- AND  min_lat>=49.3558703-0.0018 AND max_lat<=49.3558703+0.0018
+SELECT way_id
+FROM highway
+WHERE min_lon>= 7.3280550 AND max_lon<= 7.3316550
+ AND  min_lat>=49.3540703 AND max_lat<=49.3576703
 ```
 
-Find all bounding boxes that overlap the area:
+Find all elements of the index (ways) that overlap the boundingbox:
 
 ``` sql
-SELECT way_id FROM highway
-WHERE max_lon>= 7.3298550-0.0018 AND min_lon<= 7.3298550+0.0018
- AND  max_lat>=49.3558703-0.0018 AND min_lat<=49.3558703+0.0018
+SELECT way_id
+FROM highway
+WHERE max_lon>= 7.3280550 AND min_lon<= 7.3316550
+ AND  max_lat>=49.3540703 AND min_lat<=49.3576703
 ```
 
-Limit of a bounding box:
+Limits of an element of the index:
 
 ``` sql
-SELECT * FROM highway WHERE way_id=79235038
+SELECT min_lon,max_lon,min_lat,max_lat
+FROM highway
+WHERE way_id=79235038
 ```
 
 
