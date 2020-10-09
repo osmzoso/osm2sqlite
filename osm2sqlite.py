@@ -79,13 +79,28 @@ class OsmHandler( xml.sax.ContentHandler ):
 # Main
 #
 if ( __name__ == "__main__"):
-    # file name of the database
+    # filename of the database
     filename_db = 'osm.sqlite3'
-    # read the file name of the osm xml data
+    # flags creating index
+    flag_create_index   = True
+    flag_create_spatial = True
+    # read argv parameter
     if len(sys.argv) > 1:
+        # filename of the osm xml file
         filename_xml = sys.argv[1]
+        # omit creating index
+        if len(sys.argv) > 2:
+            if sys.argv[2] in ('--omit_spatial','-os'):
+                flag_create_spatial = False
+            if sys.argv[2] in ('--omit_index','-oi'):
+                flag_create_index   = False
+                flag_create_spatial = False
     else:
-        print('No file name specified')
+        print('No filename specified\n')
+        print('usage:')
+        print(__file__, 'input.osm')
+        print(__file__, 'input.osm', '[--omit_spatial|-os]')
+        print(__file__, 'input.osm', '[--omit_index|-oi]')
         sys.exit(1)
     # delete old database file if exists
     if os.path.exists(filename_db):
@@ -153,33 +168,35 @@ if ( __name__ == "__main__"):
     # write data to database
     db_connect.commit()
     # create index
-    print( time.strftime('%H:%M:%S', time.localtime()), 'creating index...')
-    db.execute('CREATE INDEX node_tags__node_id ON node_tags (node_id)')
-    db.execute('CREATE INDEX node_tags__key     ON node_tags (key)')
-    db.execute('CREATE INDEX way_tags__way_id   ON way_tags (way_id)')
-    db.execute('CREATE INDEX way_tags__key      ON way_tags (key)')
-    db.execute('CREATE INDEX way_nodes__way_id  ON way_nodes (way_id)')
-    db.execute('CREATE INDEX way_nodes__node_id ON way_nodes (node_id)')
-    db.execute('CREATE INDEX relation_members__relation_id ON relation_members ( relation_id )')
-    db.execute('CREATE INDEX relation_members__type        ON relation_members ( type, ref )')
-    db.execute('CREATE INDEX relation_tags__relation_id    ON relation_tags ( relation_id )')
-    db.execute('CREATE INDEX relation_tags__key            ON relation_tags ( key )')
-    db_connect.commit()
+    if flag_create_index:
+        print( time.strftime('%H:%M:%S', time.localtime()), 'creating index...')
+        db.execute('CREATE INDEX node_tags__node_id ON node_tags (node_id)')
+        db.execute('CREATE INDEX node_tags__key     ON node_tags (key)')
+        db.execute('CREATE INDEX way_tags__way_id   ON way_tags (way_id)')
+        db.execute('CREATE INDEX way_tags__key      ON way_tags (key)')
+        db.execute('CREATE INDEX way_nodes__way_id  ON way_nodes (way_id)')
+        db.execute('CREATE INDEX way_nodes__node_id ON way_nodes (node_id)')
+        db.execute('CREATE INDEX relation_members__relation_id ON relation_members ( relation_id )')
+        db.execute('CREATE INDEX relation_members__type        ON relation_members ( type, ref )')
+        db.execute('CREATE INDEX relation_tags__relation_id    ON relation_tags ( relation_id )')
+        db.execute('CREATE INDEX relation_tags__key            ON relation_tags ( key )')
+        db_connect.commit()
     # create spatial index
-    print( time.strftime('%H:%M:%S', time.localtime()), 'creating R*Tree "highway"...')
-    db.execute('''
-    CREATE VIRTUAL TABLE highway USING rtree( way_id,min_lat, max_lat,min_lon, max_lon )
-    ''')
-    db.execute('''
-    INSERT INTO highway (way_id,min_lat,       max_lat,       min_lon,       max_lon)
-    SELECT      way_tags.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)
-    FROM      way_tags
-    LEFT JOIN way_nodes ON way_tags.way_id=way_nodes.way_id
-    LEFT JOIN nodes     ON way_nodes.node_id=nodes.node_id
-    WHERE way_tags.key='highway'
-    GROUP BY way_tags.way_id
-    ''')
-    db_connect.commit()
+    if flag_create_spatial:
+        print( time.strftime('%H:%M:%S', time.localtime()), 'creating R*Tree "highway"...')
+        db.execute('''
+        CREATE VIRTUAL TABLE highway USING rtree( way_id,min_lat, max_lat,min_lon, max_lon )
+        ''')
+        db.execute('''
+        INSERT INTO highway (way_id,min_lat,       max_lat,       min_lon,       max_lon)
+        SELECT      way_tags.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)
+        FROM      way_tags
+        LEFT JOIN way_nodes ON way_tags.way_id=way_nodes.way_id
+        LEFT JOIN nodes     ON way_nodes.node_id=nodes.node_id
+        WHERE way_tags.key='highway'
+        GROUP BY way_tags.way_id
+        ''')
+        db_connect.commit()
     # finish
     print( time.strftime('%H:%M:%S', time.localtime()), 'reading finished')
 

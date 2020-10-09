@@ -10,7 +10,7 @@ reads the file *input.osm* and creates
 a new database **osm.sqlite3** with the tables below.
 
 > Time measurement (Intel Core i5 1.6 GHz, 16 GB RAM):  
-> germany-latest.osm - about 3 hours
+> germany.osm - about 3 hours
 
 
 ## nodes
@@ -129,6 +129,18 @@ SELECT min_lon,max_lon,min_lat,max_lat
 FROM highway
 WHERE way_id=79235038
 ```
+
+With the command
+```shell
+python osm2sqlite.py input.osm --omit_spatial
+```
+the creation of this spatial index is suppressed.
+
+The command
+```shell
+python osm2sqlite.py input.osm --omit_index
+```
+suppresses the creation of all indexes.
 
 
 ---
