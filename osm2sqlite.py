@@ -15,7 +15,6 @@ class OsmHandler( xml.sax.ContentHandler ):
         # element <way>
         self.element_way_active = False
         self.way_id = -1
-        self.way_node_id = -1
         self.way_node_order = 0
         # element <relation>
         self.element_relation_active = False
@@ -58,11 +57,14 @@ class OsmHandler( xml.sax.ContentHandler ):
     def endElement(self, element):
         if   element == 'node':
             self.element_node_active = False
+            self.node_id = -1
         elif element == 'way':
             self.element_way_active = False
+            self.way_id = -1
             self.way_node_order = 0
         elif element == 'relation':
             self.element_relation_active = False
+            self.relation_id = -1
             self.relation_member_order = 0
 
 #
