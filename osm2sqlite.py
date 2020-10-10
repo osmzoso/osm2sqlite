@@ -14,46 +14,45 @@ class OsmHandler( xml.sax.ContentHandler ):
         self.node_id = -1
         # element <way>
         self.tag_way_active = 0
-        self.way_node_order = 0
         self.way_id = -1
         self.way_node_id = -1
+        self.way_node_order = 0
         # element <relation>
         self.tag_relation_active = 0
-        self.relation_member_order = 0
         self.relation_id = -1
+        self.relation_member_order = 0
 
     # call when an element starts
-    def startElement(self, tag, attributes):
+    def startElement(self, tag, attrib):
         if tag == 'node':
             self.tag_node_active = 1
-            self.node_id = attributes['id']
+            self.node_id = attrib['id']
             db.execute('INSERT INTO nodes (node_id,lon,lat) VALUES (?,?,?)',
-             (self.node_id,attributes['lon'],attributes['lat']))
+             (self.node_id, attrib['lon'], attrib['lat']))
         elif tag == 'tag':
             if self.tag_node_active == 1:
                 db.execute('INSERT INTO node_tags (node_id,key,value) VALUES (?,?,?)',
-                 (self.node_id,attributes['k'],attributes['v']))
+                 (self.node_id, attrib['k'], attrib['v']))
             elif self.tag_way_active == 1:
                 db.execute('INSERT INTO way_tags (way_id,key,value) VALUES (?,?,?)',
-                 (self.way_id,attributes['k'],attributes['v']))
+                 (self.way_id, attrib['k'], attrib['v']))
             elif self.tag_relation_active == 1:
                 db.execute('INSERT INTO relation_tags (relation_id,key,value) VALUES (?,?,?)',
-                 (self.relation_id,attributes['k'],attributes['v']))
+                 (self.relation_id, attrib['k'], attrib['v']))
         elif tag == 'way':
             self.tag_way_active = 1
-            self.way_id = attributes['id']
+            self.way_id = attrib['id']
         elif tag == 'nd':
-            way_node_id = attributes['ref']
             self.way_node_order += 1
             db.execute('INSERT INTO way_nodes (way_id,node_id,node_order) VALUES (?,?,?)',
-             (self.way_id,way_node_id,self.way_node_order))
+             (self.way_id, attrib['ref'], self.way_node_order))
         elif tag == 'relation':
             self.tag_relation_active = 1
-            self.relation_id = attributes['id']
+            self.relation_id = attrib['id']
         elif tag == 'member':
             self.relation_member_order += 1
             db.execute('INSERT INTO relation_members (relation_id,type,ref,role,member_order) VALUES (?,?,?,?,?)',
-             (self.relation_id,attributes['type'],attributes['ref'],attributes['role'],self.relation_member_order))
+             (self.relation_id, attrib['type'], attrib['ref'], attrib['role'], self.relation_member_order))
 
     # call when an element ends
     def endElement(self, tag):
