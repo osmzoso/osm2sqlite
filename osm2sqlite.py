@@ -23,13 +23,13 @@ class OsmHandler( xml.sax.ContentHandler ):
         self.relation_member_order = 0
 
     # call when an element starts
-    def startElement(self, tag, attrib):
-        if tag == 'node':
+    def startElement(self, element, attrib):
+        if   element == 'node':
             self.tag_node_active = 1
             self.node_id = attrib['id']
             db.execute('INSERT INTO nodes (node_id,lon,lat) VALUES (?,?,?)',
              (self.node_id, attrib['lon'], attrib['lat']))
-        elif tag == 'tag':
+        elif element == 'tag':
             if self.tag_node_active == 1:
                 db.execute('INSERT INTO node_tags (node_id,key,value) VALUES (?,?,?)',
                  (self.node_id, attrib['k'], attrib['v']))
@@ -39,29 +39,29 @@ class OsmHandler( xml.sax.ContentHandler ):
             elif self.tag_relation_active == 1:
                 db.execute('INSERT INTO relation_tags (relation_id,key,value) VALUES (?,?,?)',
                  (self.relation_id, attrib['k'], attrib['v']))
-        elif tag == 'way':
+        elif element == 'way':
             self.tag_way_active = 1
             self.way_id = attrib['id']
-        elif tag == 'nd':
+        elif element == 'nd':
             self.way_node_order += 1
             db.execute('INSERT INTO way_nodes (way_id,node_id,node_order) VALUES (?,?,?)',
              (self.way_id, attrib['ref'], self.way_node_order))
-        elif tag == 'relation':
+        elif element == 'relation':
             self.tag_relation_active = 1
             self.relation_id = attrib['id']
-        elif tag == 'member':
+        elif element == 'member':
             self.relation_member_order += 1
             db.execute('INSERT INTO relation_members (relation_id,type,ref,role,member_order) VALUES (?,?,?,?,?)',
              (self.relation_id, attrib['type'], attrib['ref'], attrib['role'], self.relation_member_order))
 
     # call when an element ends
-    def endElement(self, tag):
-        if tag == 'node':
+    def endElement(self, element):
+        if   element == 'node':
             self.tag_node_active = 0
-        elif tag == 'way':
+        elif element == 'way':
             self.tag_way_active = 0
             self.way_node_order = 0
-        elif tag == 'relation':
+        elif element == 'relation':
             self.tag_relation_active = 0
             self.relation_member_order = 0
 
