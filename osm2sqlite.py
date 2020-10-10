@@ -5,46 +5,40 @@
 import xml.sax, sqlite3, time, sys, os
 
 class OsmHandler( xml.sax.ContentHandler ):
+    """
+    Read OSM XML Data
+    """
     def __init__(self):
         # element <node>
         self.tag_node_active = 0
-        self.node_id = ''
-        self.node_lon  = ''
-        self.node_lat = ''
-        # element <tag>
-        self.tag_k = ''
-        self.tag_v = ''
+        self.node_id = -1
         # element <way>
         self.tag_way_active = 0
         self.way_node_order = 0
-        self.way_id = ''
-        self.way_node_id = ''
+        self.way_id = -1
+        self.way_node_id = -1
         # element <relation>
         self.tag_relation_active = 0
         self.relation_member_order = 0
-        self.relation_id = ''
+        self.relation_id = -1
 
     # call when an element starts
     def startElement(self, tag, attributes):
         if tag == 'node':
             self.tag_node_active = 1
-            self.node_id  = attributes['id']
-            self.node_lon = attributes['lon']
-            self.node_lat = attributes['lat']
+            self.node_id = attributes['id']
             db.execute('INSERT INTO nodes (node_id,lon,lat) VALUES (?,?,?)',
-             (self.node_id,self.node_lon,self.node_lat))
+             (self.node_id,attributes['lon'],attributes['lat']))
         elif tag == 'tag':
-            self.tag_k =  attributes['k']
-            self.tag_v =  attributes['v']
             if self.tag_node_active == 1:
                 db.execute('INSERT INTO node_tags (node_id,key,value) VALUES (?,?,?)',
-                 (self.node_id,self.tag_k,self.tag_v))
+                 (self.node_id,attributes['k'],attributes['v']))
             elif self.tag_way_active == 1:
                 db.execute('INSERT INTO way_tags (way_id,key,value) VALUES (?,?,?)',
-                 (self.way_id,self.tag_k,self.tag_v))
+                 (self.way_id,attributes['k'],attributes['v']))
             elif self.tag_relation_active == 1:
                 db.execute('INSERT INTO relation_tags (relation_id,key,value) VALUES (?,?,?)',
-                 (self.relation_id,self.tag_k,self.tag_v))
+                 (self.relation_id,attributes['k'],attributes['v']))
         elif tag == 'way':
             self.tag_way_active = 1
             self.way_id = attributes['id']
