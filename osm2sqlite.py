@@ -51,12 +51,9 @@ class OsmHandler( xml.sax.ContentHandler ):
             self.tag_relation_active = 1
             self.relation_id = attributes['id']
         elif tag == 'member':
-            member_type = attributes['type']
-            member_ref  = attributes['ref']
-            member_role = attributes['role']
             self.relation_member_order += 1
             db.execute('INSERT INTO relation_members (relation_id,type,ref,role,member_order) VALUES (?,?,?,?,?)',
-             (self.relation_id,member_type,member_ref,member_role,self.relation_member_order))
+             (self.relation_id,attributes['type'],attributes['ref'],attributes['role'],self.relation_member_order))
 
     # call when an element ends
     def endElement(self, tag):
