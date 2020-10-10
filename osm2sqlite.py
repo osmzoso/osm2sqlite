@@ -10,44 +10,44 @@ class OsmHandler( xml.sax.ContentHandler ):
     """
     def __init__(self):
         # element <node>
-        self.tag_node_active = 0
+        self.element_node_active = False
         self.node_id = -1
         # element <way>
-        self.tag_way_active = 0
+        self.element_way_active = False
         self.way_id = -1
         self.way_node_id = -1
         self.way_node_order = 0
         # element <relation>
-        self.tag_relation_active = 0
+        self.element_relation_active = False
         self.relation_id = -1
         self.relation_member_order = 0
 
     # call when an element starts
     def startElement(self, element, attrib):
         if   element == 'node':
-            self.tag_node_active = 1
+            self.element_node_active = True
             self.node_id = attrib['id']
             db.execute('INSERT INTO nodes (node_id,lon,lat) VALUES (?,?,?)',
              (self.node_id, attrib['lon'], attrib['lat']))
         elif element == 'tag':
-            if self.tag_node_active == 1:
+            if self.element_node_active:
                 db.execute('INSERT INTO node_tags (node_id,key,value) VALUES (?,?,?)',
                  (self.node_id, attrib['k'], attrib['v']))
-            elif self.tag_way_active == 1:
+            elif self.element_way_active:
                 db.execute('INSERT INTO way_tags (way_id,key,value) VALUES (?,?,?)',
                  (self.way_id, attrib['k'], attrib['v']))
-            elif self.tag_relation_active == 1:
+            elif self.element_relation_active:
                 db.execute('INSERT INTO relation_tags (relation_id,key,value) VALUES (?,?,?)',
                  (self.relation_id, attrib['k'], attrib['v']))
         elif element == 'way':
-            self.tag_way_active = 1
+            self.element_way_active = True
             self.way_id = attrib['id']
         elif element == 'nd':
             self.way_node_order += 1
             db.execute('INSERT INTO way_nodes (way_id,node_id,node_order) VALUES (?,?,?)',
              (self.way_id, attrib['ref'], self.way_node_order))
         elif element == 'relation':
-            self.tag_relation_active = 1
+            self.element_relation_active = True
             self.relation_id = attrib['id']
         elif element == 'member':
             self.relation_member_order += 1
@@ -57,12 +57,12 @@ class OsmHandler( xml.sax.ContentHandler ):
     # call when an element ends
     def endElement(self, element):
         if   element == 'node':
-            self.tag_node_active = 0
+            self.element_node_active = False
         elif element == 'way':
-            self.tag_way_active = 0
+            self.element_way_active = False
             self.way_node_order = 0
         elif element == 'relation':
-            self.tag_relation_active = 0
+            self.element_relation_active = False
             self.relation_member_order = 0
 
 #
