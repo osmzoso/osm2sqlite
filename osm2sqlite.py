@@ -88,11 +88,13 @@ if ( __name__ == "__main__"):
                 flag_create_index   = False
                 flag_create_spatial = False
     else:
-        print('No filename specified\n')
+        # print help and exit
+        print(__file__, '\n')
+        print('Reads OpenStreetMap data in XML format into a SQLite database.', '\n')
         print('usage:')
-        print(__file__, 'input.osm')
-        print(__file__, 'input.osm', '[--omit_spatial|-os]')
-        print(__file__, 'input.osm', '[--omit_index|-oi]')
+        print('python', __file__, 'input.osm')
+        print('python', __file__, 'input.osm', '[--omit_spatial|-os]')
+        print('python', __file__, 'input.osm', '[--omit_index|-oi]')
         sys.exit(1)
     # delete old database file if exists
     if os.path.exists(filename_db):

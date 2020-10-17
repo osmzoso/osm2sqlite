@@ -3,7 +3,7 @@
 Reads [OpenStreetMap data in XML format](https://wiki.openstreetmap.org/wiki/OSM_XML) into a SQLite database.
 
 The command
-```shell
+```
 python osm2sqlite.py input.osm
 ```
 reads the file *input.osm* and creates
@@ -131,13 +131,13 @@ WHERE way_id=79235038
 ```
 
 With the command
-```shell
+```
 python osm2sqlite.py input.osm --omit_spatial
 ```
 the creation of this spatial index is suppressed.
 
 The command
-```shell
+```
 python osm2sqlite.py input.osm --omit_index
 ```
 suppresses the creation of all indexes.
@@ -147,5 +147,14 @@ suppresses the creation of all indexes.
 
 ### Examples for database queries
 
+#### List cell phone antennas
+
+```
+sqlite3 osm.sqlite3 < query_cell_phone_antennas.sql
+```
+
+#### Database with all addresses
+
 TODO
+
 
