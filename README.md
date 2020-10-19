@@ -145,16 +145,23 @@ suppresses the creation of all indexes.
 
 ---
 
-### Examples for database queries
+### Example Queries
 
-#### List cell phone antennas
+
+Here are some examples for querying the database **osm.sqlite3**:
+
+
+#### List of all cell phone antennas
 
 ```
 sqlite3 osm.sqlite3 < query_cell_phone_antennas.sql
 ```
 
-#### Database with all addresses
 
-TODO
+#### Separate Database with all addresses
 
-
+With the command
+```
+sqlite3 < query_address_database.sql
+```
+a new database **osm_addr.sqlite3** with all addresses is created.
