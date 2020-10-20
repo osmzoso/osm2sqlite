@@ -48,7 +48,7 @@ LEFT JOIN osm.way_tags AS housenumber ON way_id.way_id=housenumber.way_id AND ho
 --
 .print "creating temporary table 'osm_addr_way_coordinates'..."
 CREATE TEMP TABLE osm_addr_way_coordinates AS
-SELECT way.way_id AS way_id,round(avg(n.lat),7) AS lat,round(avg(n.lon),7) AS lon
+SELECT way.way_id AS way_id,round(avg(n.lon),7) AS lon,round(avg(n.lat),7) AS lat
 FROM osm_addr_way AS way
 LEFT JOIN way_nodes AS wn ON way.way_id=wn.way_id
 LEFT JOIN nodes     AS n  ON wn.node_id=n.node_id
@@ -92,19 +92,19 @@ CREATE TEMP TABLE osm_addr (
  city        TEXT,
  street      TEXT,
  housenumber TEXT,
- lat         REAL,
- lon         REAL
+ lon         REAL,
+ lat         REAL
 );
 
-INSERT INTO osm_addr (way_id,node_id,postcode,city,street,housenumber,lat,lon)
+INSERT INTO osm_addr (way_id,node_id,postcode,city,street,housenumber,lon,lat)
 
-SELECT w.way_id,-1 AS node_id,w.postcode,w.city,w.street,w.housenumber,c.lat,c.lon
+SELECT w.way_id,-1 AS node_id,w.postcode,w.city,w.street,w.housenumber,c.lon,c.lat
 FROM osm_addr_way AS w
 LEFT JOIN osm_addr_way_coordinates AS c ON w.way_id=c.way_id
 
 UNION ALL
 
-SELECT -1 AS way_id,n.node_id,n.postcode,n.city,n.street,n.housenumber,c.lat,c.lon
+SELECT -1 AS way_id,n.node_id,n.postcode,n.city,n.street,n.housenumber,c.lon,c.lat
 FROM osm_addr_node AS n
 LEFT JOIN nodes AS c ON n.node_id=c.node_id
 
@@ -134,13 +134,13 @@ CREATE TABLE db.osm_housenumber (
  housenumber_id INTEGER PRIMARY KEY,
  street_id      INTEGER,
  housenumber    TEXT,
- lat            REAL,
  lon            REAL,
+ lat            REAL,
  way_id         INTEGER,
  node_id        INTEGER
 );
-INSERT INTO db.osm_housenumber (street_id,housenumber,lat,lon,way_id,node_id)
-SELECT s.street_id,a.housenumber,a.lat,a.lon,a.way_id,a.node_id
+INSERT INTO db.osm_housenumber (street_id,housenumber,lon,lat,way_id,node_id)
+SELECT s.street_id,a.housenumber,a.lon,a.lat,a.way_id,a.node_id
 FROM osm_addr AS a
 LEFT JOIN osm_street AS s ON a.postcode=s.postcode AND a.city=s.city AND a.street=s.street
 ;
