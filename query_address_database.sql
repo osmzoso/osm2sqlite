@@ -1,23 +1,25 @@
 --
--- Creates from the database "osm.sqlite3" a new database "osm_addr.sqlite3"
--- with all addresses and coordinates
+-- Creates a database "osm_addr.sqlite3" with addresses and coordinates
+--
+-- Requires an existing database "osm.sqlite3"
 --
 -- Usage:
 -- sqlite3 < query_address_database.sql
 --
+
+-- Delete an existing database as a precaution
+.shell del osm_addr.sqlite3
 
 --
 -- Time measurement
 --
 SELECT 'start : '||datetime('now','localtime');
 
--- Connection to the database with the OpenStreetMap data
+-- Connection to the existing database with the OpenStreetMap data
 ATTACH DATABASE "./osm.sqlite3" AS osm;
 
 -- Connection to the new address database 
 .print "creating new database 'osm_addr.sqlite3'..."
--- Delete any existing database as a precaution
-.shell del osm_addr.sqlite3
 ATTACH DATABASE "./osm_addr.sqlite3" AS db;
 
 --
@@ -120,12 +122,18 @@ CREATE TABLE db.osm_street (
  street_id   INTEGER PRIMARY KEY,
  postcode    TEXT,
  city        TEXT,
- street      TEXT
+ street      TEXT,
+ min_lon     REAL,  -- Boundingbox
+ min_lat     REAL,
+ max_lon     REAL,
+ max_lat     REAL
 );
-INSERT INTO db.osm_street (postcode,city,street)
-SELECT DISTINCT postcode,city,street FROM osm_addr
+INSERT INTO db.osm_street (postcode,city,street,min_lon,min_lat,max_lon,max_lat)
+SELECT postcode,city,street,min(lon),min(lat),max(lon),max(lat)
+FROM osm_addr
+GROUP BY postcode,city,street
 ;
-.print "creating index 'osm_street_1'..."
+.print "creating index 'osm_street_1 (postcode,city,street)'..."
 CREATE INDEX db.osm_street_1 ON osm_street (postcode,city,street);
 
 .print "creating table 'osm_housenumber'..."
@@ -144,7 +152,7 @@ SELECT s.street_id,a.housenumber,a.lon,a.lat,a.way_id,a.node_id
 FROM osm_addr AS a
 LEFT JOIN osm_street AS s ON a.postcode=s.postcode AND a.city=s.city AND a.street=s.street
 ;
-.print "creating index 'osm_housenumber_1'..."
+.print "creating index 'osm_housenumber_1 (street_id)'..."
 CREATE INDEX db.osm_housenumber_1 ON osm_housenumber (street_id);
 
 --
