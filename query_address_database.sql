@@ -25,7 +25,7 @@ ATTACH DATABASE "./osm_addr.sqlite3" AS db;
 --
 -- 1. Determine address data from way tags
 --
-.print "creating temporary table 'osm_addr_way'..."
+.print "   (creating temp. table 'osm_addr_way'...)"
 CREATE TEMP TABLE osm_addr_way AS
 WITH way_id AS
 (
@@ -48,7 +48,7 @@ LEFT JOIN osm.way_tags AS housenumber ON way_id.way_id=housenumber.way_id AND ho
 --
 -- 2. Calculate coordinates of address data from way tags
 --
-.print "creating temporary table 'osm_addr_way_coordinates'..."
+.print "   (creating temp. table 'osm_addr_way_coordinates'...)"
 CREATE TEMP TABLE osm_addr_way_coordinates AS
 SELECT way.way_id AS way_id,round(avg(n.lon),7) AS lon,round(avg(n.lat),7) AS lat
 FROM osm_addr_way AS way
@@ -62,7 +62,7 @@ CREATE INDEX osm_addr_way_coordinates_way_id ON osm_addr_way_coordinates (way_id
 --
 -- 3. Determine address data from node tags
 --
-.print "creating temporary table 'osm_addr_node'..."
+.print "   (creating temp. table 'osm_addr_node'...)"
 CREATE TEMP TABLE osm_addr_node AS
 WITH node_id AS
 (
@@ -85,7 +85,7 @@ LEFT JOIN osm.node_tags AS housenumber ON node_id.node_id=housenumber.node_id AN
 --
 -- 4. Create temporary overall table with all addresses
 --
-.print "creating temporary table 'osm_addr'..."
+.print "   (creating temp. table 'osm_addr'...)"
 CREATE TEMP TABLE osm_addr (
  addr_id     INTEGER PRIMARY KEY,
  way_id      INTEGER,
@@ -114,11 +114,11 @@ ORDER BY postcode,city,street,housenumber
 ;
 
 --
--- 5. Create tables "osm_street" and "osm_housenumber" (normalise data)
+-- 5. Create tables "addr_street" and "addr_housenumber" (normalize tables)
 --
-.print "creating table 'osm_street'..."
-DROP TABLE IF EXISTS db.osm_street;
-CREATE TABLE db.osm_street (
+.print "creating table 'addr_street'..."
+DROP TABLE IF EXISTS db.addr_street;
+CREATE TABLE db.addr_street (
  street_id   INTEGER PRIMARY KEY,
  postcode    TEXT,
  city        TEXT,
@@ -128,17 +128,17 @@ CREATE TABLE db.osm_street (
  max_lon     REAL,
  max_lat     REAL
 );
-INSERT INTO db.osm_street (postcode,city,street,min_lon,min_lat,max_lon,max_lat)
+INSERT INTO db.addr_street (postcode,city,street,min_lon,min_lat,max_lon,max_lat)
 SELECT postcode,city,street,min(lon),min(lat),max(lon),max(lat)
 FROM osm_addr
 GROUP BY postcode,city,street
 ;
-.print "creating index 'osm_street_1 (postcode,city,street)'..."
-CREATE INDEX db.osm_street_1 ON osm_street (postcode,city,street);
+.print "creating index 'addr_street_1 (postcode,city,street)'..."
+CREATE INDEX db.addr_street_1 ON addr_street (postcode,city,street);
 
-.print "creating table 'osm_housenumber'..."
-DROP TABLE IF EXISTS db.osm_housenumber;
-CREATE TABLE db.osm_housenumber (
+.print "creating table 'addr_housenumber'..."
+DROP TABLE IF EXISTS db.addr_housenumber;
+CREATE TABLE db.addr_housenumber (
  housenumber_id INTEGER PRIMARY KEY,
  street_id      INTEGER,
  housenumber    TEXT,
@@ -147,34 +147,94 @@ CREATE TABLE db.osm_housenumber (
  way_id         INTEGER,
  node_id        INTEGER
 );
-INSERT INTO db.osm_housenumber (street_id,housenumber,lon,lat,way_id,node_id)
+INSERT INTO db.addr_housenumber (street_id,housenumber,lon,lat,way_id,node_id)
 SELECT s.street_id,a.housenumber,a.lon,a.lat,a.way_id,a.node_id
 FROM osm_addr AS a
-LEFT JOIN osm_street AS s ON a.postcode=s.postcode AND a.city=s.city AND a.street=s.street
+LEFT JOIN addr_street AS s ON a.postcode=s.postcode AND a.city=s.city AND a.street=s.street
 ;
-.print "creating index 'osm_housenumber_1 (street_id)'..."
-CREATE INDEX db.osm_housenumber_1 ON osm_housenumber (street_id);
+.print "creating index 'addr_housenumber_1 (street_id)'..."
+CREATE INDEX db.addr_housenumber_1 ON addr_housenumber (street_id);
 
 --
--- 6. Create overall view
+-- 6. Create view
 --
-.print "creating overall view 'view_osm_addr'..."
-CREATE VIEW db.view_osm_addr AS
+.print "creating view 'view_addr'..."
+CREATE VIEW db.view_addr AS
 SELECT s.postcode,s.city,s.street,h.housenumber,h.lon,h.lat,h.way_id,h.node_id
-FROM osm_street AS s
-LEFT JOIN osm_housenumber AS h ON s.street_id=h.street_id
+FROM addr_street AS s
+LEFT JOIN addr_housenumber AS h ON s.street_id=h.street_id
 ;
 
-/*
 --
--- 7. Create R*Tree index
+-- 7. Clean up temporary tables
 --
-.print "creating R*Tree index 'location'..."
-DROP TABLE IF EXISTS db.location;
-CREATE VIRTUAL TABLE db.location USING rtree (housenumber_id,lon,lat);
-INSERT INTO db.location (housenumber_id,lon,lat)
-SELECT housenumber_id,lon,lat FROM osm_housenumber;
-*/
+DROP TABLE osm_addr_way;
+DROP TABLE osm_addr_way_coordinates;
+DROP TABLE osm_addr_node;
+DROP TABLE osm_addr;
+
+--
+-- 8. Determine the name of all ways with key='highway'
+--
+.print "   (creating temp. table 'highway_name'...)"
+CREATE TEMP TABLE highway_name AS
+WITH highway_way_id AS
+(
+ SELECT DISTINCT way_id
+ FROM osm.way_tags
+ WHERE key='highway'
+)
+SELECT
+ highway_way_id.way_id    AS way_id,
+ ifnull(highway.value,'') AS highway,
+ ifnull(name.value,'')    AS name
+FROM highway_way_id
+LEFT JOIN way_tags AS highway ON highway_way_id.way_id=highway.way_id AND highway.key ='highway'
+LEFT JOIN way_tags AS name    ON highway_way_id.way_id=name.way_id    AND name.key    ='name'
+;
+
+--
+-- 9. Determine the boundingbox
+--
+.print "   (creating temp. table 'highway_name_bbox'...)"
+CREATE TEMP TABLE highway_name_bbox AS
+SELECT
+ highway_name.way_id AS way_id,
+ highway_name.name   AS name,
+ min(nodes.lon)      AS min_lon,
+ min(nodes.lat)      AS min_lat,
+ max(nodes.lon)      AS max_lon,
+ max(nodes.lat)      AS max_lat
+FROM highway_name
+LEFT JOIN way_nodes ON highway_name.way_id=way_nodes.way_id
+LEFT JOIN nodes     ON way_nodes.node_id=nodes.node_id
+WHERE highway_name.name!=''
+GROUP BY highway_name.way_id
+;
+CREATE INDEX highway_name_bbox_1 ON highway_name_bbox (name);
+
+--
+-- 10. Create table "addr_street_highway"
+--
+.print "creating table 'addr_street_highway'..."
+DROP TABLE IF EXISTS db.addr_street_highway;
+CREATE TABLE db.addr_street_highway (
+ street_id INTEGER,
+ way_id    INTEGER
+);
+INSERT INTO db.addr_street_highway (street_id,way_id)
+SELECT s.street_id,h.way_id
+FROM db.addr_street AS s
+LEFT JOIN highway_name_bbox AS h ON s.street=h.name  -- streetname = highway name
+WHERE
+ -- only highways that overlap the boundingbox of the street
+     h.max_lon>=s.min_lon AND h.min_lon<=s.max_lon
+ AND h.max_lat>=s.min_lat AND h.min_lat<=s.max_lat
+ -- only streets with postcode info
+ AND s.postcode!=''
+;
+.print "creating index 'addr_street_highway_1 (street_id)'..."
+CREATE INDEX db.addr_street_highway_1 ON addr_street_highway (street_id);
 
 --
 -- Time measurement
