@@ -123,13 +123,13 @@ CREATE TABLE db.addr_street (
  postcode    TEXT,
  city        TEXT,
  street      TEXT,
- min_lon     REAL,  -- Boundingbox
+ min_lon     REAL,  -- Boundingbox slightly larger than in real life (0.002 degress)
  min_lat     REAL,
  max_lon     REAL,
  max_lat     REAL
 );
 INSERT INTO db.addr_street (postcode,city,street,min_lon,min_lat,max_lon,max_lat)
-SELECT postcode,city,street,min(lon),min(lat),max(lon),max(lat)
+SELECT postcode,city,street,min(lon)-0.002,min(lat)-0.002,max(lon)+0.002,max(lat)+0.002
 FROM osm_addr
 GROUP BY postcode,city,street
 ;
