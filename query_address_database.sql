@@ -160,7 +160,7 @@ CREATE INDEX db.addr_housenumber_1 ON addr_housenumber (street_id);
 --
 .print "creating view 'view_addr'..."
 CREATE VIEW db.view_addr AS
-SELECT s.postcode,s.city,s.street,h.housenumber,h.lon,h.lat,h.way_id,h.node_id
+SELECT s.street_id,s.postcode,s.city,s.street,h.housenumber,h.lon,h.lat,h.way_id,h.node_id
 FROM addr_street AS s
 LEFT JOIN addr_housenumber AS h ON s.street_id=h.street_id
 ;
