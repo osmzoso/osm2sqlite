@@ -9,11 +9,11 @@ python osm2sqlite.py input.osm
 reads the file *input.osm* and creates
 a new database **osm.sqlite3** with the tables below.
 
-> Time measurement (Intel Core i5 1.6 GHz, 16 GB RAM):  
+> Time measurement (Intel Core i5 1.6 GHz):  
 > germany.osm - about 3 hours
 
 
-## nodes
+### nodes
 
 column       | type                | description
 -------------|---------------------|-------------------------------------
@@ -22,7 +22,7 @@ lon          | REAL                | longitude
 lat          | REAL                | latitude
 
 
-## node_tags
+### node_tags
 
 column       | type                | description
 -------------|---------------------|-------------------------------------
@@ -34,7 +34,7 @@ value        | TEXT                | tag value
 - INDEX node_tags__key     ON node_tags (key)
 
 
-## way_nodes
+### way_nodes
 
 column       | type                | description
 -------------|---------------------|-------------------------------------
@@ -46,7 +46,7 @@ node_order   | INTEGER             | node order
 - INDEX way_nodes__node_id ON way_nodes (node_id)
 
 
-## way_tags
+### way_tags
 
 column       | type                | description
 -------------|---------------------|-------------------------------------
@@ -58,7 +58,7 @@ value        | TEXT                | tag value
 - INDEX way_tags__key      ON way_tags (key)
 
 
-## relation_members
+### relation_members
 
 column       | type                | description
 -------------|---------------------|-------------------------------------
@@ -72,7 +72,7 @@ member_order | INTEGER             | member order
 - INDEX relation_members__type        ON relation_members ( type, ref )
 
 
-## relation_tags
+### relation_tags
 
 column       | type                | description
 -------------|---------------------|-------------------------------------
@@ -84,12 +84,49 @@ value        | TEXT                | tag value
 - INDEX relation_tags__key            ON relation_tags ( key )
 
 
+The command
+```
+python osm2sqlite.py input.osm --omit_index
+```
+suppresses the creation of all indexes.
+
+
 ---
 
-### Spatial Index
+## Example Queries
 
-Additionally a [R*Tree index](https://www.sqlite.org/rtree.html) **highway** is created for
+
+Here are some examples for querying the database **osm.sqlite3**:
+
+
+#### List of all cell phone antennas
+
+```
+sqlite3 osm.sqlite3 < query_cell_phone_antennas.sql
+```
+
+
+#### Separate Database with all addresses
+
+With the command
+```
+sqlite3 < query_address_database.sql
+```
+a new database **osm_addr.sqlite3** with all addresses is created.
+
+
+---
+
+## Spatial Index
+
+
+The command
+```
+sqlite3 osm.sqlite3 < spatial_index.sql
+```
+creates a [R*Tree index](https://www.sqlite.org/rtree.html) **highway** for
 all ways with *key='highway'*.
+
 
 Here are some examples for querying this index:
 
@@ -129,39 +166,3 @@ SELECT min_lon,max_lon,min_lat,max_lat
 FROM highway
 WHERE way_id=79235038
 ```
-
-With the command
-```
-python osm2sqlite.py input.osm --omit_spatial
-```
-the creation of this spatial index is suppressed.
-
-The command
-```
-python osm2sqlite.py input.osm --omit_index
-```
-suppresses the creation of all indexes.
-
-
----
-
-### Example Queries
-
-
-Here are some examples for querying the database **osm.sqlite3**:
-
-
-#### List of all cell phone antennas
-
-```
-sqlite3 osm.sqlite3 < query_cell_phone_antennas.sql
-```
-
-
-#### Separate Database with all addresses
-
-With the command
-```
-sqlite3 < query_address_database.sql
-```
-a new database **osm_addr.sqlite3** with all addresses is created.
