@@ -73,27 +73,22 @@ class OsmHandler( xml.sax.ContentHandler ):
 if ( __name__ == "__main__"):
     # filename of the database
     filename_db = 'osm.sqlite3'
-    # flags creating index
+    # flag creating index
     flag_create_index   = True
-    flag_create_spatial = True
     # read argv parameter
     if len(sys.argv) > 1:
         # filename of the osm xml file
         filename_xml = sys.argv[1]
         # omit creating index
         if len(sys.argv) > 2:
-            if sys.argv[2] in ('--omit_spatial','-os'):
-                flag_create_spatial = False
             if sys.argv[2] in ('--omit_index','-oi'):
                 flag_create_index   = False
-                flag_create_spatial = False
     else:
         # print help and exit
         print(__file__, '\n')
         print('Reads OpenStreetMap data in XML format into a SQLite database.', '\n')
         print('usage:')
         print('python', __file__, 'input.osm')
-        print('python', __file__, 'input.osm', '[--omit_spatial|-os]')
         print('python', __file__, 'input.osm', '[--omit_index|-oi]')
         sys.exit(1)
     # delete old database file if exists
@@ -174,22 +169,6 @@ if ( __name__ == "__main__"):
         db.execute('CREATE INDEX relation_members__type        ON relation_members ( type, ref )')
         db.execute('CREATE INDEX relation_tags__relation_id    ON relation_tags ( relation_id )')
         db.execute('CREATE INDEX relation_tags__key            ON relation_tags ( key )')
-        db_connect.commit()
-    # create spatial index
-    if flag_create_spatial:
-        print( time.strftime('%H:%M:%S', time.localtime()), 'creating R*Tree "highway"...')
-        db.execute('''
-        CREATE VIRTUAL TABLE highway USING rtree( way_id,min_lat, max_lat,min_lon, max_lon )
-        ''')
-        db.execute('''
-        INSERT INTO highway (way_id,min_lat,       max_lat,       min_lon,       max_lon)
-        SELECT      way_tags.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)
-        FROM      way_tags
-        LEFT JOIN way_nodes ON way_tags.way_id=way_nodes.way_id
-        LEFT JOIN nodes     ON way_nodes.node_id=nodes.node_id
-        WHERE way_tags.key='highway'
-        GROUP BY way_tags.way_id
-        ''')
         db_connect.commit()
     # finish
     print( time.strftime('%H:%M:%S', time.localtime()), 'reading finished')
