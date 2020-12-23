@@ -133,7 +133,7 @@ SELECT postcode,city,street,min(lon)-0.002,min(lat)-0.002,max(lon)+0.002,max(lat
 FROM osm_addr
 GROUP BY postcode,city,street
 ;
-.print "creating index 'addr_street_1 (postcode,city,street)'..."
+-- index
 CREATE INDEX db.addr_street_1 ON addr_street (postcode,city,street);
 
 .print "creating table 'addr_housenumber'..."
@@ -152,7 +152,7 @@ SELECT s.street_id,a.housenumber,a.lon,a.lat,a.way_id,a.node_id
 FROM osm_addr AS a
 LEFT JOIN addr_street AS s ON a.postcode=s.postcode AND a.city=s.city AND a.street=s.street
 ;
-.print "creating index 'addr_housenumber_1 (street_id)'..."
+-- index
 CREATE INDEX db.addr_housenumber_1 ON addr_housenumber (street_id);
 
 --
@@ -166,12 +166,17 @@ LEFT JOIN addr_housenumber AS h ON s.street_id=h.street_id
 ;
 
 --
--- 7. Clean up temporary tables
+-- 7. Finish, clean up temporary tables
 --
 DROP TABLE osm_addr_way;
 DROP TABLE osm_addr_way_coordinates;
 DROP TABLE osm_addr_node;
 DROP TABLE osm_addr;
+
+--
+-- To check the street name in the address it is useful to
+-- check if there is also a way with the same name nearby
+--
 
 --
 -- 8. Determine the name of all ways with key='highway'
@@ -194,7 +199,7 @@ LEFT JOIN way_tags AS name    ON highway_way_id.way_id=name.way_id    AND name.k
 ;
 
 --
--- 9. Determine the boundingbox
+-- 9. Determine the boundingbox of the highway
 --
 .print "   (creating temp. table 'highway_name_bbox'...)"
 CREATE TEMP TABLE highway_name_bbox AS
@@ -211,7 +216,18 @@ LEFT JOIN nodes     ON way_nodes.node_id=nodes.node_id
 WHERE highway_name.name!=''
 GROUP BY highway_name.way_id
 ;
-CREATE INDEX highway_name_bbox_1 ON highway_name_bbox (name);
+-- R*Tree index boundingbox
+-- (uses auxiliary columns, available since SQLite version 3.24.0)
+CREATE VIRTUAL TABLE highway USING rtree(
+ way_id,
+ min_lon, max_lon,
+ min_lat, max_lat,
+ +name TEXT
+);
+INSERT INTO highway (way_id, min_lon, max_lon, min_lat, max_lat, name)
+SELECT               way_id, min_lon, max_lon, min_lat, max_lat, name
+FROM highway_name_bbox
+;
 
 --
 -- 10. Create table "addr_street_highway"
@@ -225,15 +241,14 @@ CREATE TABLE db.addr_street_highway (
 INSERT INTO db.addr_street_highway (street_id,way_id)
 SELECT s.street_id,h.way_id
 FROM db.addr_street AS s
-LEFT JOIN highway_name_bbox AS h ON s.street=h.name  -- streetname = highway name
-WHERE
+LEFT JOIN highway AS h ON
  -- only highways that overlap the boundingbox of the street
-     h.max_lon>=s.min_lon AND h.min_lon<=s.max_lon
- AND h.max_lat>=s.min_lat AND h.min_lat<=s.max_lat
- -- only streets with postcode info
- AND s.postcode!=''
+ h.max_lon>=s.min_lon AND h.min_lon<=s.max_lon AND
+ h.max_lat>=s.min_lat AND h.min_lat<=s.max_lat
+ -- streetname = highway name
+ AND s.street=h.name
 ;
-.print "creating index 'addr_street_highway_1 (street_id)'..."
+-- index
 CREATE INDEX db.addr_street_highway_1 ON addr_street_highway (street_id);
 
 --
