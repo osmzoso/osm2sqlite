@@ -219,10 +219,10 @@ GROUP BY highway_name.way_id
 -- R*Tree index boundingbox
 -- (uses auxiliary columns, available since SQLite version 3.24.0)
 CREATE VIRTUAL TABLE highway USING rtree(
- way_id,
- min_lon, max_lon,
- min_lat, max_lat,
- +name TEXT
+  way_id,
+  min_lon, max_lon,
+  min_lat, max_lat,
+  +name TEXT
 );
 INSERT INTO highway (way_id, min_lon, max_lon, min_lat, max_lat, name)
 SELECT               way_id, min_lon, max_lon, min_lat, max_lat, name
@@ -242,11 +242,13 @@ INSERT INTO db.addr_street_highway (street_id,way_id)
 SELECT s.street_id,h.way_id
 FROM db.addr_street AS s
 LEFT JOIN highway AS h ON
- -- only highways that overlap the boundingbox of the street
- h.max_lon>=s.min_lon AND h.min_lon<=s.max_lon AND
- h.max_lat>=s.min_lat AND h.min_lat<=s.max_lat
- -- streetname = highway name
- AND s.street=h.name
+  -- only highways that overlap the boundingbox of the street
+  h.max_lon>=s.min_lon AND h.min_lon<=s.max_lon AND
+  h.max_lat>=s.min_lat AND h.min_lat<=s.max_lat
+  -- streetname = highway name
+  AND s.street=h.name
+-- only streets with postcode info
+WHERE s.postcode!=''
 ;
 -- index
 CREATE INDEX db.addr_street_highway_1 ON addr_street_highway (street_id);
