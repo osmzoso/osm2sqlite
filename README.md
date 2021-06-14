@@ -124,13 +124,18 @@ sqlite3 osm.sqlite3 < query.sql
 
 ---
 
-## Separate Database with all addresses
+## Create a separate Database with all addresses
 
 With the command
 ```
-sqlite3 < query_address_database.sql
+sqlite3 < address_database.sql
 ```
 a new database **osm_addr.sqlite3** with all addresses is created.
+
+The datebase contains 3 tables:  
+Table *addr_street* contains postcode, city, street and boundingbox of the street.  
+Table *addr_housenumber* contains the coordinates of each housenumber.  
+Table *addr_street_highway* contains the **highway**-*way_id* of the street.  
 
 
 ---
