@@ -93,20 +93,38 @@ suppresses the creation of all indexes.
 
 ---
 
-## Example Queries
+## Query the database
 
+To query the database with the [SQLite CLI](https://www.sqlite.org/cli.html),
+a simple file must be created with the SQL command, e.g. named *query.sql*:
 
-Here are some examples for querying the database **osm.sqlite3**:
+``` sql
+--
+-- List of all cell phone antennas
+--
+-- https://wiki.openstreetmap.org/wiki/DE:Key:communication:mobile_phone
+--
+.header on
+.mode tabs
 
-
-#### List of all cell phone antennas
+SELECT t.node_id,t.key,t.value,n.lon,n.lat
+FROM node_tags AS t
+LEFT JOIN nodes AS n ON t.node_id=n.node_id
+WHERE t.key='communication:mobile_phone' AND t.value='yes'
+ORDER BY t.node_id
+;
 
 ```
-sqlite3 osm.sqlite3 < query_cell_phone_antennas.sql
+
+then
+
+```
+sqlite3 osm.sqlite3 < query.sql
 ```
 
+---
 
-#### Separate Database with all addresses
+## Separate Database with all addresses
 
 With the command
 ```
