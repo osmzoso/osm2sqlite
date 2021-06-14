@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 #
 # Reads OpenStreetMap data in XML format into a SQLite database
 #
@@ -6,7 +6,7 @@ import xml.sax, sqlite3, time, sys, os
 
 class OsmHandler( xml.sax.ContentHandler ):
     """
-    Read OSM XML Data
+    Read OpenStreetMap XML Data
     """
     def __init__(self):
         # element <node>
@@ -81,7 +81,7 @@ if ( __name__ == "__main__"):
         filename_xml = sys.argv[1]
         # omit creating index
         if len(sys.argv) > 2:
-            if sys.argv[2] in ('--omit_index','-oi'):
+            if sys.argv[2] in ('--no_index','-n'):
                 flag_create_index   = False
     else:
         # print help and exit
@@ -89,17 +89,17 @@ if ( __name__ == "__main__"):
         print('Reads OpenStreetMap data in XML format into a SQLite database.', '\n')
         print('usage:')
         print('python', __file__, 'input.osm')
-        print('python', __file__, 'input.osm', '[--omit_index|-oi]')
+        print('python', __file__, 'input.osm', '[--no_index|-n]')
         sys.exit(1)
     # delete old database file if exists
     if os.path.exists(filename_db):
         os.remove(filename_db)
-        print('existing database file '+filename_db+' removed')
+        print(time.strftime('%H:%M:%S', time.localtime()), 'existing file '+filename_db+' removed')
     # connect to the database
     db_connect = sqlite3.connect(filename_db)
     db = db_connect.cursor()   # new database cursor
     # start
-    print( time.strftime('%H:%M:%S', time.localtime()), 'reading '+filename_xml+'...')
+    print(time.strftime('%H:%M:%S', time.localtime()), 'reading '+filename_xml+'...')
     # create all tables
     db.execute('''
     CREATE TABLE nodes (
@@ -171,5 +171,5 @@ if ( __name__ == "__main__"):
         db.execute('CREATE INDEX relation_tags__key            ON relation_tags ( key )')
         db_connect.commit()
     # finish
-    print( time.strftime('%H:%M:%S', time.localtime()), 'reading finished')
+    print( time.strftime('%H:%M:%S', time.localtime()), 'finished')
 

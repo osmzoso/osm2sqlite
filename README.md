@@ -86,7 +86,7 @@ value        | TEXT                | tag value
 
 The command
 ```
-python osm2sqlite.py input.osm --omit_index
+python osm2sqlite.py input.osm --no_index
 ```
 suppresses the creation of all indexes.
 
