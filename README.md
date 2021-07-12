@@ -10,8 +10,8 @@ reads the file *input.osm* and creates
 a new database **osm.sqlite3** with the tables below.
 
 > Time measurement (Intel Core i5 1.6 GHz):  
-> saarland.osm (700 MB) - about 2 minutes
-> germany.osm (60 GB) - about 4 hours
+> saarland.osm (700 MB) - about 2 minutes  
+> germany.osm (60 GB) - about 4 hours  
 
 
 ### nodes
