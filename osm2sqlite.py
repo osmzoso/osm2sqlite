@@ -4,7 +4,7 @@
 #
 import xml.sax, sqlite3, time, sys, os
 
-class OsmHandler( xml.sax.ContentHandler ):
+class OsmHandler(xml.sax.ContentHandler):
     """
     Read OpenStreetMap XML Data
     """
@@ -70,11 +70,11 @@ class OsmHandler( xml.sax.ContentHandler ):
 #
 # Main
 #
-if ( __name__ == "__main__"):
+if __name__ == '__main__':
     # filename of the database
     filename_db = 'osm.sqlite3'
     # flag creating index
-    flag_create_index   = True
+    flag_create_index = True
     # read argv parameter
     if len(sys.argv) > 1:
         # filename of the osm xml file
@@ -82,13 +82,13 @@ if ( __name__ == "__main__"):
         # omit creating index
         if len(sys.argv) > 2:
             if sys.argv[2] in ('--no_index','-n'):
-                flag_create_index   = False
+                flag_create_index = False
     else:
         # print help and exit
         print(__file__, '\n')
-        print('Reads OpenStreetMap data in XML format into a SQLite database.', '\n')
+        print('Reads OpenStreetMap data in XML format')
+        print('into a SQLite database "osm.sqlite3".', '\n')
         print('usage:')
-        print('python', __file__, 'input.osm')
         print('python', __file__, 'input.osm', '[--no_index|-n]')
         sys.exit(1)
     # delete old database file if exists
@@ -158,7 +158,7 @@ if ( __name__ == "__main__"):
     db_connect.commit()
     # create index
     if flag_create_index:
-        print( time.strftime('%H:%M:%S', time.localtime()), 'creating index...')
+        print(time.strftime('%H:%M:%S', time.localtime()), 'creating index...')
         db.execute('CREATE INDEX node_tags__node_id ON node_tags (node_id)')
         db.execute('CREATE INDEX node_tags__key     ON node_tags (key)')
         db.execute('CREATE INDEX way_tags__way_id   ON way_tags (way_id)')
@@ -171,5 +171,4 @@ if ( __name__ == "__main__"):
         db.execute('CREATE INDEX relation_tags__key            ON relation_tags ( key )')
         db_connect.commit()
     # finish
-    print( time.strftime('%H:%M:%S', time.localtime()), 'finished')
-
+    print(time.strftime('%H:%M:%S', time.localtime()), 'finished')
