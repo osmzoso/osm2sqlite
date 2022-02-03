@@ -76,13 +76,22 @@ void start_element_callback(void *user_data, const xmlChar *name, const xmlChar 
   }
   else if(!xmlStrcmp(name, (const xmlChar *)"tag")) {
     if(element_node_active) {
-      /* TODO printf("INSERT INTO node_tags (node_id,key,value) VALUES (%I64d,'%s','%s');\n", attrib_id, attrib_k, attrib_v); */
+      sqlite3_bind_int64(stmt_insert_node_tags, 1, attrib_id);
+      sqlite3_bind_text (stmt_insert_node_tags, 2, attrib_k, -1, NULL);
+      sqlite3_bind_text (stmt_insert_node_tags, 3, attrib_v, -1, NULL);
+      if( sqlite3_step(stmt_insert_node_tags)==SQLITE_DONE ) sqlite3_reset(stmt_insert_node_tags);
     }
     if(element_way_active) {
-      /* TODO printf("INSERT INTO way_tags (way_id,key,value) VALUES (%I64d,'%s','%s');\n", attrib_id, attrib_k, attrib_v); */
+      sqlite3_bind_int64(stmt_insert_way_tags, 1, attrib_id);
+      sqlite3_bind_text (stmt_insert_way_tags, 2, attrib_k, -1, NULL);
+      sqlite3_bind_text (stmt_insert_way_tags, 3, attrib_v, -1, NULL);
+      if( sqlite3_step(stmt_insert_way_tags)==SQLITE_DONE ) sqlite3_reset(stmt_insert_way_tags);
     }
     if(element_relation_active) {
-      /* TODO printf("INSERT INTO relation_tags (relation_id,key,value) VALUES (%I64d,'%s','%s');\n", attrib_id, attrib_k, attrib_v); */
+      sqlite3_bind_int64(stmt_insert_relation_tags, 1, attrib_id);
+      sqlite3_bind_text (stmt_insert_relation_tags, 2, attrib_k, -1, NULL);
+      sqlite3_bind_text (stmt_insert_relation_tags, 3, attrib_v, -1, NULL);
+      if( sqlite3_step(stmt_insert_relation_tags)==SQLITE_DONE ) sqlite3_reset(stmt_insert_relation_tags);
     }
   }
   else if(!xmlStrcmp(name, (const xmlChar *)"nd")) {
