@@ -10,10 +10,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 #include <libxml/tree.h>
 #include <libxml/parser.h>
 #include <libxml/parserInternals.h>
-#include <inttypes.h>
+#include "sqlite3.h"
 
 /*
 ** Public variable for the SAX parser
@@ -31,6 +32,10 @@ char   attrib_k[1000];
 char   attrib_v[1000];
 char   attrib_type[1000];
 char   attrib_role[1000];
+
+sqlite3 *db;         /* SQLite Database connection */
+char *zErrMsg = 0;   /* SQLite Error message */
+int rc;              /* SQLite Return code */
 
 /*
 ** Callback functions
@@ -103,31 +108,36 @@ void end_element_callback(void *user_data, const xmlChar *name) {
 **
 */
 void create_tables() {
-  printf(
+  rc = sqlite3_exec(db,
+  "DROP TABLE IF EXISTS nodes;\n"
   "CREATE TABLE nodes (\n"
   " node_id      INTEGER PRIMARY KEY,  -- node ID\n"
   " lon          REAL,                 -- longitude\n"
   " lat          REAL                  -- latitude\n"
   ");\n"
 
+  "DROP TABLE IF EXISTS node_tags;\n"
   "CREATE TABLE node_tags (\n"
   " node_id      INTEGER,              -- node ID\n"
   " key          TEXT,                 -- tag key\n"
   " value        TEXT                  -- tag value\n"
   ");\n"
 
+  "DROP TABLE IF EXISTS way_nodes;\n"
   "CREATE TABLE way_nodes (\n"
   " way_id       INTEGER,              -- way ID\n"
   " node_id      INTEGER,              -- node ID\n"
   " node_order   INTEGER               -- node order\n"
   ");\n"
 
+  "DROP TABLE IF EXISTS way_tags;\n"
   "CREATE TABLE way_tags (\n"
   " way_id       INTEGER,              -- way ID\n"
   " key          TEXT,                 -- tag key\n"
   " value        TEXT                  -- tag value\n"
   ");\n"
 
+  "DROP TABLE IF EXISTS relation_members;\n"
   "CREATE TABLE relation_members (\n"
   " relation_id  INTEGER,              -- relation ID\n"
   " type         TEXT,                 -- type ('node','way','relation')\n"
@@ -136,19 +146,31 @@ void create_tables() {
   " member_order INTEGER               -- member order\n"
   ");\n"
 
+  "DROP TABLE IF EXISTS relation_tags;\n"
   "CREATE TABLE relation_tags (\n"
   " relation_id  INTEGER,              -- relation ID\n"
   " key          TEXT,                 -- tag key\n"
   " value        TEXT                  -- tag value\n"
-  ");\n"
-
-  );
+  ");\n",
+  NULL, NULL, &zErrMsg);
+  if( rc!=SQLITE_OK ){
+    fprintf(stderr, "SQL error: %s\n", zErrMsg);
+    sqlite3_free(zErrMsg);
+  }
 }
 
 /*
 ** Main
 */
 int main(int argc, char **argv){
+  /* connect to the database */
+  rc = sqlite3_open("osm.sqlite3", &db);
+  if( rc ){
+    fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+    sqlite3_close(db);
+    return EXIT_FAILURE;
+  }
+
   /* Initialize all fields to zero */
   xmlSAXHandler sh = { 0 };
 
