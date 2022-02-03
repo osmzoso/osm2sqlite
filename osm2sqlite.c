@@ -37,16 +37,16 @@ sqlite3 *db;         /* SQLite Database connection */
 char *zErrMsg = 0;   /* SQLite Error message */
 int rc;              /* SQLite Return code */
 
+sqlite3_stmt *stmt_insert_nodes, *stmt_insert_node_tags, *stmt_insert_way_nodes,
+  *stmt_insert_way_tags, *stmt_insert_relation_members, *stmt_insert_relation_tags;
+
 /*
 ** Callback functions
 */
 void start_element_callback(void *user_data, const xmlChar *name, const xmlChar **attrs) {
-  printf("  --Beginning of element : %s \n", name);
 
   /* Alle Attribute des Element auswerten */
   while (NULL != attrs && NULL != attrs[0]) {
-    printf("    --attrib: %s = %s\n",attrs[0],attrs[1]);
-
     if     (!xmlStrcmp(attrs[0], (const xmlChar *)"id"))   attrib_id  = strtoll((const char *)attrs[1], NULL, 10);
     else if(!xmlStrcmp(attrs[0], (const xmlChar *)"ref"))  attrib_ref = strtoll((const char *)attrs[1], NULL, 10);
     else if(!xmlStrcmp(attrs[0], (const xmlChar *)"lat"))  attrib_lat = atof((const char *)attrs[1]);
@@ -61,7 +61,10 @@ void start_element_callback(void *user_data, const xmlChar *name, const xmlChar 
   /* Name des Element auswerten */
   if(!xmlStrcmp(name, (const xmlChar *)"node")) {
     element_node_active = 1;
-    printf("INSERT INTO nodes (node_id,lat,lon) VALUES (%I64d,%12.8f,%12.8f);\n", attrib_id, attrib_lat, attrib_lon);
+    sqlite3_bind_int64 (stmt_insert_nodes, 1, attrib_id);
+    sqlite3_bind_double(stmt_insert_nodes, 2, attrib_lat);
+    sqlite3_bind_double(stmt_insert_nodes, 3, attrib_lon);
+    if( sqlite3_step(stmt_insert_nodes)==SQLITE_DONE ) sqlite3_reset(stmt_insert_nodes);
   }
   else if(!xmlStrcmp(name, (const xmlChar *)"way")) {
     element_way_active = 1;
@@ -73,32 +76,33 @@ void start_element_callback(void *user_data, const xmlChar *name, const xmlChar 
   }
   else if(!xmlStrcmp(name, (const xmlChar *)"tag")) {
     if(element_node_active) {
-      printf("INSERT INTO node_tags (node_id,key,value) VALUES (%I64d,'%s','%s');\n", attrib_id, attrib_k, attrib_v);
+      /* TODO printf("INSERT INTO node_tags (node_id,key,value) VALUES (%I64d,'%s','%s');\n", attrib_id, attrib_k, attrib_v); */
     }
     if(element_way_active) {
-      printf("INSERT INTO way_tags (way_id,key,value) VALUES (%I64d,'%s','%s');\n", attrib_id, attrib_k, attrib_v);
+      /* TODO printf("INSERT INTO way_tags (way_id,key,value) VALUES (%I64d,'%s','%s');\n", attrib_id, attrib_k, attrib_v); */
     }
     if(element_relation_active) {
-      printf("INSERT INTO relation_tags (relation_id,key,value) VALUES (%I64d,'%s','%s');\n", attrib_id, attrib_k, attrib_v);
+      /* TODO printf("INSERT INTO relation_tags (relation_id,key,value) VALUES (%I64d,'%s','%s');\n", attrib_id, attrib_k, attrib_v); */
     }
   }
   else if(!xmlStrcmp(name, (const xmlChar *)"nd")) {
     if(element_way_active) {
       node_order++;
-      printf("INSERT INTO way_nodes (way_id,node_order,node_id) VALUES (%I64d,%d,%I64d);\n", attrib_id, node_order, attrib_ref);
+      sqlite3_bind_int64(stmt_insert_way_nodes, 1, attrib_id);
+      sqlite3_bind_int64(stmt_insert_way_nodes, 2, attrib_ref);
+      sqlite3_bind_int  (stmt_insert_way_nodes, 3, node_order);
+      if( sqlite3_step(stmt_insert_way_nodes)==SQLITE_DONE ) sqlite3_reset(stmt_insert_way_nodes);
     }
   }
   else if(!xmlStrcmp(name, (const xmlChar *)"member")) {
     if(element_relation_active) {
       member_order++;
-      printf("INSERT INTO relation_members (relation_id,type,ref,role,member_order) VALUES (%I64d,'%s',%I64d,'%s',%d);\n", attrib_id, attrib_type, attrib_ref, attrib_role, member_order);
+      /* TODO printf("INSERT INTO relation_members (relation_id,type,ref,role,member_order) VALUES (%I64d,'%s',%I64d,'%s',%d);\n", attrib_id, attrib_type, attrib_ref, attrib_role, member_order); */
     }
   }
 }
 
 void end_element_callback(void *user_data, const xmlChar *name) {
-  printf("  --Ending of element : %s \n", name);
-
   if     (!xmlStrcmp(name, (const xmlChar *)"node"))     element_node_active     = 0;
   else if(!xmlStrcmp(name, (const xmlChar *)"way"))      element_way_active      = 0;
   else if(!xmlStrcmp(name, (const xmlChar *)"relation")) element_relation_active = 0;
@@ -157,6 +161,30 @@ void create_tables() {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
     sqlite3_free(zErrMsg);
   }
+
+  sqlite3_prepare_v2(db,
+  "INSERT INTO nodes (node_id,lat,lon) VALUES (?1,?2,?3)",
+  -1, &stmt_insert_nodes, NULL);
+
+  sqlite3_prepare_v2(db,
+  "INSERT INTO node_tags (node_id,key,value) VALUES (?1,?2,?3)",
+  -1, &stmt_insert_node_tags, NULL);
+
+  sqlite3_prepare_v2(db,
+  "INSERT INTO way_nodes (way_id,node_id,node_order) VALUES (?1,?2,?3)",
+  -1, &stmt_insert_way_nodes, NULL);
+
+  sqlite3_prepare_v2(db,
+  "INSERT INTO way_tags (way_id,key,value) VALUES (?1,?2,?3)",
+  -1, &stmt_insert_way_tags, NULL);
+
+  sqlite3_prepare_v2(db,
+  "INSERT INTO relation_members (relation_id,type,ref,role,member_order) VALUES (?1,?2,?3,?4,?5)",
+  -1, &stmt_insert_relation_members, NULL);
+
+  sqlite3_prepare_v2(db,
+  "INSERT INTO relation_tags (relation_id,key,value) VALUES (?1,?2,?3)",
+  -1, &stmt_insert_relation_tags, NULL);
 }
 
 /*
@@ -189,10 +217,15 @@ int main(int argc, char **argv){
   ctxt->sax = &sh;
 
   /* create the tables in the database */
+  sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
   create_tables();
 
   /* parse the xml document */
   xmlParseDocument(ctxt);
+
+  /* */
+  sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+
   /* well-formed document? */
   if (ctxt->wellFormed) {
     printf("XML Document is well formed\n");
