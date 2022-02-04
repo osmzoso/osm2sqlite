@@ -1,8 +1,14 @@
 /*
-** Reads OpenStreetMap data in XML format into a SQLite database
+** osm2sqlite - Reads OpenStreetMap data in XML format into a SQLite database
 **
+** Copyright (C) 2022 Herbert Gläser
+**
+** TODOs:
 ** Uses Module SAX from libxml2 (deprecated)
 ** http://xmlsoft.org/html/libxml-SAX.html
+**
+** strcpy() strncpy() buffer overflow?
+** https://stackoverflow.com/questions/40040150/overflow-in-c-function-strcpy
 **
 */
 #include <stdlib.h>
@@ -14,7 +20,7 @@
 #include <libxml/parserInternals.h>
 #include "sqlite3.h"
 
-#define OSM2SQLITE_VERSION "0.5.0 alpha"
+#define OSM2SQLITE_VERSION "0.5.1"
 #define OSM2SQLITE_HELP_INFO \
 "osm2sqlite (Version " OSM2SQLITE_VERSION ")\n\n" \
 "Reads OpenStreetMap data in XML format\n" \
@@ -52,7 +58,7 @@ sqlite3_stmt *stmt_insert_nodes, *stmt_insert_node_tags, *stmt_insert_way_nodes,
 */
 void start_element_callback(void *user_data, const xmlChar *name, const xmlChar **attrs) {
 
-  /* Alle Attribute des Element auswerten */
+  /* check all attributes of the element */
   while (NULL != attrs && NULL != attrs[0]) {
     if     (!xmlStrcmp(attrs[0], (const xmlChar *)"id"))   attrib_id  = strtoll((const char *)attrs[1], NULL, 10);
     else if(!xmlStrcmp(attrs[0], (const xmlChar *)"ref"))  attrib_ref = strtoll((const char *)attrs[1], NULL, 10);
@@ -65,7 +71,7 @@ void start_element_callback(void *user_data, const xmlChar *name, const xmlChar 
     attrs = &attrs[2];
   }
 
-  /* Name des Element auswerten */
+  /* save data for each osm element */
   if(!xmlStrcmp(name, (const xmlChar *)"node")) {
     element_node_active = 1;
     sqlite3_bind_int64 (stmt_insert_nodes, 1, attrib_id);
@@ -219,10 +225,10 @@ void create_index() {
   "CREATE INDEX way_tags__key                 ON way_tags (key);\n"
   "CREATE INDEX way_nodes__way_id             ON way_nodes (way_id);\n"
   "CREATE INDEX way_nodes__node_id            ON way_nodes (node_id);\n"
-  "CREATE INDEX relation_members__relation_id ON relation_members ( relation_id );\n"
-  "CREATE INDEX relation_members__type        ON relation_members ( type, ref );\n"
-  "CREATE INDEX relation_tags__relation_id    ON relation_tags ( relation_id );\n"
-  "CREATE INDEX relation_tags__key            ON relation_tags ( key );\n",
+  "CREATE INDEX relation_members__relation_id ON relation_members (relation_id);\n"
+  "CREATE INDEX relation_members__type        ON relation_members (type, ref);\n"
+  "CREATE INDEX relation_tags__relation_id    ON relation_tags (relation_id);\n"
+  "CREATE INDEX relation_tags__key            ON relation_tags (key);\n",
   NULL, NULL, &zErrMsg);
   if( rc!=SQLITE_OK ){
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
@@ -279,15 +285,13 @@ int main(int argc, char **argv){
     create_index();
   }
 
-  /* well-formed document? */
+  /* finish, check if well-formed document */
   if (ctxt->wellFormed) {
     printf("finished (XML document is well formed)\n");
   } else {
     printf("finished (XML Document isn't well formed)\n");
   }
-
-  /* free the memory */
-  xmlFreeParserCtxt(ctxt);
+  xmlFreeParserCtxt(ctxt);  /* free the memory */
 
   return EXIT_SUCCESS;
 }
