@@ -13,6 +13,12 @@ a new database **osm.sqlite3** with the tables and indexes below.
 > saarland.osm (700 MB) - about 32 seconds  
 > germany.osm (60 GB) - about 1 hour 10 minutes  
 
+The command
+```
+osm2sqlite input.osm --no_index
+```
+suppresses the creation of all indexes.
+
 
 ### nodes
 
@@ -84,12 +90,6 @@ value        | TEXT                | tag value
 - INDEX relation_tags__relation_id    ON relation_tags ( relation_id )
 - INDEX relation_tags__key            ON relation_tags ( key )
 
-
-The command
-```
-osm2sqlite input.osm --no_index
-```
-suppresses the creation of all indexes.
 
 
 ---
