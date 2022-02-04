@@ -13,5 +13,4 @@ osm2sqlite: osm2sqlite.c
 # install
 install: osm2sqlite
 	install -m 644 osm2sqlite /usr/bin
-.PHONY: install
 
