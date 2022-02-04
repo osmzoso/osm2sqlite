@@ -7,9 +7,6 @@
 ** Uses Module SAX from libxml2 (deprecated)
 ** http://xmlsoft.org/html/libxml-SAX.html
 **
-** strcpy() strncpy() buffer overflow?
-** https://stackoverflow.com/questions/40040150/overflow-in-c-function-strcpy
-**
 */
 #include <stdlib.h>
 #include <stdio.h>
@@ -20,7 +17,7 @@
 #include <libxml/parserInternals.h>
 #include "sqlite3.h"
 
-#define OSM2SQLITE_VERSION "0.5.1"
+#define OSM2SQLITE_VERSION "0.5.2"
 #define OSM2SQLITE_HELP_INFO \
 "osm2sqlite (Version " OSM2SQLITE_VERSION ")\n\n" \
 "Reads OpenStreetMap data in XML format\n" \
@@ -42,10 +39,10 @@ uint64_t attrib_id  = 0;
 uint64_t attrib_ref = 0;
 double attrib_lat = 0;
 double attrib_lon = 0;
-char   attrib_k[1000];
-char   attrib_v[1000];
-char   attrib_type[1000];
-char   attrib_role[1000];
+char   attrib_k[2000];    /* There is a 255 character limit for         */
+char   attrib_v[2000];    /* key and value length in OSM.               */
+char   attrib_type[2000]; /* Therefore 2000 characters should be enough */
+char   attrib_role[2000]; /* to avoid a buffer overflow in strcpy().    */
 
 sqlite3 *db;         /* SQLite Database connection */
 char *zErrMsg = 0;   /* SQLite Error message */
@@ -292,6 +289,7 @@ int main(int argc, char **argv){
     printf("finished (XML Document isn't well formed)\n");
   }
   xmlFreeParserCtxt(ctxt);  /* free the memory */
+  sqlite3_close(db);
 
   return EXIT_SUCCESS;
 }
