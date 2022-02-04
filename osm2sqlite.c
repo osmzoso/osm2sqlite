@@ -4,8 +4,6 @@
 ** Uses Module SAX from libxml2 (deprecated)
 ** http://xmlsoft.org/html/libxml-SAX.html
 **
-** gcc osm2sqlite.c -lxml2 -o osm2sqlite
-**
 */
 #include <stdlib.h>
 #include <stdio.h>
@@ -15,6 +13,16 @@
 #include <libxml/parser.h>
 #include <libxml/parserInternals.h>
 #include "sqlite3.h"
+
+#define OSM2SQLITE_VERSION "0.5.0 alpha"
+#define OSM2SQLITE_HELP_INFO \
+"osm2sqlite (Version " OSM2SQLITE_VERSION ")\n\n" \
+"Reads OpenStreetMap data in XML format\n" \
+"into a SQLite database 'osm.sqlite3'.\n\n" \
+"Usage:\n" \
+"osm2sqlite input.osm [--no_index|-n]\n\n" \
+"(SQLite Version " SQLITE_VERSION ")\n" \
+"(compile time: " __DATE__ " " __TIME__ "  gcc " __VERSION__ ")\n"
 
 /*
 ** Public variable for the SAX parser
@@ -36,7 +44,6 @@ char   attrib_role[1000];
 sqlite3 *db;         /* SQLite Database connection */
 char *zErrMsg = 0;   /* SQLite Error message */
 int rc;              /* SQLite Return code */
-
 sqlite3_stmt *stmt_insert_nodes, *stmt_insert_node_tags, *stmt_insert_way_nodes,
   *stmt_insert_way_tags, *stmt_insert_relation_members, *stmt_insert_relation_tags;
 
@@ -106,7 +113,12 @@ void start_element_callback(void *user_data, const xmlChar *name, const xmlChar 
   else if(!xmlStrcmp(name, (const xmlChar *)"member")) {
     if(element_relation_active) {
       member_order++;
-      /* TODO printf("INSERT INTO relation_members (relation_id,type,ref,role,member_order) VALUES (%I64d,'%s',%I64d,'%s',%d);\n", attrib_id, attrib_type, attrib_ref, attrib_role, member_order); */
+      sqlite3_bind_int64(stmt_insert_relation_members, 1, attrib_id);
+      sqlite3_bind_text (stmt_insert_relation_members, 2, attrib_type, -1, NULL);
+      sqlite3_bind_int64(stmt_insert_relation_members, 3, attrib_ref);
+      sqlite3_bind_text (stmt_insert_relation_members, 4, attrib_role, -1, NULL);
+      sqlite3_bind_int  (stmt_insert_relation_members, 5, member_order);
+      if( sqlite3_step(stmt_insert_relation_members)==SQLITE_DONE ) sqlite3_reset(stmt_insert_relation_members);
     }
   }
 }
@@ -118,9 +130,9 @@ void end_element_callback(void *user_data, const xmlChar *name) {
 }
 
 /*
-**
+** create tables and prepared insert statements
 */
-void create_tables() {
+void create_tables_and_stmt() {
   rc = sqlite3_exec(db,
   "DROP TABLE IF EXISTS nodes;\n"
   "CREATE TABLE nodes (\n"
@@ -197,9 +209,36 @@ void create_tables() {
 }
 
 /*
+** create indexes
+*/
+void create_index() {
+  rc = sqlite3_exec(db,
+  "CREATE INDEX node_tags__node_id            ON node_tags (node_id);\n"
+  "CREATE INDEX node_tags__key                ON node_tags (key);\n"
+  "CREATE INDEX way_tags__way_id              ON way_tags (way_id);\n"
+  "CREATE INDEX way_tags__key                 ON way_tags (key);\n"
+  "CREATE INDEX way_nodes__way_id             ON way_nodes (way_id);\n"
+  "CREATE INDEX way_nodes__node_id            ON way_nodes (node_id);\n"
+  "CREATE INDEX relation_members__relation_id ON relation_members ( relation_id );\n"
+  "CREATE INDEX relation_members__type        ON relation_members ( type, ref );\n"
+  "CREATE INDEX relation_tags__relation_id    ON relation_tags ( relation_id );\n"
+  "CREATE INDEX relation_tags__key            ON relation_tags ( key );\n",
+  NULL, NULL, &zErrMsg);
+  if( rc!=SQLITE_OK ){
+    fprintf(stderr, "SQL error: %s\n", zErrMsg);
+    sqlite3_free(zErrMsg);
+  }
+}
+
+/*
 ** Main
 */
 int main(int argc, char **argv){
+  if( argc==1 ){
+    fprintf(stderr, OSM2SQLITE_HELP_INFO);
+    return EXIT_FAILURE;
+  }
+
   /* connect to the database */
   rc = sqlite3_open("osm.sqlite3", &db);
   if( rc ){
@@ -225,23 +264,23 @@ int main(int argc, char **argv){
   /* register sax handler with the context */
   ctxt->sax = &sh;
 
-  /* create the tables in the database */
+  /* read the data */
+  printf("reading %s...\n", argv[1]);
   sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
-  create_tables();
-
-  /* parse the xml document */
-  xmlParseDocument(ctxt);
-
-  /* */
+  create_tables_and_stmt();
+  xmlParseDocument(ctxt);   /* parse the xml document */
   sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+
+  printf("creating index...\n");
+  create_index();
 
   /* well-formed document? */
   if (ctxt->wellFormed) {
     printf("XML Document is well formed\n");
   } else {
     fprintf(stderr, "XML Document isn't well formed\n");
-    xmlFreeParserCtxt(ctxt);
-    return EXIT_FAILURE;
+    /* xmlFreeParserCtxt(ctxt); */
+    /* return EXIT_FAILURE; */
   }
 
   /* free the memory */
