@@ -234,9 +234,14 @@ void create_index() {
 ** Main
 */
 int main(int argc, char **argv){
+  /* check parameter */
   if( argc==1 ){
     fprintf(stderr, OSM2SQLITE_HELP_INFO);
     return EXIT_FAILURE;
+  }
+  int flag_create_index = 1;
+  if( argc==3 && ( strcmp("--no_index", argv[2])==0 || strcmp("-n", argv[2])==0 ) ){
+    flag_create_index = 0;
   }
 
   /* connect to the database */
@@ -247,16 +252,15 @@ int main(int argc, char **argv){
     return EXIT_FAILURE;
   }
 
-  /* Initialize all fields to zero */
+  /* SAX handler, initialize all fields to zero */
   xmlSAXHandler sh = { 0 };
 
   /* register callbacks */
   sh.startElement = start_element_callback;
   sh.endElement = end_element_callback;
 
-  xmlParserCtxtPtr ctxt;
-
   /* create the context */
+  xmlParserCtxtPtr ctxt;
   if ((ctxt = xmlCreateFileParserCtxt(argv[1])) == NULL) {
     fprintf(stderr, "Error creating context\n");
     return EXIT_FAILURE;
@@ -270,17 +274,16 @@ int main(int argc, char **argv){
   create_tables_and_stmt();
   xmlParseDocument(ctxt);   /* parse the xml document */
   sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
-
-  printf("creating index...\n");
-  create_index();
+  if (flag_create_index) {
+    printf("creating index...\n");
+    create_index();
+  }
 
   /* well-formed document? */
   if (ctxt->wellFormed) {
-    printf("XML Document is well formed\n");
+    printf("finished (XML document is well formed)\n");
   } else {
-    fprintf(stderr, "XML Document isn't well formed\n");
-    /* xmlFreeParserCtxt(ctxt); */
-    /* return EXIT_FAILURE; */
+    printf("finished (XML Document isn't well formed)\n");
   }
 
   /* free the memory */
