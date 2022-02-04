@@ -4,14 +4,14 @@ Reads [OpenStreetMap data in XML format](https://wiki.openstreetmap.org/wiki/OSM
 
 The command
 ```
-python osm2sqlite.py input.osm
+osm2sqlite input.osm
 ```
 reads the file *input.osm* and creates
-a new database **osm.sqlite3** with the tables below.
+a new database **osm.sqlite3** with the tables and indexes below.
 
 > Time measurement (Intel Core i5 1.6 GHz):  
-> saarland.osm (700 MB) - about 2 minutes  
-> germany.osm (60 GB) - about 4 hours  
+> saarland.osm (700 MB) - about 32 seconds  
+> germany.osm (60 GB) - about 1 hour 10 minutes  
 
 
 ### nodes
@@ -87,7 +87,7 @@ value        | TEXT                | tag value
 
 The command
 ```
-python osm2sqlite.py input.osm --no_index
+osm2sqlite input.osm --no_index
 ```
 suppresses the creation of all indexes.
 
