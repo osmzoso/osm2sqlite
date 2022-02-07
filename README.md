@@ -1,23 +1,17 @@
 # osm2sqlite
 
-Reads [OpenStreetMap data in XML format](https://wiki.openstreetmap.org/wiki/OSM_XML) into a SQLite database.
+Reads [OpenStreetMap XML data](https://wiki.openstreetmap.org/wiki/OSM_XML) into a SQLite database.
 
 The command
 ```
-osm2sqlite input.osm
+osm2sqlite input.osm output.db
 ```
-reads the file *input.osm* and creates
-a new database **osm.sqlite3** with the tables and indexes below.
+reads the OSM XML file **input.osm** and creates in the database **output.db**
+the tables and indexes below.
 
 > Time measurement (Intel Core i5 1.6 GHz):  
 > saarland.osm (700 MB) - about 32 seconds  
 > germany.osm (60 GB) - about 1 hour 10 minutes  
-
-The command
-```
-osm2sqlite input.osm --no_index
-```
-suppresses the creation of all indexes.
 
 
 ### nodes
@@ -75,8 +69,8 @@ ref          | INTEGER             | node, way or relation ID
 role         | TEXT                | describes a particular feature
 member_order | INTEGER             | member order
 
-- INDEX relation_members__relation_id ON relation_members ( relation_id )
-- INDEX relation_members__type        ON relation_members ( type, ref )
+- INDEX relation_members__relation_id ON relation_members (relation_id)
+- INDEX relation_members__type        ON relation_members (type, ref)
 
 
 ### relation_tags
@@ -87,56 +81,8 @@ relation_id  | INTEGER             | relation ID
 key          | TEXT                | tag key
 value        | TEXT                | tag value
 
-- INDEX relation_tags__relation_id    ON relation_tags ( relation_id )
-- INDEX relation_tags__key            ON relation_tags ( key )
-
-
-
----
-
-## Query the database
-
-To query the database with the [SQLite CLI](https://www.sqlite.org/cli.html),
-a simple file must be created with the SQL command, e.g. named *query.sql*:
-
-``` sql
---
--- List of all cell phone antennas
---
--- https://wiki.openstreetmap.org/wiki/DE:Key:communication:mobile_phone
---
-.header on
-.mode tabs
-
-SELECT t.node_id,t.key,t.value,n.lon,n.lat
-FROM node_tags AS t
-LEFT JOIN nodes AS n ON t.node_id=n.node_id
-WHERE t.key='communication:mobile_phone' AND t.value='yes'
-ORDER BY t.node_id
-;
-
-```
-
-then
-
-```
-sqlite3 osm.sqlite3 < query.sql
-```
-
----
-
-## Create a separate Database with all addresses
-
-With the command
-```
-sqlite3 < address_database.sql
-```
-a new database **osm_addr.sqlite3** with all addresses is created.
-
-The datebase contains 3 tables:  
-Table **addr_street** contains postcode, city, street and boundingbox of the street.  
-Table **addr_housenumber** contains the coordinates of each housenumber.  
-Table **addr_street_highway** contains the **highway**-*way_id* of the street.  
+- INDEX relation_tags__relation_id    ON relation_tags (relation_id)
+- INDEX relation_tags__key            ON relation_tags (key)
 
 
 ---
@@ -146,9 +92,9 @@ Table **addr_street_highway** contains the **highway**-*way_id* of the street.
 
 The command
 ```
-sqlite3 osm.sqlite3 < spatial_index.sql
+sqlite3 input.osm output.db --spatial-index
 ```
-creates a [R*Tree index](https://www.sqlite.org/rtree.html) **highway** for
+creates an additional [R*Tree index](https://www.sqlite.org/rtree.html) **highway** for
 all ways with *key='highway'*.
 
 
@@ -189,4 +135,63 @@ Limits of an element of the index:
 SELECT min_lon,max_lon,min_lat,max_lat
 FROM highway
 WHERE way_id=79235038
+```
+
+
+---
+
+## Suppress the creation of all indexes
+
+```
+osm2sqlite input.osm output.db --no-index
+```
+
+
+---
+
+## Create a separate Database with all addresses
+
+With the command
+```
+sqlite3 < address_database.sql
+```
+a new database **osm_addr.sqlite3** with all addresses is created.
+
+Required database name: **osm.sqlite3**
+
+The datebase contains 3 tables:  
+Table **addr_street** contains postcode, city, street and boundingbox of the street.  
+Table **addr_housenumber** contains the coordinates of each housenumber.  
+Table **addr_street_highway** contains the **highway**-*way_id* of the street.  
+
+
+---
+
+## Query the database
+
+To query the database with the [SQLite CLI](https://www.sqlite.org/cli.html),
+a simple file must be created with the SQL command, e.g. named *query.sql*:
+
+``` sql
+--
+-- List of all cell phone antennas
+--
+-- https://wiki.openstreetmap.org/wiki/DE:Key:communication:mobile_phone
+--
+.header on
+.mode tabs
+
+SELECT t.node_id,t.key,t.value,n.lon,n.lat
+FROM node_tags AS t
+LEFT JOIN nodes AS n ON t.node_id=n.node_id
+WHERE t.key='communication:mobile_phone' AND t.value='yes'
+ORDER BY t.node_id
+;
+
+```
+
+then
+
+```
+sqlite3 osm.sqlite3 < query.sql
 ```

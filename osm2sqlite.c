@@ -1,5 +1,5 @@
 /*
-** osm2sqlite - Reads OpenStreetMap data in XML format into a SQLite database
+** osm2sqlite - Reads OpenStreetMap XML data into a SQLite database
 **
 ** Copyright (C) 2022 Herbert Gläser
 **
@@ -17,13 +17,14 @@
 #include <libxml/parserInternals.h>
 #include "sqlite3.h"
 
-#define OSM2SQLITE_VERSION "0.5.3"
+#define OSM2SQLITE_VERSION "0.6.0"
 #define OSM2SQLITE_HELP_INFO \
 "osm2sqlite (Version " OSM2SQLITE_VERSION ")\n\n" \
-"Reads OpenStreetMap data in XML format\n" \
-"into a SQLite database 'osm.sqlite3'.\n\n" \
-"Usage:\n" \
-"osm2sqlite input.osm [--no_index|-n]\n\n" \
+"Reads OpenStreetMap XML data into a SQLite database.\n\n" \
+"Usage:\nosm2sqlite FILE_OSM_XML FILE_SQLITE_DB [INDEX]\n\n" \
+"Index control:\n" \
+" -n, --no-index       No indexes are created\n" \
+" -s, --spatial-index  Indexes and spatial index are created\n\n" \
 "(SQLite Version " SQLITE_VERSION ")\n" \
 "(compile time: " __DATE__ " " __TIME__ "  gcc " __VERSION__ ")\n"
 
@@ -215,6 +216,7 @@ void create_tables_and_stmt() {
 ** create indexes
 */
 void create_index() {
+  printf("creating indexes...\n");
   rc = sqlite3_exec(db,
   "CREATE INDEX node_tags__node_id            ON node_tags (node_id);\n"
   "CREATE INDEX node_tags__key                ON node_tags (key);\n"
@@ -234,21 +236,48 @@ void create_index() {
 }
 
 /*
+** create spatial index
+*/
+void create_spatial_index() {
+  printf("creating spatial index...\n");
+  rc = sqlite3_exec(db,
+  "DROP TABLE IF EXISTS highway;\n"
+  "CREATE VIRTUAL TABLE highway USING rtree( way_id, min_lat, max_lat, min_lon, max_lon );\n"
+  "INSERT INTO highway (way_id,min_lat,       max_lat,       min_lon,       max_lon)\n"
+  "SELECT      way_tags.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)\n"
+  "FROM      way_tags\n"
+  "LEFT JOIN way_nodes ON way_tags.way_id=way_nodes.way_id\n"
+  "LEFT JOIN nodes     ON way_nodes.node_id=nodes.node_id\n"
+  "WHERE way_tags.key='highway'\n"
+  "GROUP BY way_tags.way_id;\n",
+  NULL, NULL, &zErrMsg);
+  if( rc!=SQLITE_OK ){
+    fprintf(stderr, "SQL error: %s\n", zErrMsg);
+    sqlite3_free(zErrMsg);
+  }
+}
+
+/*
 ** Main
 */
 int main(int argc, char **argv){
   /* check parameter */
-  if( argc==1 ){
+  int flag_create_index = 1;
+  int flag_create_spatial_index = 0;
+  if( argc!=3 && argc!=4 ){
     fprintf(stderr, OSM2SQLITE_HELP_INFO);
     return EXIT_FAILURE;
   }
-  int flag_create_index = 1;
-  if( argc==3 && ( strcmp("--no_index", argv[2])==0 || strcmp("-n", argv[2])==0 ) ){
+  if( argc==4 && ( strcmp("-n", argv[3])==0 || strcmp("--no-index", argv[3])==0 ) ){
     flag_create_index = 0;
+  }
+  if( argc==4 && ( strcmp("-s", argv[3])==0 || strcmp("--spatial-index", argv[3])==0 ) ){
+    flag_create_index = 1;
+    flag_create_spatial_index = 1;
   }
 
   /* connect to the database */
-  rc = sqlite3_open("osm.sqlite3", &db);
+  rc = sqlite3_open(argv[2], &db);
   if( rc ){
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
     sqlite3_close(db);
@@ -274,15 +303,13 @@ int main(int argc, char **argv){
   ctxt->sax = &sh;
 
   /* read the data */
-  printf("reading %s...\n", argv[1]);
+  printf("reading '%s' into '%s'...\n", argv[1], argv[2]);
   sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
   create_tables_and_stmt();
   xmlParseDocument(ctxt);   /* parse the xml document */
   sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
-  if (flag_create_index) {
-    printf("creating indexes...\n");
-    create_index();
-  }
+  if (flag_create_index) create_index();
+  if (flag_create_spatial_index) create_spatial_index();
 
   /* finish, check if well-formed document */
   if (!ctxt->wellFormed) printf("XML document isn't well formed\n");
