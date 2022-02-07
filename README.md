@@ -140,7 +140,7 @@ WHERE way_id=79235038
 
 ---
 
-## Suppress the creation of all indexes
+## Suppress creation of all indexes
 
 ```
 osm2sqlite input.osm output.db --no-index
