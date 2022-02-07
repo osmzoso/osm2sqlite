@@ -307,9 +307,9 @@ int main(int argc, char **argv){
   sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
   create_tables_and_stmt();
   xmlParseDocument(ctxt);   /* parse the xml document */
-  sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
   if (flag_create_index) create_index();
   if (flag_create_spatial_index) create_spatial_index();
+  sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
 
   /* finish, check if well-formed document */
   if (!ctxt->wellFormed) printf("XML document isn't well formed\n");
