@@ -17,7 +17,7 @@
 #include <libxml/parserInternals.h>
 #include "sqlite3.h"
 
-#define OSM2SQLITE_VERSION "0.5.2"
+#define OSM2SQLITE_VERSION "0.5.3"
 #define OSM2SQLITE_HELP_INFO \
 "osm2sqlite (Version " OSM2SQLITE_VERSION ")\n\n" \
 "Reads OpenStreetMap data in XML format\n" \
@@ -254,6 +254,8 @@ int main(int argc, char **argv){
     sqlite3_close(db);
     return EXIT_FAILURE;
   }
+  sqlite3_exec(db, "PRAGMA journal_mode = OFF", NULL, NULL, NULL);
+  sqlite3_exec(db, "PRAGMA page_size = 65536", NULL, NULL, NULL);
 
   /* SAX handler, initialize all fields to zero */
   xmlSAXHandler sh = { 0 };
@@ -278,17 +280,12 @@ int main(int argc, char **argv){
   xmlParseDocument(ctxt);   /* parse the xml document */
   sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
   if (flag_create_index) {
-    printf("creating index...\n");
+    printf("creating indexes...\n");
     create_index();
   }
 
   /* finish, check if well-formed document */
-  if (ctxt->wellFormed) {
-    printf("finished (XML document is well formed)\n");
-  } else {
-    printf("finished (XML Document isn't well formed)\n");
-  }
-  xmlFreeParserCtxt(ctxt);  /* free the memory */
+  if (!ctxt->wellFormed) printf("XML document isn't well formed\n");
   sqlite3_close(db);
 
   return EXIT_SUCCESS;

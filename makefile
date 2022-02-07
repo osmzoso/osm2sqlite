@@ -3,14 +3,15 @@
 #
 # Compiler:
 CC = gcc
-CFLAGS = -ansi -Wall -Os -s
-CDSQLITE = -DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION
+CFLAGS = -Wall -Os -s
+DSQLITE = -DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION
+INC = -I/usr/include/libxml2
 
 # compile
-osm2sqlite: osm2sqlite.c
-	$(CC) osm2sqlite.c sqlite3.c -lxml2 -o osm2sqlite $(CFLAGS) $(CDSQLITE)
+osm2sqlite: osm2sqlite.c sqlite3.c
+	$(CC) osm2sqlite.c sqlite3.c -lxml2 -o osm2sqlite $(CFLAGS) $(DSQLITE) $(INC)
 
 # install
 install: osm2sqlite
-	install -m 644 osm2sqlite /usr/bin
+	install -m755 osm2sqlite /usr/bin
 
