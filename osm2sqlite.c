@@ -3,10 +3,6 @@
 **
 ** Copyright (C) 2022 Herbert Gläser
 **
-** TODOs:
-** Uses Module SAX from libxml2 (deprecated)
-** http://xmlsoft.org/html/libxml-SAX.html
-**
 */
 #include <stdlib.h>
 #include <stdio.h>
@@ -17,7 +13,7 @@
 #include <libxml/parserInternals.h>
 #include "sqlite3.h"
 
-#define OSM2SQLITE_VERSION "0.6.0"
+#define OSM2SQLITE_VERSION "0.6.1"
 #define OSM2SQLITE_HELP_INFO \
 "osm2sqlite (Version " OSM2SQLITE_VERSION ")\n\n" \
 "Reads OpenStreetMap XML data into a SQLite database.\n\n" \
@@ -29,7 +25,7 @@
 "(compile time: " __DATE__ " " __TIME__ "  gcc " __VERSION__ ")\n"
 
 /*
-** Public variable for the SAX parser
+** Public variables
 */
 int element_node_active     = 0;  /* SAX marker within element <node>     */
 int element_way_active      = 0;  /* SAX marker within element <way>      */
@@ -134,9 +130,9 @@ void end_element_callback(void *user_data, const xmlChar *name) {
 }
 
 /*
-** create tables and prepared insert statements
+** create tables, indexes and prepared insert statements
 */
-void create_tables_and_stmt() {
+void create_tables() {
   rc = sqlite3_exec(db,
   "DROP TABLE IF EXISTS nodes;\n"
   "CREATE TABLE nodes (\n"
@@ -186,35 +182,38 @@ void create_tables_and_stmt() {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
     sqlite3_free(zErrMsg);
   }
+}
 
+void create_prep_stmt() {
   sqlite3_prepare_v2(db,
   "INSERT INTO nodes (node_id,lat,lon) VALUES (?1,?2,?3)",
   -1, &stmt_insert_nodes, NULL);
-
   sqlite3_prepare_v2(db,
   "INSERT INTO node_tags (node_id,key,value) VALUES (?1,?2,?3)",
   -1, &stmt_insert_node_tags, NULL);
-
   sqlite3_prepare_v2(db,
   "INSERT INTO way_nodes (way_id,node_id,node_order) VALUES (?1,?2,?3)",
   -1, &stmt_insert_way_nodes, NULL);
-
   sqlite3_prepare_v2(db,
   "INSERT INTO way_tags (way_id,key,value) VALUES (?1,?2,?3)",
   -1, &stmt_insert_way_tags, NULL);
-
   sqlite3_prepare_v2(db,
   "INSERT INTO relation_members (relation_id,type,ref,role,member_order) VALUES (?1,?2,?3,?4,?5)",
   -1, &stmt_insert_relation_members, NULL);
-
   sqlite3_prepare_v2(db,
   "INSERT INTO relation_tags (relation_id,key,value) VALUES (?1,?2,?3)",
   -1, &stmt_insert_relation_tags, NULL);
 }
 
-/*
-** create indexes
-*/
+void destroy_prep_stmt() {
+  sqlite3_finalize(stmt_insert_nodes);
+  sqlite3_finalize(stmt_insert_node_tags);
+  sqlite3_finalize(stmt_insert_way_nodes);
+  sqlite3_finalize(stmt_insert_way_tags);
+  sqlite3_finalize(stmt_insert_relation_members);
+  sqlite3_finalize(stmt_insert_relation_tags);
+}
+
 void create_index() {
   printf("creating indexes...\n");
   rc = sqlite3_exec(db,
@@ -235,10 +234,7 @@ void create_index() {
   }
 }
 
-/*
-** create spatial index
-*/
-void create_spatial_index() {
+void create_sindex() {
   printf("creating spatial index...\n");
   rc = sqlite3_exec(db,
   "DROP TABLE IF EXISTS highway;\n"
@@ -261,9 +257,9 @@ void create_spatial_index() {
 ** Main
 */
 int main(int argc, char **argv){
-  /* check parameter */
+  /* Parameter check */
   int flag_create_index = 1;
-  int flag_create_spatial_index = 0;
+  int flag_create_sindex = 0;
   if( argc!=3 && argc!=4 ){
     fprintf(stderr, OSM2SQLITE_HELP_INFO);
     return EXIT_FAILURE;
@@ -273,10 +269,10 @@ int main(int argc, char **argv){
   }
   if( argc==4 && ( strcmp("-s", argv[3])==0 || strcmp("--spatial-index", argv[3])==0 ) ){
     flag_create_index = 1;
-    flag_create_spatial_index = 1;
+    flag_create_sindex = 1;
   }
 
-  /* connect to the database */
+  /* Database connection */
   rc = sqlite3_open(argv[2], &db);
   if( rc ){
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
@@ -286,34 +282,29 @@ int main(int argc, char **argv){
   sqlite3_exec(db, "PRAGMA journal_mode = OFF", NULL, NULL, NULL);
   sqlite3_exec(db, "PRAGMA page_size = 65536", NULL, NULL, NULL);
 
-  /* SAX handler, initialize all fields to zero */
-  xmlSAXHandler sh = { 0 };
-
-  /* register callbacks */
-  sh.startElement = start_element_callback;
+  /* SAX handler */
+  xmlSAXHandler sh = { 0 }; /* initialize all fields to zero */
+  sh.startElement = start_element_callback;  /* register callback functions */
   sh.endElement = end_element_callback;
-
-  /* create the context */
-  xmlParserCtxtPtr ctxt;
+  xmlParserCtxtPtr ctxt;    /* create the context */
   if ((ctxt = xmlCreateFileParserCtxt(argv[1])) == NULL) {
-    fprintf(stderr, "Error creating context\n");
+    fprintf(stderr, "SAX Error : creating context failed\n");
     return EXIT_FAILURE;
   }
-  /* register sax handler with the context */
-  ctxt->sax = &sh;
+  ctxt->sax = &sh;          /* register sax handler with the context */
 
-  /* read the data */
+  /* Read the data */
   printf("reading '%s' into '%s'...\n", argv[1], argv[2]);
   sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
-  create_tables_and_stmt();
-  xmlParseDocument(ctxt);   /* parse the xml document */
-  if (flag_create_index) create_index();
-  if (flag_create_spatial_index) create_spatial_index();
+  create_tables();         /* create tables                        */
+  create_prep_stmt();      /* create prepared insert statements    */
+  xmlParseDocument(ctxt);  /* read and parse the XML document      */
+  if (!ctxt->wellFormed) fprintf(stderr, "XML document isn't well formed\n");
+  if (flag_create_index) create_index();   /* create indexes       */
+  if (flag_create_sindex) create_sindex(); /* create spatial index */
   sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
-
-  /* finish, check if well-formed document */
-  if (!ctxt->wellFormed) printf("XML document isn't well formed\n");
-  sqlite3_close(db);
+  destroy_prep_stmt();     /* destroy prepared statements          */
+  sqlite3_close(db);       /* close the database                   */
 
   return EXIT_SUCCESS;
 }
