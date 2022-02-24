@@ -13,7 +13,7 @@
 #include <libxml/parserInternals.h>
 #include "sqlite3.h"
 
-#define OSM2SQLITE_VERSION "0.6.1"
+#define OSM2SQLITE_VERSION "0.7.0"
 #define OSM2SQLITE_HELP_INFO \
 "osm2sqlite (Version " OSM2SQLITE_VERSION ")\n\n" \
 "Reads OpenStreetMap XML data into a SQLite database.\n\n" \
@@ -42,10 +42,20 @@ char   attrib_type[2000]; /* Therefore 2000 characters should be enough */
 char   attrib_role[2000]; /* to avoid a buffer overflow in strcpy().    */
 
 sqlite3 *db;         /* SQLite Database connection */
-char *zErrMsg = 0;   /* SQLite Error message */
-int rc;              /* SQLite Return code */
+int rc;              /* SQLite Result code */
 sqlite3_stmt *stmt_insert_nodes, *stmt_insert_node_tags, *stmt_insert_way_nodes,
   *stmt_insert_way_tags, *stmt_insert_relation_members, *stmt_insert_relation_tags;
+
+/*
+** Abort if a database error has occurred
+*/
+void abort_db_error(int rc){
+  fprintf(stderr, "abort - sqlite error\n");
+  fprintf(stderr, "  sqlite result code   : (%i) %s\n", rc, sqlite3_errstr(rc));
+  fprintf(stderr, "  sqlite error message : %s\n", sqlite3_errmsg(db));
+  sqlite3_close(db);
+  exit(EXIT_FAILURE);
+}
 
 /*
 ** Callback functions
@@ -53,80 +63,110 @@ sqlite3_stmt *stmt_insert_nodes, *stmt_insert_node_tags, *stmt_insert_way_nodes,
 void start_element_callback(void *user_data, const xmlChar *name, const xmlChar **attrs) {
 
   /* check all attributes of the element */
-  while (NULL != attrs && NULL != attrs[0]) {
-    if     (!xmlStrcmp(attrs[0], (const xmlChar *)"id"))   attrib_id  = strtoll((const char *)attrs[1], NULL, 10);
-    else if(!xmlStrcmp(attrs[0], (const xmlChar *)"ref"))  attrib_ref = strtoll((const char *)attrs[1], NULL, 10);
-    else if(!xmlStrcmp(attrs[0], (const xmlChar *)"lat"))  attrib_lat = atof((const char *)attrs[1]);
-    else if(!xmlStrcmp(attrs[0], (const xmlChar *)"lon"))  attrib_lon = atof((const char *)attrs[1]);
-    else if(!xmlStrcmp(attrs[0], (const xmlChar *)"k"))    strcpy(attrib_k,  (const char *)attrs[1]);
-    else if(!xmlStrcmp(attrs[0], (const xmlChar *)"v"))    strcpy(attrib_v,  (const char *)attrs[1]);
-    else if(!xmlStrcmp(attrs[0], (const xmlChar *)"type")) strcpy(attrib_type,  (const char *)attrs[1]);
-    else if(!xmlStrcmp(attrs[0], (const xmlChar *)"role")) strcpy(attrib_role,  (const char *)attrs[1]);
+  while( NULL!=attrs && NULL!=attrs[0] ){
+    if     ( !xmlStrcmp(attrs[0], (const xmlChar *) "id") )   attrib_id  = strtoll((const char *)attrs[1], NULL, 10);
+    else if( !xmlStrcmp(attrs[0], (const xmlChar *) "ref") )  attrib_ref = strtoll((const char *)attrs[1], NULL, 10);
+    else if( !xmlStrcmp(attrs[0], (const xmlChar *) "lat") )  attrib_lat = atof((const char *)attrs[1]);
+    else if( !xmlStrcmp(attrs[0], (const xmlChar *) "lon") )  attrib_lon = atof((const char *)attrs[1]);
+    else if( !xmlStrcmp(attrs[0], (const xmlChar *) "k") )    strcpy(attrib_k,  (const char *)attrs[1]);
+    else if( !xmlStrcmp(attrs[0], (const xmlChar *) "v") )    strcpy(attrib_v,  (const char *)attrs[1]);
+    else if( !xmlStrcmp(attrs[0], (const xmlChar *) "type") ) strcpy(attrib_type,  (const char *)attrs[1]);
+    else if( !xmlStrcmp(attrs[0], (const xmlChar *) "role") ) strcpy(attrib_role,  (const char *)attrs[1]);
     attrs = &attrs[2];
   }
 
   /* save data for each osm element */
-  if(!xmlStrcmp(name, (const xmlChar *)"node")) {
+  if( !xmlStrcmp(name, (const xmlChar *) "node") ){
     element_node_active = 1;
     sqlite3_bind_int64 (stmt_insert_nodes, 1, attrib_id);
     sqlite3_bind_double(stmt_insert_nodes, 2, attrib_lat);
     sqlite3_bind_double(stmt_insert_nodes, 3, attrib_lon);
-    if( sqlite3_step(stmt_insert_nodes)==SQLITE_DONE ) sqlite3_reset(stmt_insert_nodes);
+    rc = sqlite3_step(stmt_insert_nodes);
+    if( rc==SQLITE_DONE ){
+      sqlite3_reset(stmt_insert_nodes);
+    }else{
+      abort_db_error(rc);
+    }
   }
-  else if(!xmlStrcmp(name, (const xmlChar *)"way")) {
+  else if( !xmlStrcmp(name, (const xmlChar *) "way") ){
     element_way_active = 1;
     node_order = 0;
   }
-  else if(!xmlStrcmp(name, (const xmlChar *)"relation")) {
+  else if( !xmlStrcmp(name, (const xmlChar *) "relation") ){
     element_relation_active = 1;
     member_order = 0;
   }
-  else if(!xmlStrcmp(name, (const xmlChar *)"tag")) {
-    if(element_node_active) {
+  else if( !xmlStrcmp(name, (const xmlChar *) "tag") ){
+    if( element_node_active ){
       sqlite3_bind_int64(stmt_insert_node_tags, 1, attrib_id);
       sqlite3_bind_text (stmt_insert_node_tags, 2, attrib_k, -1, NULL);
       sqlite3_bind_text (stmt_insert_node_tags, 3, attrib_v, -1, NULL);
-      if( sqlite3_step(stmt_insert_node_tags)==SQLITE_DONE ) sqlite3_reset(stmt_insert_node_tags);
+      rc = sqlite3_step(stmt_insert_node_tags);
+      if( rc==SQLITE_DONE ){
+        sqlite3_reset(stmt_insert_node_tags);
+      }else{
+        abort_db_error(rc);
+      }
     }
-    if(element_way_active) {
+    if( element_way_active ){
       sqlite3_bind_int64(stmt_insert_way_tags, 1, attrib_id);
       sqlite3_bind_text (stmt_insert_way_tags, 2, attrib_k, -1, NULL);
       sqlite3_bind_text (stmt_insert_way_tags, 3, attrib_v, -1, NULL);
-      if( sqlite3_step(stmt_insert_way_tags)==SQLITE_DONE ) sqlite3_reset(stmt_insert_way_tags);
+      rc = sqlite3_step(stmt_insert_way_tags);
+      if( rc==SQLITE_DONE ){
+        sqlite3_reset(stmt_insert_way_tags);
+      }else{
+        abort_db_error(rc);
+      }
     }
-    if(element_relation_active) {
+    if( element_relation_active ){
       sqlite3_bind_int64(stmt_insert_relation_tags, 1, attrib_id);
       sqlite3_bind_text (stmt_insert_relation_tags, 2, attrib_k, -1, NULL);
       sqlite3_bind_text (stmt_insert_relation_tags, 3, attrib_v, -1, NULL);
-      if( sqlite3_step(stmt_insert_relation_tags)==SQLITE_DONE ) sqlite3_reset(stmt_insert_relation_tags);
+      rc = sqlite3_step(stmt_insert_relation_tags);
+      if( rc==SQLITE_DONE ){
+        sqlite3_reset(stmt_insert_relation_tags);
+      }else{
+        abort_db_error(rc);
+      }
     }
   }
-  else if(!xmlStrcmp(name, (const xmlChar *)"nd")) {
-    if(element_way_active) {
+  else if( !xmlStrcmp(name, (const xmlChar *) "nd") ){
+    if( element_way_active ){
       node_order++;
       sqlite3_bind_int64(stmt_insert_way_nodes, 1, attrib_id);
       sqlite3_bind_int64(stmt_insert_way_nodes, 2, attrib_ref);
       sqlite3_bind_int  (stmt_insert_way_nodes, 3, node_order);
-      if( sqlite3_step(stmt_insert_way_nodes)==SQLITE_DONE ) sqlite3_reset(stmt_insert_way_nodes);
+      rc = sqlite3_step(stmt_insert_way_nodes);
+      if( rc==SQLITE_DONE ){
+        sqlite3_reset(stmt_insert_way_nodes);
+      }else{
+        abort_db_error(rc);
+      }
     }
   }
-  else if(!xmlStrcmp(name, (const xmlChar *)"member")) {
-    if(element_relation_active) {
+  else if( !xmlStrcmp(name, (const xmlChar *) "member") ){
+    if( element_relation_active ){
       member_order++;
       sqlite3_bind_int64(stmt_insert_relation_members, 1, attrib_id);
       sqlite3_bind_text (stmt_insert_relation_members, 2, attrib_type, -1, NULL);
       sqlite3_bind_int64(stmt_insert_relation_members, 3, attrib_ref);
       sqlite3_bind_text (stmt_insert_relation_members, 4, attrib_role, -1, NULL);
       sqlite3_bind_int  (stmt_insert_relation_members, 5, member_order);
-      if( sqlite3_step(stmt_insert_relation_members)==SQLITE_DONE ) sqlite3_reset(stmt_insert_relation_members);
+      rc = sqlite3_step(stmt_insert_relation_members);
+      if( rc==SQLITE_DONE ){
+        sqlite3_reset(stmt_insert_relation_members);
+      }else{
+        abort_db_error(rc);
+      }
     }
   }
 }
 
 void end_element_callback(void *user_data, const xmlChar *name) {
-  if     (!xmlStrcmp(name, (const xmlChar *)"node"))     element_node_active     = 0;
-  else if(!xmlStrcmp(name, (const xmlChar *)"way"))      element_way_active      = 0;
-  else if(!xmlStrcmp(name, (const xmlChar *)"relation")) element_relation_active = 0;
+  if     ( !xmlStrcmp(name, (const xmlChar *) "node") )     element_node_active     = 0;
+  else if( !xmlStrcmp(name, (const xmlChar *) "way") )      element_way_active      = 0;
+  else if( !xmlStrcmp(name, (const xmlChar *) "relation") ) element_relation_active = 0;
 }
 
 /*
@@ -177,32 +217,29 @@ void create_tables() {
   " key          TEXT,                 -- tag key\n"
   " value        TEXT                  -- tag value\n"
   ");\n",
-  NULL, NULL, &zErrMsg);
-  if( rc!=SQLITE_OK ){
-    fprintf(stderr, "SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
+  NULL, NULL, NULL);
+  if( rc!=SQLITE_OK ) abort_db_error(rc);
 }
 
 void create_prep_stmt() {
-  sqlite3_prepare_v2(db,
-  "INSERT INTO nodes (node_id,lat,lon) VALUES (?1,?2,?3)",
-  -1, &stmt_insert_nodes, NULL);
-  sqlite3_prepare_v2(db,
-  "INSERT INTO node_tags (node_id,key,value) VALUES (?1,?2,?3)",
-  -1, &stmt_insert_node_tags, NULL);
-  sqlite3_prepare_v2(db,
-  "INSERT INTO way_nodes (way_id,node_id,node_order) VALUES (?1,?2,?3)",
-  -1, &stmt_insert_way_nodes, NULL);
-  sqlite3_prepare_v2(db,
-  "INSERT INTO way_tags (way_id,key,value) VALUES (?1,?2,?3)",
-  -1, &stmt_insert_way_tags, NULL);
-  sqlite3_prepare_v2(db,
-  "INSERT INTO relation_members (relation_id,type,ref,role,member_order) VALUES (?1,?2,?3,?4,?5)",
-  -1, &stmt_insert_relation_members, NULL);
-  sqlite3_prepare_v2(db,
-  "INSERT INTO relation_tags (relation_id,key,value) VALUES (?1,?2,?3)",
-  -1, &stmt_insert_relation_tags, NULL);
+  #define SQL_INSERT_NODES "INSERT INTO nodes (node_id,lat,lon) VALUES (?1,?2,?3)"
+  rc = sqlite3_prepare_v2(db, SQL_INSERT_NODES, -1, &stmt_insert_nodes, NULL);
+  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  #define SQL_INSERT_NODE_TAGS "INSERT INTO node_tags (node_id,key,value) VALUES (?1,?2,?3)"
+  rc = sqlite3_prepare_v2(db, SQL_INSERT_NODE_TAGS, -1, &stmt_insert_node_tags, NULL);
+  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  #define SQL_INSERT_WAY_NODES "INSERT INTO way_nodes (way_id,node_id,node_order) VALUES (?1,?2,?3)"
+  rc = sqlite3_prepare_v2(db, SQL_INSERT_WAY_NODES, -1, &stmt_insert_way_nodes, NULL);
+  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  #define SQL_INSERT_WAY_TAGS "INSERT INTO way_tags (way_id,key,value) VALUES (?1,?2,?3)"
+  rc = sqlite3_prepare_v2(db, SQL_INSERT_WAY_TAGS, -1, &stmt_insert_way_tags, NULL);
+  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  #define SQL_INSERT_RELATION_MEMBERS "INSERT INTO relation_members (relation_id,type,ref,role,member_order) VALUES (?1,?2,?3,?4,?5)"
+  rc = sqlite3_prepare_v2(db, SQL_INSERT_RELATION_MEMBERS, -1, &stmt_insert_relation_members, NULL);
+  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  #define SQL_INSERT_RELATION_TAGS "INSERT INTO relation_tags (relation_id,key,value) VALUES (?1,?2,?3)"
+  rc = sqlite3_prepare_v2(db, SQL_INSERT_RELATION_TAGS, -1, &stmt_insert_relation_tags, NULL);
+  if( rc!=SQLITE_OK ) abort_db_error(rc);
 }
 
 void destroy_prep_stmt() {
@@ -227,11 +264,8 @@ void create_index() {
   "CREATE INDEX relation_members__type        ON relation_members (type, ref);\n"
   "CREATE INDEX relation_tags__relation_id    ON relation_tags (relation_id);\n"
   "CREATE INDEX relation_tags__key            ON relation_tags (key);\n",
-  NULL, NULL, &zErrMsg);
-  if( rc!=SQLITE_OK ){
-    fprintf(stderr, "SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
+  NULL, NULL, NULL);
+  if( rc!=SQLITE_OK ) abort_db_error(rc);
 }
 
 void create_sindex() {
@@ -246,11 +280,8 @@ void create_sindex() {
   "LEFT JOIN nodes     ON way_nodes.node_id=nodes.node_id\n"
   "WHERE way_tags.key='highway'\n"
   "GROUP BY way_tags.way_id;\n",
-  NULL, NULL, &zErrMsg);
-  if( rc!=SQLITE_OK ){
-    fprintf(stderr, "SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
+  NULL, NULL, NULL);
+  if( rc!=SQLITE_OK ) abort_db_error(rc);
 }
 
 /*
@@ -274,37 +305,33 @@ int main(int argc, char **argv){
 
   /* Database connection */
   rc = sqlite3_open(argv[2], &db);
-  if( rc ){
-    fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-    sqlite3_close(db);
-    return EXIT_FAILURE;
-  }
-  sqlite3_exec(db, "PRAGMA journal_mode = OFF", NULL, NULL, NULL);
+  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  sqlite3_exec(db, "PRAGMA journal_mode = OFF", NULL, NULL, NULL); /* db tuning */
   sqlite3_exec(db, "PRAGMA page_size = 65536", NULL, NULL, NULL);
 
   /* SAX handler */
-  xmlSAXHandler sh = { 0 }; /* initialize all fields to zero */
-  sh.startElement = start_element_callback;  /* register callback functions */
+  xmlSAXHandler sh = { 0 };                 /* initialize all fields to zero   */
+  sh.startElement = start_element_callback; /* register callback functions     */
   sh.endElement = end_element_callback;
-  xmlParserCtxtPtr ctxt;    /* create the context */
-  if ((ctxt = xmlCreateFileParserCtxt(argv[1])) == NULL) {
+  xmlParserCtxtPtr ctxt;                    /* create context                  */
+  if( (ctxt = xmlCreateFileParserCtxt(argv[1]))==NULL ){
     fprintf(stderr, "SAX Error : creating context failed\n");
     return EXIT_FAILURE;
   }
-  ctxt->sax = &sh;          /* register sax handler with the context */
+  ctxt->sax = &sh;                          /* register sax handler in context */
 
   /* Read the data */
   printf("reading '%s' into '%s'...\n", argv[1], argv[2]);
   sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
-  create_tables();         /* create tables                        */
-  create_prep_stmt();      /* create prepared insert statements    */
-  xmlParseDocument(ctxt);  /* read and parse the XML document      */
-  if (!ctxt->wellFormed) fprintf(stderr, "XML document isn't well formed\n");
-  if (flag_create_index) create_index();   /* create indexes       */
-  if (flag_create_sindex) create_sindex(); /* create spatial index */
+  create_tables();         /* create tables                         */
+  create_prep_stmt();      /* create prepared insert statements     */
+  xmlParseDocument(ctxt);  /* read and parse the XML document       */
+  if( !ctxt->wellFormed ) fprintf(stderr, "XML document isn't well formed\n");
+  if( flag_create_index ) create_index();   /* create indexes       */
+  if( flag_create_sindex ) create_sindex(); /* create spatial index */
   sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
-  destroy_prep_stmt();     /* destroy prepared statements          */
-  sqlite3_close(db);       /* close the database                   */
+  destroy_prep_stmt();     /* destroy prepared statements           */
+  sqlite3_close(db);       /* close the database                    */
 
   return EXIT_SUCCESS;
 }
