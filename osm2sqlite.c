@@ -291,16 +291,19 @@ int main(int argc, char **argv){
   /* Parameter check */
   int flag_create_index = 1;
   int flag_create_sindex = 0;
-  if( argc!=3 && argc!=4 ){
+  if( argc==3 || argc==4 ){
+    if( argc==4 ){
+      if( strcmp("-n", argv[3])==0 || strcmp("--no-index", argv[3])==0 ){
+        flag_create_index = 0;
+      }
+      if( strcmp("-s", argv[3])==0 || strcmp("--spatial-index", argv[3])==0 ){
+        flag_create_index = 1;
+        flag_create_sindex = 1;
+      }
+    }
+  }else{
     fprintf(stderr, OSM2SQLITE_HELP_INFO);
     return EXIT_FAILURE;
-  }
-  if( argc==4 && ( strcmp("-n", argv[3])==0 || strcmp("--no-index", argv[3])==0 ) ){
-    flag_create_index = 0;
-  }
-  if( argc==4 && ( strcmp("-s", argv[3])==0 || strcmp("--spatial-index", argv[3])==0 ) ){
-    flag_create_index = 1;
-    flag_create_sindex = 1;
   }
 
   /* Database connection */
