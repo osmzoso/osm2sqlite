@@ -164,15 +164,15 @@ osm2sqlite input.osm output.db --no-index
 
 ## Create a separate Database with all addresses
 
-Required database name: **osm.sqlite3**
+An existing database with the name **osm.sqlite3** is required.
 
-With the command
 ```
+osm2sqlite germany.osm osm.sqlite3
 sqlite3 < address_database.sql
 ```
-a new database **osm_addr.sqlite3** with all addresses is created.
+creates an additional database **osm_addr.sqlite3** with all addresses.
 
-The database contains 3 tables:  
+This database contains 3 tables:  
 Table **addr_street** contains postcode, city, street and boundingbox of the street.  
 Table **addr_housenumber** contains the coordinates of each housenumber.  
 Table **addr_street_highway** contains the **highway**-*way_id* of the street.  
