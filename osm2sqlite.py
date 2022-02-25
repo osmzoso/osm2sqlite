@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 #
-# Reads OpenStreetMap data in XML format into a SQLite database
+# osm2sqlite - Reads OpenStreetMap XML data into a SQLite database
 #
-import xml.sax, sqlite3, time, sys, os
+# Copyright (C) 2021-2022 Herbert Gläser
+#
+import xml.sax, sqlite3, sys
 
 class OsmHandler(xml.sax.ContentHandler):
     """
@@ -71,36 +73,41 @@ class OsmHandler(xml.sax.ContentHandler):
 # Main
 #
 if __name__ == '__main__':
-    # filename of the database
-    filename_db = 'osm.sqlite3'
     # flag creating index
     flag_create_index = True
+    flag_create_sindex = False
     # read argv parameter
-    if len(sys.argv) > 1:
+    if len(sys.argv)==3 or len(sys.argv)==4:
         # filename of the osm xml file
         filename_xml = sys.argv[1]
+        filename_db  = sys.argv[2]
         # omit creating index
-        if len(sys.argv) > 2:
-            if sys.argv[2] in ('--no_index','-n'):
+        if len(sys.argv)==4:
+            if sys.argv[3] in ('-n','--no-index'):
                 flag_create_index = False
+            if sys.argv[3] in ('-s','--spatial-index'):
+                flag_create_index = True
+                flag_create_sindex = True
     else:
         # print help and exit
-        print(__file__, '\n')
-        print('Reads OpenStreetMap data in XML format')
-        print('into a SQLite database "osm.sqlite3".', '\n')
-        print('usage:')
-        print('python', __file__, 'input.osm', '[--no_index|-n]')
+        print(__file__, '(Version 0.7.0)\n')
+        print('Reads OpenStreetMap XML data into a SQLite database.\n')
+        print('Usage:')
+        print('python', __file__, 'FILE_OSM_XML FILE_SQLITE_DB [INDEX]\n')
+        print('Index control:')
+        print(' -n, --no-index       No indexes are created')
+        print(' -s, --spatial-index  Indexes and spatial index are created')
         sys.exit(1)
-    # delete old database file if exists
-    if os.path.exists(filename_db):
-        os.remove(filename_db)
-        print(time.strftime('%H:%M:%S', time.localtime()), 'existing file '+filename_db+' removed')
     # connect to the database
     db_connect = sqlite3.connect(filename_db)
     db = db_connect.cursor()   # new database cursor
+    # tuning database
+    db.execute('PRAGMA journal_mode = OFF');
+    db.execute('PRAGMA page_size = 65536');
     # start
-    print(time.strftime('%H:%M:%S', time.localtime()), 'reading '+filename_xml+'...')
+    print("reading '"+filename_xml+"' into '"+filename_db+"'...")
     # create all tables
+    db.execute('DROP TABLE IF EXISTS nodes')
     db.execute('''
     CREATE TABLE nodes (
      node_id      INTEGER PRIMARY KEY,  -- node ID
@@ -108,6 +115,7 @@ if __name__ == '__main__':
      lat          REAL                  -- latitude
     )
     ''')
+    db.execute('DROP TABLE IF EXISTS node_tags')
     db.execute('''
     CREATE TABLE node_tags (
      node_id      INTEGER,              -- node ID
@@ -115,6 +123,7 @@ if __name__ == '__main__':
      value        TEXT                  -- tag value
     )
     ''')
+    db.execute('DROP TABLE IF EXISTS way_nodes')
     db.execute('''
     CREATE TABLE way_nodes (
      way_id       INTEGER,              -- way ID
@@ -122,6 +131,7 @@ if __name__ == '__main__':
      node_order   INTEGER               -- node order
     )
     ''')
+    db.execute('DROP TABLE IF EXISTS way_tags')
     db.execute('''
     CREATE TABLE way_tags (
      way_id       INTEGER,              -- way ID
@@ -129,6 +139,7 @@ if __name__ == '__main__':
      value        TEXT                  -- tag value
     )
     ''')
+    db.execute('DROP TABLE IF EXISTS relation_members')
     db.execute('''
     CREATE TABLE relation_members (
      relation_id  INTEGER,              -- relation ID
@@ -138,6 +149,7 @@ if __name__ == '__main__':
      member_order INTEGER               -- member order
     )
     ''')
+    db.execute('DROP TABLE IF EXISTS relation_tags')
     db.execute('''
     CREATE TABLE relation_tags (
      relation_id  INTEGER,              -- relation ID
@@ -158,7 +170,7 @@ if __name__ == '__main__':
     db_connect.commit()
     # create index
     if flag_create_index:
-        print(time.strftime('%H:%M:%S', time.localtime()), 'creating index...')
+        print('creating index...')
         db.execute('CREATE INDEX node_tags__node_id ON node_tags (node_id)')
         db.execute('CREATE INDEX node_tags__key     ON node_tags (key)')
         db.execute('CREATE INDEX way_tags__way_id   ON way_tags (way_id)')
@@ -170,5 +182,18 @@ if __name__ == '__main__':
         db.execute('CREATE INDEX relation_tags__relation_id    ON relation_tags ( relation_id )')
         db.execute('CREATE INDEX relation_tags__key            ON relation_tags ( key )')
         db_connect.commit()
-    # finish
-    print(time.strftime('%H:%M:%S', time.localtime()), 'finished')
+    # create spatial index
+    if flag_create_sindex:
+        print('creating spatial index...')
+        db.execute('DROP TABLE IF EXISTS highway')
+        db.execute('CREATE VIRTUAL TABLE highway USING rtree( way_id, min_lat, max_lat, min_lon, max_lon )')
+        db.execute('''
+        INSERT INTO highway (way_id,min_lat,       max_lat,       min_lon,       max_lon)
+        SELECT      way_tags.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)
+        FROM      way_tags
+        LEFT JOIN way_nodes ON way_tags.way_id=way_nodes.way_id
+        LEFT JOIN nodes     ON way_nodes.node_id=nodes.node_id
+        WHERE way_tags.key='highway'
+        GROUP BY way_tags.way_id
+        ''')
+        db_connect.commit()
