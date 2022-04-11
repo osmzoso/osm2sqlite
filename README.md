@@ -92,7 +92,7 @@ value        | TEXT                | tag value
 
 The command
 ```
-sqlite3 input.osm output.db --spatial-index
+osm2sqlite input.osm output.db --spatial-index
 ```
 creates an additional [R*Tree index](https://www.sqlite.org/rtree.html) **highway** for
 all ways with *key='highway'*.
