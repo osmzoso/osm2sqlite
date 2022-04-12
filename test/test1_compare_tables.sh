@@ -24,10 +24,12 @@ python ../osm2sqlite.py
 echo "----------------------------------------------"
 echo "Read OSM XML $file_osm_xml"
 echo "----------------------------------------------"
+set -x              # activate bash debugging mode
 rm -f osm_c.db
 osm2sqlite $file_osm_xml osm_c.db
 rm -f osm_py.db
 python ../osm2sqlite.py $file_osm_xml osm_py.db
+set +x              # stop bash debugging mode
 # Print size and MD5-Hash of the databases
 ls -l *.db
 md5sum *.db
@@ -107,3 +109,4 @@ echo "$sql_shell" | sqlite3
 
 # clean up
 rm -f osm_c.db osm_py.db
+
