@@ -13,16 +13,15 @@
 #include <libxml/parserInternals.h>
 #include "sqlite3.h"
 
-#define OSM2SQLITE_VERSION "0.7.0"
+#define OSM2SQLITE_VERSION "0.7.1"
 #define OSM2SQLITE_HELP_INFO \
-"osm2sqlite (Version " OSM2SQLITE_VERSION ")\n\n" \
+"osm2sqlite " OSM2SQLITE_VERSION " " \
+"(SQLite " SQLITE_VERSION ", compiled " __DATE__ " " __TIME__ ")\n\n" \
 "Reads OpenStreetMap XML data into a SQLite database.\n\n" \
 "Usage:\nosm2sqlite FILE_OSM_XML FILE_SQLITE_DB [INDEX]\n\n" \
 "Index control:\n" \
 " -n, --no-index       No indexes are created\n" \
-" -s, --spatial-index  Indexes and spatial index are created\n\n" \
-"(SQLite Version " SQLITE_VERSION ")\n" \
-"(compile time: " __DATE__ " " __TIME__ "  gcc " __VERSION__ ")\n"
+" -s, --spatial-index  Indexes and spatial index are created\n"
 
 /*
 ** Public variables
@@ -252,7 +251,6 @@ void destroy_prep_stmt() {
 }
 
 void create_index() {
-  printf("creating indexes...\n");
   rc = sqlite3_exec(db,
   "CREATE INDEX node_tags__node_id            ON node_tags (node_id);\n"
   "CREATE INDEX node_tags__key                ON node_tags (key);\n"
@@ -269,7 +267,6 @@ void create_index() {
 }
 
 void create_sindex() {
-  printf("creating spatial index...\n");
   rc = sqlite3_exec(db,
   "DROP TABLE IF EXISTS highway;\n"
   "CREATE VIRTUAL TABLE highway USING rtree( way_id, min_lat, max_lat, min_lon, max_lon );\n"
@@ -321,10 +318,10 @@ int main(int argc, char **argv){
     fprintf(stderr, "SAX Error : creating context failed\n");
     return EXIT_FAILURE;
   }
+  xmlCtxtUseOptions(ctxt, XML_PARSE_NOENT); /* substitute entities, e.g. &amp; */
   ctxt->sax = &sh;                          /* register sax handler in context */
 
   /* Read the data */
-  printf("reading '%s' into '%s'...\n", argv[1], argv[2]);
   sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
   create_tables();         /* create tables                         */
   create_prep_stmt();      /* create prepared insert statements     */

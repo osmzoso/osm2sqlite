@@ -1,7 +1,8 @@
 #
 # Makefile osm2sqlite
 #
-# Compiler:
+# Files "sqlite3.c" and "sqlite3.h" required
+#
 CC = gcc
 CFLAGS = -Wall -Os -s
 DSQLITE = -DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION -DSQLITE_ENABLE_RTREE

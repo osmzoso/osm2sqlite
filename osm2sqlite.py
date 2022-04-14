@@ -90,10 +90,10 @@ if __name__ == '__main__':
                 flag_create_sindex = True
     else:
         # print help and exit
-        print(__file__, '(Version 0.7.0)\n')
+        print('osm2sqlite.py 0.7.1\n')
         print('Reads OpenStreetMap XML data into a SQLite database.\n')
         print('Usage:')
-        print('python', __file__, 'FILE_OSM_XML FILE_SQLITE_DB [INDEX]\n')
+        print('python osm2sqlite.py FILE_OSM_XML FILE_SQLITE_DB [INDEX]\n')
         print('Index control:')
         print(' -n, --no-index       No indexes are created')
         print(' -s, --spatial-index  Indexes and spatial index are created')
@@ -104,8 +104,6 @@ if __name__ == '__main__':
     # tuning database
     db.execute('PRAGMA journal_mode = OFF');
     db.execute('PRAGMA page_size = 65536');
-    # start
-    print("reading '"+filename_xml+"' into '"+filename_db+"'...")
     # create all tables
     db.execute('DROP TABLE IF EXISTS nodes')
     db.execute('''
@@ -170,7 +168,6 @@ if __name__ == '__main__':
     db_connect.commit()
     # create index
     if flag_create_index:
-        print('creating index...')
         db.execute('CREATE INDEX node_tags__node_id ON node_tags (node_id)')
         db.execute('CREATE INDEX node_tags__key     ON node_tags (key)')
         db.execute('CREATE INDEX way_tags__way_id   ON way_tags (way_id)')
@@ -184,7 +181,6 @@ if __name__ == '__main__':
         db_connect.commit()
     # create spatial index
     if flag_create_sindex:
-        print('creating spatial index...')
         db.execute('DROP TABLE IF EXISTS highway')
         db.execute('CREATE VIRTUAL TABLE highway USING rtree( way_id, min_lat, max_lat, min_lon, max_lon )')
         db.execute('''
@@ -197,3 +193,4 @@ if __name__ == '__main__':
         GROUP BY way_tags.way_id
         ''')
         db_connect.commit()
+

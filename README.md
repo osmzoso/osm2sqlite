@@ -1,18 +1,27 @@
 # osm2sqlite
 
-Reads [OpenStreetMap XML data](https://wiki.openstreetmap.org/wiki/OSM_XML) into a SQLite database.
+Reads OpenStreetMap XML data into a SQLite database.
 
 The command
 ```
 osm2sqlite input.osm output.db
 ```
-reads the OSM XML file **input.osm** and creates in the database **output.db**
-the tables and indexes below.
+reads the [OSM XML](https://wiki.openstreetmap.org/wiki/OSM_XML) file
+**input.osm** and creates in the database **output.db** the tables and indexes below.
+
+`osm2sqlite input.osm output.db --no-index` suppresses the creation of the indexes.
+
+The database can be easily queried with the [SQLite CLI](https://www.sqlite.org/cli.html) tool.
+
+---
 
 > Time measurement (Intel Core i5 1.6 GHz):  
 > saarland.osm (700 MB) - about 32 seconds  
 > germany.osm (60 GB) - about 1 hour 10 minutes  
 
+---
+
+## Tables and Indexes
 
 ### nodes
 
@@ -87,7 +96,7 @@ value        | TEXT                | tag value
 
 ---
 
-## Spatial Index
+## Add a spatial index
 
 
 The command
@@ -153,58 +162,11 @@ WHERE way_id=79235038
 
 ---
 
-## Suppress creation of all indexes
+## Add tables with all addresses
 
-```
-osm2sqlite input.osm output.db --no-index
-```
+`sqlite3 output.db < add_addr.sql` generates 2 tables:
 
-
----
-
-## Create a separate Database with all addresses
-
-An existing database with the name **osm.sqlite3** is required.
-
-```
-osm2sqlite germany.osm osm.sqlite3
-sqlite3 < address_database.sql
-```
-creates an additional database **osm_addr.sqlite3** with all addresses.
-
-This database contains 3 tables:  
 Table **addr_street** contains postcode, city, street and boundingbox of the street.  
 Table **addr_housenumber** contains the coordinates of each housenumber.  
-Table **addr_street_highway** contains the **highway**-*way_id* of the street.  
+In addition, a view **addr_view** is created.  
 
-
----
-
-## Query the database
-
-To query the database with the [SQLite CLI](https://www.sqlite.org/cli.html),
-a simple file must be created with the SQL command, e.g. named *query.sql*:
-
-``` sql
---
--- List of all cell phone antennas
---
--- https://wiki.openstreetmap.org/wiki/DE:Key:communication:mobile_phone
---
-.header on
-.mode tabs
-
-SELECT t.node_id,t.key,t.value,n.lon,n.lat
-FROM node_tags AS t
-LEFT JOIN nodes AS n ON t.node_id=n.node_id
-WHERE t.key='communication:mobile_phone' AND t.value='yes'
-ORDER BY t.node_id
-;
-
-```
-
-then
-
-```
-sqlite3 osm.sqlite3 < query.sql
-```
