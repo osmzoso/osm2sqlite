@@ -9,9 +9,12 @@ osm2sqlite input.osm output.db
 reads the [OSM XML](https://wiki.openstreetmap.org/wiki/OSM_XML) file
 **input.osm** and creates in the database **output.db** the tables and indexes below.
 
-`osm2sqlite input.osm output.db --no-index` suppresses the creation of the indexes.
+(The command `osm2sqlite input.osm output.db --no-index` suppresses the creation of the indexes)
 
-The database can be easily queried with the [SQLite CLI](https://www.sqlite.org/cli.html) tool.
+The database can be easily queried with the [SQLite CLI tool](https://www.sqlite.org/cli.html).
+
+|[**Download the latest version**](https://github.com/osmzoso/osm2sqlite/releases/latest)|
+|----------------------------------------------------------------------------------------|
 
 ---
 
@@ -96,6 +99,17 @@ value        | TEXT                | tag value
 
 ---
 
+## Add tables with all addresses
+
+The command `sqlite3 output.db < add_addr.sql` generates 2 tables:
+
+Table **addr_street** contains postcode, city, street and boundingbox of the street.  
+Table **addr_housenumber** contains the coordinates of each housenumber.  
+In addition, a view **addr_view** is created.  
+
+
+---
+
 ## Add a spatial index
 
 
@@ -158,15 +172,4 @@ SELECT min_lon,max_lon,min_lat,max_lat
 FROM highway
 WHERE way_id=79235038
 ```
-
-
----
-
-## Add tables with all addresses
-
-`sqlite3 output.db < add_addr.sql` generates 2 tables:
-
-Table **addr_street** contains postcode, city, street and boundingbox of the street.  
-Table **addr_housenumber** contains the coordinates of each housenumber.  
-In addition, a view **addr_view** is created.  
 
