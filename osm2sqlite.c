@@ -13,12 +13,14 @@
 #include <libxml/parserInternals.h>
 #include "sqlite3.h"
 
-#define OSM2SQLITE_VERSION "0.7.1"
-#define OSM2SQLITE_HELP_INFO \
-"osm2sqlite " OSM2SQLITE_VERSION " " \
-"(SQLite " SQLITE_VERSION ", compiled " __DATE__ " " __TIME__ ")\n\n" \
-"Reads OpenStreetMap XML data into a SQLite database.\n\n" \
-"Usage:\nosm2sqlite FILE_OSM_XML FILE_SQLITE_DB [INDEX]\n\n" \
+#define HELP \
+"osm2sqlite 0.7.2 " \
+"(SQLite " SQLITE_VERSION ", compiled " __DATE__ " " __TIME__ ")\n" \
+"\n" \
+"Reads OpenStreetMap XML data into a SQLite database.\n" \
+"\n" \
+"Usage:\nosm2sqlite FILE_OSM_XML FILE_SQLITE_DB [INDEX]\n" \
+"\n" \
 "Index control:\n" \
 " -n, --no-index       No indexes are created\n" \
 " -s, --spatial-index  Indexes and spatial index are created\n"
@@ -173,35 +175,30 @@ void end_element_callback(void *user_data, const xmlChar *name) {
 */
 void create_tables() {
   rc = sqlite3_exec(db,
-  "DROP TABLE IF EXISTS nodes;\n"
   "CREATE TABLE nodes (\n"
   " node_id      INTEGER PRIMARY KEY,  -- node ID\n"
   " lon          REAL,                 -- longitude\n"
   " lat          REAL                  -- latitude\n"
   ");\n"
 
-  "DROP TABLE IF EXISTS node_tags;\n"
   "CREATE TABLE node_tags (\n"
   " node_id      INTEGER,              -- node ID\n"
   " key          TEXT,                 -- tag key\n"
   " value        TEXT                  -- tag value\n"
   ");\n"
 
-  "DROP TABLE IF EXISTS way_nodes;\n"
   "CREATE TABLE way_nodes (\n"
   " way_id       INTEGER,              -- way ID\n"
   " node_id      INTEGER,              -- node ID\n"
   " node_order   INTEGER               -- node order\n"
   ");\n"
 
-  "DROP TABLE IF EXISTS way_tags;\n"
   "CREATE TABLE way_tags (\n"
   " way_id       INTEGER,              -- way ID\n"
   " key          TEXT,                 -- tag key\n"
   " value        TEXT                  -- tag value\n"
   ");\n"
 
-  "DROP TABLE IF EXISTS relation_members;\n"
   "CREATE TABLE relation_members (\n"
   " relation_id  INTEGER,              -- relation ID\n"
   " type         TEXT,                 -- type ('node','way','relation')\n"
@@ -210,7 +207,6 @@ void create_tables() {
   " member_order INTEGER               -- member order\n"
   ");\n"
 
-  "DROP TABLE IF EXISTS relation_tags;\n"
   "CREATE TABLE relation_tags (\n"
   " relation_id  INTEGER,              -- relation ID\n"
   " key          TEXT,                 -- tag key\n"
@@ -268,7 +264,6 @@ void create_index() {
 
 void create_sindex() {
   rc = sqlite3_exec(db,
-  "DROP TABLE IF EXISTS highway;\n"
   "CREATE VIRTUAL TABLE highway USING rtree( way_id, min_lat, max_lat, min_lon, max_lon );\n"
   "INSERT INTO highway (way_id,min_lat,       max_lat,       min_lon,       max_lon)\n"
   "SELECT      way_tags.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)\n"
@@ -299,7 +294,7 @@ int main(int argc, char **argv){
       }
     }
   }else{
-    fprintf(stderr, OSM2SQLITE_HELP_INFO);
+    printf(HELP);
     return EXIT_FAILURE;
   }
 

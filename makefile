@@ -1,7 +1,8 @@
 #
 # Makefile osm2sqlite
 #
-# Files "sqlite3.c" and "sqlite3.h" required
+# Additionally the files "sqlite3.c" and "sqlite3.h"
+# from the SQLite Amalgamation are required
 #
 CC = gcc
 CFLAGS = -Wall -Os -s

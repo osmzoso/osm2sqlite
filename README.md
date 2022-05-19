@@ -101,7 +101,7 @@ value        | TEXT                | tag value
 
 ## Add tables with all addresses
 
-The command `sqlite3 output.db < add_addr.sql` generates 2 tables:
+The command `sqlite3 output.db < ./query/add_addr.sql` generates 2 tables:
 
 Table **addr_street** contains postcode, city, street and boundingbox of the street.  
 Table **addr_housenumber** contains the coordinates of each housenumber.  
