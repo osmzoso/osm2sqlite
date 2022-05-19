@@ -15,7 +15,7 @@ file_osm_xml=$1
 echo "----------------------------------------------"
 echo "Help Output C-Version"
 echo "----------------------------------------------"
-osm2sqlite
+../osm2sqlite
 echo "----------------------------------------------"
 echo "Help Output Python-Version"
 echo "----------------------------------------------"
@@ -26,7 +26,7 @@ echo "Test1: Read OSM XML $file_osm_xml"
 echo "----------------------------------------------"
 rm -f osm_c.db osm_py.db
 set -x              # activate bash debugging mode
-osm2sqlite $file_osm_xml osm_c.db
+../osm2sqlite $file_osm_xml osm_c.db
 python ../osm2sqlite.py $file_osm_xml osm_py.db
 set +x              # stop bash debugging mode
 echo "Size and MD5-Hash of the databases:"
