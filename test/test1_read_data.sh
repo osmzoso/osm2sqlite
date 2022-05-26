@@ -19,7 +19,7 @@ echo "----------------------------------------------"
 echo "----------------------------------------------"
 echo "Help Output Python-Version"
 echo "----------------------------------------------"
-python ../osm2sqlite.py
+../osm2sqlite.py
 
 echo "----------------------------------------------"
 echo "Test1: Read OSM XML $file_osm_xml"
