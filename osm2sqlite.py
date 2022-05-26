@@ -6,7 +6,7 @@
 #
 import xml.sax, sqlite3, sys
 
-help = '''osm2sqlite.py 0.7.2
+help = '''osm2sqlite.py 0.7.3
 
 Reads OpenStreetMap XML data into a SQLite database.
 
@@ -16,6 +16,9 @@ python osm2sqlite.py FILE_OSM_XML FILE_SQLITE_DB [INDEX]
 Index control:
  -n, --no-index       No indexes are created
  -s, --spatial-index  Indexes and spatial index are created'''
+
+db_connect = None     # SQLite Database connection
+db         = None     # SQLite Database cursor
 
 class OsmHandler(xml.sax.ContentHandler):
     """
@@ -80,35 +83,7 @@ class OsmHandler(xml.sax.ContentHandler):
             self.relation_id = -1
             self.relation_member_order = 0
 
-#
-# Main
-#
-if __name__ == '__main__':
-    # flag creating index
-    flag_create_index = True
-    flag_create_sindex = False
-    # read argv parameter
-    if len(sys.argv)==3 or len(sys.argv)==4:
-        # filename of the osm xml file
-        filename_xml = sys.argv[1]
-        filename_db  = sys.argv[2]
-        # omit creating index
-        if len(sys.argv)==4:
-            if sys.argv[3] in ('-n','--no-index'):
-                flag_create_index = False
-            if sys.argv[3] in ('-s','--spatial-index'):
-                flag_create_index = True
-                flag_create_sindex = True
-    else:
-        print(help)
-        sys.exit(1)
-    # connect to the database
-    db_connect = sqlite3.connect(filename_db)
-    db = db_connect.cursor()   # new database cursor
-    # tuning database
-    db.execute('PRAGMA journal_mode = OFF');
-    db.execute('PRAGMA page_size = 65536');
-    # create all tables
+def add_tables():
     db.execute('''
     CREATE TABLE nodes (
      node_id      INTEGER PRIMARY KEY,  -- node ID
@@ -153,6 +128,64 @@ if __name__ == '__main__':
      value        TEXT                  -- tag value
     )
     ''')
+
+def add_std_index():
+    db.execute('CREATE INDEX node_tags__node_id            ON node_tags (node_id)')
+    db.execute('CREATE INDEX node_tags__key                ON node_tags (key)')
+    db.execute('CREATE INDEX way_tags__way_id              ON way_tags (way_id)')
+    db.execute('CREATE INDEX way_tags__key                 ON way_tags (key)')
+    db.execute('CREATE INDEX way_nodes__way_id             ON way_nodes (way_id)')
+    db.execute('CREATE INDEX way_nodes__node_id            ON way_nodes (node_id)')
+    db.execute('CREATE INDEX relation_members__relation_id ON relation_members (relation_id)')
+    db.execute('CREATE INDEX relation_members__type        ON relation_members (type, ref)')
+    db.execute('CREATE INDEX relation_tags__relation_id    ON relation_tags (relation_id)')
+    db.execute('CREATE INDEX relation_tags__key            ON relation_tags (key)')
+    db_connect.commit()
+
+def add_rtree(table):
+    db.execute('CREATE VIRTUAL TABLE '+table+' USING rtree(way_id, min_lat, max_lat, min_lon, max_lon)')
+    db.execute("""
+    INSERT INTO """+table+""" (way_id, min_lat, max_lat, min_lon, max_lon)
+    SELECT way_tags.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)
+    FROM way_tags
+    LEFT JOIN way_nodes ON way_tags.way_id=way_nodes.way_id
+    LEFT JOIN nodes ON way_nodes.node_id=nodes.node_id
+    WHERE way_tags.key='"""+table+"""'
+    GROUP BY way_tags.way_id
+    """)
+    db_connect.commit()
+
+#
+# Main
+#
+def main():
+    global db_connect, db
+    # flag creating index
+    flag_create_index = True
+    flag_create_sindex = False
+    # read argv parameter
+    if len(sys.argv)==3 or len(sys.argv)==4:
+        # filename of the osm xml file
+        filename_xml = sys.argv[1]
+        filename_db  = sys.argv[2]
+        # omit creating index
+        if len(sys.argv)==4:
+            if sys.argv[3] in ('-n','--no-index'):
+                flag_create_index = False
+            if sys.argv[3] in ('-s','--spatial-index'):
+                flag_create_index = True
+                flag_create_sindex = True
+    else:
+        print(help)
+        sys.exit(1)
+    # connect to the database
+    db_connect = sqlite3.connect(filename_db)
+    db = db_connect.cursor()   # new database cursor
+    # tuning database
+    db.execute('PRAGMA journal_mode = OFF');
+    db.execute('PRAGMA page_size = 65536');
+    # create all tables
+    add_tables()
     # create an XMLReader
     parser = xml.sax.make_parser()
     # turn off namespaces
@@ -166,28 +199,11 @@ if __name__ == '__main__':
     db_connect.commit()
     # create index
     if flag_create_index:
-        db.execute('CREATE INDEX node_tags__node_id ON node_tags (node_id)')
-        db.execute('CREATE INDEX node_tags__key     ON node_tags (key)')
-        db.execute('CREATE INDEX way_tags__way_id   ON way_tags (way_id)')
-        db.execute('CREATE INDEX way_tags__key      ON way_tags (key)')
-        db.execute('CREATE INDEX way_nodes__way_id  ON way_nodes (way_id)')
-        db.execute('CREATE INDEX way_nodes__node_id ON way_nodes (node_id)')
-        db.execute('CREATE INDEX relation_members__relation_id ON relation_members ( relation_id )')
-        db.execute('CREATE INDEX relation_members__type        ON relation_members ( type, ref )')
-        db.execute('CREATE INDEX relation_tags__relation_id    ON relation_tags ( relation_id )')
-        db.execute('CREATE INDEX relation_tags__key            ON relation_tags ( key )')
-        db_connect.commit()
+        add_std_index()
     # create spatial index
     if flag_create_sindex:
-        db.execute('CREATE VIRTUAL TABLE highway USING rtree( way_id, min_lat, max_lat, min_lon, max_lon )')
-        db.execute('''
-        INSERT INTO highway (way_id,min_lat,       max_lat,       min_lon,       max_lon)
-        SELECT      way_tags.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)
-        FROM      way_tags
-        LEFT JOIN way_nodes ON way_tags.way_id=way_nodes.way_id
-        LEFT JOIN nodes     ON way_nodes.node_id=nodes.node_id
-        WHERE way_tags.key='highway'
-        GROUP BY way_tags.way_id
-        ''')
-        db_connect.commit()
+        add_rtree('highway')
+
+if __name__ == "__main__":
+    main()
 

@@ -14,7 +14,7 @@
 #include "sqlite3.h"
 
 #define HELP \
-"osm2sqlite 0.7.2 " \
+"osm2sqlite 0.7.3 " \
 "(SQLite " SQLITE_VERSION ", compiled " __DATE__ " " __TIME__ ")\n" \
 "\n" \
 "Reads OpenStreetMap XML data into a SQLite database.\n" \
@@ -173,7 +173,7 @@ void end_element_callback(void *user_data, const xmlChar *name) {
 /*
 ** create tables, indexes and prepared insert statements
 */
-void create_tables() {
+void add_tables() {
   rc = sqlite3_exec(db,
   "CREATE TABLE nodes (\n"
   " node_id      INTEGER PRIMARY KEY,  -- node ID\n"
@@ -246,7 +246,7 @@ void destroy_prep_stmt() {
   sqlite3_finalize(stmt_insert_relation_tags);
 }
 
-void create_index() {
+void add_std_index() {
   rc = sqlite3_exec(db,
   "CREATE INDEX node_tags__node_id            ON node_tags (node_id);\n"
   "CREATE INDEX node_tags__key                ON node_tags (key);\n"
@@ -262,16 +262,162 @@ void create_index() {
   if( rc!=SQLITE_OK ) abort_db_error(rc);
 }
 
-void create_sindex() {
-  rc = sqlite3_exec(db,
-  "CREATE VIRTUAL TABLE highway USING rtree( way_id, min_lat, max_lat, min_lon, max_lon );\n"
-  "INSERT INTO highway (way_id,min_lat,       max_lat,       min_lon,       max_lon)\n"
-  "SELECT      way_tags.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)\n"
-  "FROM      way_tags\n"
+void add_rtree(char *table) {
+  char query[1000] =
+  "CREATE VIRTUAL TABLE ";strcat(query, table);strcat(query, " USING rtree(way_id, min_lat, max_lat, min_lon, max_lon);\n"
+  "INSERT INTO ");strcat(query, table);strcat(query, " (way_id, min_lat, max_lat, min_lon, max_lon)\n"
+  "SELECT way_tags.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)\n"
+  "FROM way_tags\n"
   "LEFT JOIN way_nodes ON way_tags.way_id=way_nodes.way_id\n"
-  "LEFT JOIN nodes     ON way_nodes.node_id=nodes.node_id\n"
-  "WHERE way_tags.key='highway'\n"
-  "GROUP BY way_tags.way_id;\n",
+  "LEFT JOIN nodes ON way_nodes.node_id=nodes.node_id\n"
+  "WHERE way_tags.key='");strcat(query, table);strcat(query, "'\n"
+  "GROUP BY way_tags.way_id;\n");
+  rc = sqlite3_exec(db, query, NULL, NULL, NULL);
+  if( rc!=SQLITE_OK ) abort_db_error(rc);
+}
+
+void add_addr() {
+  rc = sqlite3_exec(db,
+  "--\n"
+  "-- Create address tables with coordinates\n"
+  "--\n"
+  "BEGIN TRANSACTION;\n"
+  "--\n"
+  "DROP TABLE IF EXISTS addr_street;\n"
+  "DROP TABLE IF EXISTS addr_housenumber;\n"
+  "DROP VIEW IF EXISTS addr_view;\n"
+  "--\n"
+  "-- 1. Determine address data from way tags\n"
+  "--\n"
+  "CREATE TEMP TABLE tmp_addr_way (\n"
+  " way_id      INTEGER PRIMARY KEY,\n"
+  " postcode    TEXT,\n"
+  " city        TEXT,\n"
+  " street      TEXT,\n"
+  " housenumber TEXT\n"
+  ");\n"
+  "INSERT INTO tmp_addr_way\n"
+  " SELECT way_id,value AS postcode,'','',''\n"
+  " FROM way_tags WHERE key='addr:postcode'\n"
+  " ON CONFLICT(way_id) DO UPDATE SET postcode=excluded.postcode;\n"
+  "INSERT INTO tmp_addr_way\n"
+  " SELECT way_id,'',value AS city,'',''\n"
+  " FROM way_tags WHERE key='addr:city'\n"
+  " ON CONFLICT(way_id) DO UPDATE SET city=excluded.city;\n"
+  "INSERT INTO tmp_addr_way\n"
+  " SELECT way_id,'','',value AS street,''\n"
+  " FROM way_tags WHERE key='addr:street'\n"
+  " ON CONFLICT(way_id) DO UPDATE SET street=excluded.street;\n"
+  "INSERT INTO tmp_addr_way\n"
+  " SELECT way_id,'','','',value AS housenumber\n"
+  " FROM way_tags WHERE key='addr:housenumber'\n"
+  " ON CONFLICT(way_id) DO UPDATE SET housenumber=excluded.housenumber;\n"
+  "--\n"
+  "-- 2. Calculate coordinates of address data from way tags\n"
+  "--\n"
+  "CREATE TEMP TABLE tmp_addr_way_coordinates AS\n"
+  "SELECT way.way_id AS way_id,round(avg(n.lon),7) AS lon,round(avg(n.lat),7) AS lat\n"
+  "FROM tmp_addr_way AS way\n"
+  "LEFT JOIN way_nodes AS wn ON way.way_id=wn.way_id\n"
+  "LEFT JOIN nodes     AS n  ON wn.node_id=n.node_id\n"
+  "GROUP BY way.way_id;\n"
+  "CREATE INDEX tmp_addr_way_coordinates_way_id ON tmp_addr_way_coordinates (way_id);\n"
+  "--\n"
+  "-- 3. Determine address data from node tags\n"
+  "--\n"
+  "CREATE TEMP TABLE tmp_addr_node (\n"
+  " node_id     INTEGER PRIMARY KEY,\n"
+  " postcode    TEXT,\n"
+  " city        TEXT,\n"
+  " street      TEXT,\n"
+  " housenumber TEXT\n"
+  ");\n"
+  "INSERT INTO tmp_addr_node\n"
+  " SELECT node_id,value AS postcode,'','',''\n"
+  " FROM node_tags WHERE key='addr:postcode'\n"
+  " ON CONFLICT(node_id) DO UPDATE SET postcode=excluded.postcode;\n"
+  "INSERT INTO tmp_addr_node\n"
+  " SELECT node_id,'',value AS city,'',''\n"
+  " FROM node_tags WHERE key='addr:city'\n"
+  " ON CONFLICT(node_id) DO UPDATE SET city=excluded.city;\n"
+  "INSERT INTO tmp_addr_node\n"
+  " SELECT node_id,'','',value AS street,''\n"
+  " FROM node_tags WHERE key='addr:street'\n"
+  " ON CONFLICT(node_id) DO UPDATE SET street=excluded.street;\n"
+  "INSERT INTO tmp_addr_node\n"
+  " SELECT node_id,'','','',value AS housenumber\n"
+  " FROM node_tags WHERE key='addr:housenumber'\n"
+  " ON CONFLICT(node_id) DO UPDATE SET housenumber=excluded.housenumber;\n"
+  "--\n"
+  "-- 4. Create temporary overall table with all addresses\n"
+  "--\n"
+  "CREATE TEMP TABLE tmp_addr (\n"
+  " addr_id     INTEGER PRIMARY KEY,\n"
+  " way_id      INTEGER,\n"
+  " node_id     INTEGER,\n"
+  " postcode    TEXT,\n"
+  " city        TEXT,\n"
+  " street      TEXT,\n"
+  " housenumber TEXT,\n"
+  " lon         REAL,\n"
+  " lat         REAL\n"
+  ");\n"
+  "INSERT INTO tmp_addr (way_id,node_id,postcode,city,street,housenumber,lon,lat)\n"
+  " SELECT w.way_id,-1 AS node_id,w.postcode,w.city,w.street,w.housenumber,c.lon,c.lat\n"
+  " FROM tmp_addr_way AS w\n"
+  " LEFT JOIN tmp_addr_way_coordinates AS c ON w.way_id=c.way_id\n"
+  "UNION ALL\n"
+  " SELECT -1 AS way_id,n.node_id,n.postcode,n.city,n.street,n.housenumber,c.lon,c.lat\n"
+  " FROM tmp_addr_node AS n\n"
+  " LEFT JOIN nodes AS c ON n.node_id=c.node_id\n"
+  "ORDER BY postcode,city,street,housenumber;\n"
+  "--\n"
+  "-- 5. Create tables 'addr_street' and 'addr_housenumber' and view 'addr_view' (normalize tables)\n"
+  "--\n"
+  "CREATE TABLE addr_street (\n"
+  " street_id   INTEGER PRIMARY KEY,\n"
+  " postcode    TEXT,\n"
+  " city        TEXT,\n"
+  " street      TEXT,\n"
+  " min_lon     REAL,\n"
+  " min_lat     REAL,\n"
+  " max_lon     REAL,\n"
+  " max_lat     REAL\n"
+  ");\n"
+  "INSERT INTO addr_street (postcode,city,street,min_lon,min_lat,max_lon,max_lat)\n"
+  " SELECT postcode,city,street,min(lon),min(lat),max(lon),max(lat)\n"
+  " FROM tmp_addr\n"
+  " GROUP BY postcode,city,street;\n"
+  "CREATE INDEX addr_street_1 ON addr_street (postcode,city,street);\n"
+  "CREATE TABLE addr_housenumber (\n"
+  " housenumber_id INTEGER PRIMARY KEY,\n"
+  " street_id      INTEGER,\n"
+  " housenumber    TEXT,\n"
+  " lon            REAL,\n"
+  " lat            REAL,\n"
+  " way_id         INTEGER,\n"
+  " node_id        INTEGER\n"
+  ");\n"
+  "INSERT INTO addr_housenumber (street_id,housenumber,lon,lat,way_id,node_id)\n"
+  " SELECT s.street_id,a.housenumber,a.lon,a.lat,a.way_id,a.node_id\n"
+  " FROM tmp_addr AS a\n"
+  " LEFT JOIN addr_street AS s ON a.postcode=s.postcode AND a.city=s.city AND a.street=s.street;\n"
+  "CREATE INDEX addr_housenumber_1 ON addr_housenumber (street_id);\n"
+  "--\n"
+  "CREATE VIEW addr_view AS\n"
+  "SELECT s.street_id,s.postcode,s.city,s.street,h.housenumber,h.lon,h.lat,h.way_id,h.node_id\n"
+  "FROM addr_street AS s\n"
+  "LEFT JOIN addr_housenumber AS h ON s.street_id=h.street_id;\n"
+  "--\n"
+  "-- 6. Delete temporary tables\n"
+  "--\n"
+  "DROP TABLE tmp_addr_way;\n"
+  "DROP TABLE tmp_addr_way_coordinates;\n"
+  "DROP TABLE tmp_addr_node;\n"
+  "DROP TABLE tmp_addr;\n"
+  "--\n"
+  "COMMIT TRANSACTION;\n"
+  "\n",
   NULL, NULL, NULL);
   if( rc!=SQLITE_OK ) abort_db_error(rc);
 }
@@ -283,6 +429,7 @@ int main(int argc, char **argv){
   /* Parameter check */
   int flag_create_index = 1;
   int flag_create_sindex = 0;
+  int flag_addr = 0;
   if( argc==3 || argc==4 ){
     if( argc==4 ){
       if( strcmp("-n", argv[3])==0 || strcmp("--no-index", argv[3])==0 ){
@@ -292,6 +439,7 @@ int main(int argc, char **argv){
         flag_create_index = 1;
         flag_create_sindex = 1;
       }
+      if( strcmp("addr", argv[3])==0 ) flag_addr = 1;
     }
   }else{
     printf(HELP);
@@ -318,15 +466,17 @@ int main(int argc, char **argv){
 
   /* Read the data */
   sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
-  create_tables();         /* create tables                         */
+  add_tables();            /* create all tables                     */
   create_prep_stmt();      /* create prepared insert statements     */
   xmlParseDocument(ctxt);  /* read and parse the XML document       */
   if( !ctxt->wellFormed ) fprintf(stderr, "XML document isn't well formed\n");
-  if( flag_create_index ) create_index();   /* create indexes       */
-  if( flag_create_sindex ) create_sindex(); /* create spatial index */
+  if( flag_create_index ) add_std_index();       /* standard indexes                   */
+  if( flag_create_sindex ) add_rtree("highway"); /* R*Tree for ways with key='highway' */
   sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+  if( flag_addr ) add_addr();                    /* create address tables */
   destroy_prep_stmt();     /* destroy prepared statements           */
   sqlite3_close(db);       /* close the database                    */
 
   return EXIT_SUCCESS;
 }
+

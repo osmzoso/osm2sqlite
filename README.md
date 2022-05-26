@@ -9,7 +9,7 @@ osm2sqlite input.osm output.db
 reads the [OSM XML](https://wiki.openstreetmap.org/wiki/OSM_XML) file
 **input.osm** and creates in the database **output.db** the tables and indexes below.
 
-(The command `osm2sqlite input.osm output.db --no-index` suppresses the creation of the indexes)
+Linux read from stdin (example): `7z e -so germany.osm.bz2 | osm2sqlite - germany.db`
 
 The database can be easily queried with the [SQLite CLI tool](https://www.sqlite.org/cli.html).
 
@@ -18,9 +18,10 @@ The database can be easily queried with the [SQLite CLI tool](https://www.sqlite
 
 ---
 
-> Time measurement (Intel Core i5 1.6 GHz):  
-> saarland.osm (700 MB) - about 32 seconds  
-> germany.osm (60 GB) - about 1 hour 10 minutes  
+> Time measurement for **saarland.osm (700 MB)** (Intel(R) Pentium(R) Silver J5005 CPU @ 1.50GHz):  
+>
+> C-Version      : about 47 seconds  
+> Python-Version : about 2 minutes 36 seconds  
 
 ---
 
@@ -99,6 +100,15 @@ value        | TEXT                | tag value
 
 ---
 
+## Suppressing the index creation
+
+`osm2sqlite input.osm output.db --no-index` suppresses the creation of the indexes.
+
+Not recommended if the database is to be queried (e.g. if an rtree is to be created).
+
+
+---
+
 ## Add tables with all addresses
 
 The command `sqlite3 output.db < ./query/add_addr.sql` generates 2 tables:
@@ -123,13 +133,13 @@ all ways with *key='highway'*.
 Internally, the index is generated with the following commands:
 
 ``` sql
-CREATE VIRTUAL TABLE highway USING rtree( way_id, min_lat, max_lat, min_lon, max_lon );
+CREATE VIRTUAL TABLE highway USING rtree(way_id, min_lat, max_lat, min_lon, max_lon);
 
-INSERT INTO highway (way_id,min_lat,       max_lat,       min_lon,       max_lon)
-SELECT      way_tags.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)
-FROM      way_tags
+INSERT INTO highway (way_id, min_lat, max_lat, min_lon, max_lon)
+SELECT way_tags.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)
+FROM way_tags
 LEFT JOIN way_nodes ON way_tags.way_id=way_nodes.way_id
-LEFT JOIN nodes     ON way_nodes.node_id=nodes.node_id
+LEFT JOIN nodes ON way_nodes.node_id=nodes.node_id
 WHERE way_tags.key='highway'
 GROUP BY way_tags.way_id;
 ```
@@ -172,4 +182,13 @@ SELECT min_lon,max_lon,min_lat,max_lat
 FROM highway
 WHERE way_id=79235038
 ```
+
+
+---
+
+## Compiling the C-Version
+
+1. The [SQLite Amalgamation](https://www.sqlite.org/amalgamation.html) is required (files sqlite3.c and sqlite3.h)
+2. libxml2 is required
+3. A simple `make` should do the job
 
