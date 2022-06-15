@@ -24,6 +24,26 @@ ORDER BY number DESC
 ;
 
 .print
+.print 'way key=leisure:'
+.print
+SELECT key,value,count(*) AS number
+FROM way_tags
+WHERE key='leisure'
+GROUP BY key,value
+ORDER BY number DESC
+;
+
+.print
+.print 'way key=natural:'
+.print
+SELECT key,value,count(*) AS number
+FROM way_tags
+WHERE key='natural'
+GROUP BY key,value
+ORDER BY number DESC
+;
+
+.print
 .print 'way key=building:'
 .print
 SELECT key,value,count(*) AS number
