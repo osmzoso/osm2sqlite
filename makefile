@@ -1,5 +1,5 @@
 #
-# Makefile osm2sqlite
+# compile osm2sqlite.c
 #
 CC = gcc
 CFLAGS = -Wall -Os -s
