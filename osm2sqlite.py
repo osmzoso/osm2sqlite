@@ -6,16 +6,18 @@
 #
 import xml.sax, sqlite3, sys
 
-help = '''osm2sqlite.py 0.7.3
+help = '''osm2sqlite.py 0.8.0
 
 Reads OpenStreetMap XML data into a SQLite database.
 
 Usage:
-python osm2sqlite.py FILE_OSM_XML FILE_SQLITE_DB [INDEX]
+osm2sqlite FILE_OSM_XML FILE_SQLITE_DB [option ...]
 
-Index control:
- -n, --no-index       No indexes are created
- -s, --spatial-index  Indexes and spatial index are created'''
+Options:
+  no-index         Do not create indexes
+  rtree-highway    Add R*Tree for ways with key=highway
+  rtree-landuse    Add R*Tree for ways with key=landuse
+  rtree-building   Add R*Tree for ways with key=building'''
 
 db_connect = None     # SQLite Database connection
 db         = None     # SQLite Database cursor
@@ -160,26 +162,29 @@ def add_rtree(table):
 #
 def main():
     global db_connect, db
-    # flag creating index
-    flag_create_index = True
-    flag_create_sindex = False
-    # read argv parameter
-    if len(sys.argv)==3 or len(sys.argv)==4:
-        # filename of the osm xml file
-        filename_xml = sys.argv[1]
-        filename_db  = sys.argv[2]
-        # omit creating index
-        if len(sys.argv)==4:
-            if sys.argv[3] in ('-n','--no-index'):
-                flag_create_index = False
-            if sys.argv[3] in ('-s','--spatial-index'):
-                flag_create_index = True
-                flag_create_sindex = True
-    else:
+    if len(sys.argv)<3:
         print(help)
         sys.exit(1)
+    # check options
+    std_index = True
+    rtree_highway = False
+    rtree_landuse = False
+    rtree_building = False
+    if len(sys.argv)>3:
+        for i in range(3, len(sys.argv)):
+            if sys.argv[i]=='no-index':
+                std_index = False
+            elif sys.argv[i]=='rtree-highway':
+                rtree_highway = True
+            elif sys.argv[i]=='rtree-landuse':
+                rtree_landuse = True
+            elif sys.argv[i]=='rtree-building':
+                rtree_building = True
+            else:
+                print("abort - option '"+sys.argv[i]+"' unknown")
+                sys.exit(1)
     # connect to the database
-    db_connect = sqlite3.connect(filename_db)
+    db_connect = sqlite3.connect(sys.argv[2])
     db = db_connect.cursor()   # new database cursor
     # tuning database
     db.execute('PRAGMA journal_mode = OFF');
@@ -194,15 +199,19 @@ def main():
     handler = OsmHandler()
     parser.setContentHandler(handler)
     # parse osm xml data
-    parser.parse(filename_xml)
+    parser.parse(sys.argv[1])
     # write data to database
     db_connect.commit()
     # create index
-    if flag_create_index:
+    if std_index:
         add_std_index()
     # create spatial index
-    if flag_create_sindex:
+    if rtree_highway:
         add_rtree('highway')
+    if rtree_landuse:
+        add_rtree('landuse')
+    if rtree_building:
+        add_rtree('building')
 
 if __name__ == "__main__":
     main()

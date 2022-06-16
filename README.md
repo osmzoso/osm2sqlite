@@ -2,14 +2,18 @@
 
 Reads OpenStreetMap XML data into a SQLite database.
 
-The command
 ```
-osm2sqlite input.osm output.db
+Usage:
+osm2sqlite FILE_OSM_XML FILE_SQLITE_DB [option ...]
 ```
-reads the [OSM XML](https://wiki.openstreetmap.org/wiki/OSM_XML) file
-**input.osm** and creates in the database **output.db** the tables and indexes below.
 
-Linux read from stdin (example): `7z e -so germany.osm.bz2 | osm2sqlite - germany.db`
+The command `osm2sqlite input.osm output.db` reads the
+[OSM XML](https://wiki.openstreetmap.org/wiki/OSM_XML) file **input.osm** and
+creates in the database **output.db** the tables and indexes below.
+
+The option `no-index` suppresses the creation of the indexes.
+
+Read from stdin (example, only Linux): `7z e -so germany.osm.bz2 | osm2sqlite - germany.db`
 
 The database can be easily queried with the [SQLite CLI tool](https://www.sqlite.org/cli.html).
 
@@ -18,10 +22,19 @@ The database can be easily queried with the [SQLite CLI tool](https://www.sqlite
 
 ---
 
-> Time measurement for **saarland.osm (700 MB)** (Intel(R) Pentium(R) Silver J5005 CPU @ 1.50GHz):  
->
-> C-Version      : about 47 seconds  
-> Python-Version : about 2 minutes 36 seconds  
+Time measurement for **saarland.osm (700 MB)** (Intel(R) Pentium(R) Silver J5005 CPU @ 1.50GHz):  
+
+C-Version      : about 47 seconds  
+Python-Version : about 2 minutes 36 seconds  
+
+---
+
+Compile the C-Version:  
+
+1. The files from the [SQLite Amalgamation](https://www.sqlite.org/amalgamation.html) are required
+   (*sqlite3.c* and *sqlite3.h*)
+2. libxml2 is required
+3. A simple `make` should do the job
 
 ---
 
@@ -100,35 +113,19 @@ value        | TEXT                | tag value
 
 ---
 
-## Suppressing the index creation
+## Options for creating additional data
 
-`osm2sqlite input.osm output.db --no-index` suppresses the creation of the indexes.
+### Address tables
 
-Not recommended if the database is to be queried (e.g. if an rtree is to be created).
-
-
----
-
-## Add tables with all addresses
-
-The command `sqlite3 output.db < ./query/add_addr.sql` generates 2 tables:
-
+The option `addr` generates 2 additional tables:  
 Table **addr_street** contains postcode, city, street and boundingbox of the street.  
 Table **addr_housenumber** contains the coordinates of each housenumber.  
 In addition, a view **addr_view** is created.  
 
+### R*Trees
 
----
-
-## Add a spatial index
-
-
-The command
-```
-osm2sqlite input.osm output.db --spatial-index
-```
-creates an additional [R*Tree index](https://www.sqlite.org/rtree.html) **highway** for
-all ways with *key='highway'*.
+The option `rtree-highway` creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
+index **highway** for all ways with *key='highway'*.
 
 Internally, the index is generated with the following commands:
 
@@ -183,12 +180,4 @@ FROM highway
 WHERE way_id=79235038
 ```
 
-
----
-
-## Compiling the C-Version
-
-1. The [SQLite Amalgamation](https://www.sqlite.org/amalgamation.html) is required (files sqlite3.c and sqlite3.h)
-2. libxml2 is required
-3. A simple `make` should do the job
 

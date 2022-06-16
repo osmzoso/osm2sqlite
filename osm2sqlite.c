@@ -14,16 +14,19 @@
 #include "sqlite3.h"
 
 #define HELP \
-"osm2sqlite 0.7.3 " \
+"osm2sqlite 0.8.0 " \
 "(SQLite " SQLITE_VERSION ", compiled " __DATE__ " " __TIME__ ")\n" \
 "\n" \
 "Reads OpenStreetMap XML data into a SQLite database.\n" \
 "\n" \
-"Usage:\nosm2sqlite FILE_OSM_XML FILE_SQLITE_DB [INDEX]\n" \
+"Usage:\nosm2sqlite FILE_OSM_XML FILE_SQLITE_DB [option ...]\n" \
 "\n" \
-"Index control:\n" \
-" -n, --no-index       No indexes are created\n" \
-" -s, --spatial-index  Indexes and spatial index are created\n"
+"Options:\n" \
+"  no-index         Do not create indexes\n" \
+"  rtree-highway    Add R*Tree for ways with key=highway\n" \
+"  rtree-landuse    Add R*Tree for ways with key=landuse\n" \
+"  rtree-building   Add R*Tree for ways with key=building\n" \
+"  addr             Add address tables\n"
 
 /*
 ** Public variables
@@ -51,9 +54,7 @@ sqlite3_stmt *stmt_insert_nodes, *stmt_insert_node_tags, *stmt_insert_way_nodes,
 ** Abort if a database error has occurred
 */
 void abort_db_error(int rc){
-  fprintf(stderr, "abort - sqlite error\n");
-  fprintf(stderr, "  sqlite result code   : (%i) %s\n", rc, sqlite3_errstr(rc));
-  fprintf(stderr, "  sqlite error message : %s\n", sqlite3_errmsg(db));
+  fprintf(stderr, "abort osm2sqlite - (%i) %s - %s\n", rc, sqlite3_errstr(rc), sqlite3_errmsg(db));
   sqlite3_close(db);
   exit(EXIT_FAILURE);
 }
@@ -426,24 +427,30 @@ void add_addr() {
 ** Main
 */
 int main(int argc, char **argv){
-  /* Parameter check */
-  int flag_create_index = 1;
-  int flag_create_sindex = 0;
-  int flag_addr = 0;
-  if( argc==3 || argc==4 ){
-    if( argc==4 ){
-      if( strcmp("-n", argv[3])==0 || strcmp("--no-index", argv[3])==0 ){
-        flag_create_index = 0;
-      }
-      if( strcmp("-s", argv[3])==0 || strcmp("--spatial-index", argv[3])==0 ){
-        flag_create_index = 1;
-        flag_create_sindex = 1;
-      }
-      if( strcmp("addr", argv[3])==0 ) flag_addr = 1;
-    }
-  }else{
+  if( argc<3 ){
     printf(HELP);
     return EXIT_FAILURE;
+  }
+
+  /* check options */
+  int std_index = 1;
+  int rtree_highway = 0;
+  int rtree_landuse = 0;
+  int rtree_building = 0;
+  int addr = 0;
+  int i;
+  if( argc>3 ){
+    for(i=3; i < argc; i++) {
+      if     ( strcmp("no-index",       argv[i])==0 ){ std_index = 0; }
+      else if( strcmp("rtree-highway",  argv[i])==0 ){ rtree_highway = 1; }
+      else if( strcmp("rtree-landuse",  argv[i])==0 ){ rtree_landuse = 1; }
+      else if( strcmp("rtree-building", argv[i])==0 ){ rtree_building = 1; }
+      else if( strcmp("addr",           argv[i])==0 ){ addr = 1; }
+      else {
+        fprintf(stderr, "abort - option '%s' unknown\n", argv[i]);
+        return EXIT_FAILURE;
+      }
+    }
   }
 
   /* Database connection */
@@ -470,10 +477,12 @@ int main(int argc, char **argv){
   create_prep_stmt();      /* create prepared insert statements     */
   xmlParseDocument(ctxt);  /* read and parse the XML document       */
   if( !ctxt->wellFormed ) fprintf(stderr, "XML document isn't well formed\n");
-  if( flag_create_index ) add_std_index();       /* standard indexes                   */
-  if( flag_create_sindex ) add_rtree("highway"); /* R*Tree for ways with key='highway' */
+  if( std_index )      add_std_index();       /* standard indexes                    */
+  if( rtree_highway )  add_rtree("highway");  /* R*Tree for ways with key='highway'  */
+  if( rtree_landuse )  add_rtree("landuse");  /* R*Tree for ways with key='landuse'  */
+  if( rtree_building ) add_rtree("building"); /* R*Tree for ways with key='building' */
   sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
-  if( flag_addr ) add_addr();                    /* create address tables */
+  if( addr )           add_addr();            /* create address tables               */
   destroy_prep_stmt();     /* destroy prepared statements           */
   sqlite3_close(db);       /* close the database                    */
 
