@@ -26,8 +26,8 @@ echo "Test1: Read OSM XML $file_osm_xml"
 echo "----------------------------------------------"
 rm -f osm_c.db osm_py.db
 set -x              # activate bash debugging mode
-../osm2sqlite $file_osm_xml osm_c.db
-python ../osm2sqlite.py $file_osm_xml osm_py.db
+time ../osm2sqlite $file_osm_xml osm_c.db addr
+time python ../osm2sqlite.py $file_osm_xml osm_py.db addr
 set +x              # stop bash debugging mode
 echo "Size and MD5-Hash of the databases:"
 ls -l *.db

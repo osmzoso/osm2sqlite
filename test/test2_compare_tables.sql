@@ -66,3 +66,23 @@ EXCEPT
 SELECT 'osm_py'AS source,* FROM db_c.relation_tags
 ;
 
+.print 'diff in table "addr_street":'
+SELECT 'osm_c' AS source,* FROM db_c.addr_street
+EXCEPT
+SELECT 'osm_c' AS source,* FROM db_py.addr_street
+;
+SELECT 'osm_py'AS source,* FROM db_py.addr_street
+EXCEPT
+SELECT 'osm_py'AS source,* FROM db_c.addr_street
+;
+
+.print 'diff in table "addr_housenumber":'
+SELECT 'osm_c' AS source,* FROM db_c.addr_housenumber
+EXCEPT
+SELECT 'osm_c' AS source,* FROM db_py.addr_housenumber
+;
+SELECT 'osm_py'AS source,* FROM db_py.addr_housenumber
+EXCEPT
+SELECT 'osm_py'AS source,* FROM db_c.addr_housenumber
+;
+
