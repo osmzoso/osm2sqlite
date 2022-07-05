@@ -1,6 +1,6 @@
---
--- OSM general statistics
---
+/*
+** OSM general statistics
+*/
 
 -------------------------------------------------------------
 

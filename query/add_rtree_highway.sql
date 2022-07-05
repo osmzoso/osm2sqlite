@@ -1,6 +1,6 @@
---
--- Creates an R*Tree index highway for all ways with key='highway'.
---
+/*
+** Creates an R*Tree index highway for all ways with key='highway'.
+*/
 CREATE VIRTUAL TABLE highway USING rtree(way_id, min_lat, max_lat, min_lon, max_lon);
 INSERT INTO highway (way_id, min_lat, max_lat, min_lon, max_lon)
 SELECT way_tags.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)

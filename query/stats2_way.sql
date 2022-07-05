@@ -1,10 +1,10 @@
---
--- Values for important way keys
---
+/*
+** Way keys and values
+*/
 .mode table
 
 .print
-.print 'way key=highway:'
+.print "Values for ways with key='highway':"
 .print
 SELECT key,value,count(*) AS number
 FROM way_tags
@@ -14,41 +14,22 @@ ORDER BY number DESC
 ;
 
 .print
-.print 'way key=landuse:'
+.print 'The most common key/value pairs for ways:'
 .print
 SELECT key,value,count(*) AS number
 FROM way_tags
-WHERE key='landuse'
-GROUP BY key,value
-ORDER BY number DESC
-;
-
-.print
-.print 'way key=leisure:'
-.print
-SELECT key,value,count(*) AS number
-FROM way_tags
-WHERE key='leisure'
-GROUP BY key,value
-ORDER BY number DESC
-;
-
-.print
-.print 'way key=natural:'
-.print
-SELECT key,value,count(*) AS number
-FROM way_tags
-WHERE key='natural'
-GROUP BY key,value
-ORDER BY number DESC
-;
-
-.print
-.print 'way key=building:'
-.print
-SELECT key,value,count(*) AS number
-FROM way_tags
-WHERE key='building'
+-- except some keys with individual values:
+WHERE key NOT IN (
+'name','name:source',
+'addr:country','addr:postcode','addr:city','addr:street','addr:housenumber','addr:suburb','addr:housename','addr:place','addr:source',
+'source','source:outline','source:geometry','source:addr','source:address',
+'FIXME','fixme',
+'note','note:name','note:de',
+'website','website:de','url','contact:website','phone','contact:phone','operator','opening_hours','description','ref','email','fax',
+'wikipedia','wikidata',
+'destination',
+'is_in'
+)
 GROUP BY key,value
 ORDER BY number DESC
 ;
