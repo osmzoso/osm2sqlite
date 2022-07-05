@@ -124,21 +124,19 @@ In addition, a view **addr_view** is created.
 
 ### R*Trees
 
-The option `rtree-highway` creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
-index **highway** for all ways with *key='highway'*.
+The option `rtree-index` creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
+index **rtree_way** for finding ways quickly.
 
 Internally, the index is generated with the following commands:
 
 ``` sql
-CREATE VIRTUAL TABLE highway USING rtree(way_id, min_lat, max_lat, min_lon, max_lon);
+CREATE VIRTUAL TABLE rtree_way USING rtree(way_id, min_lat, max_lat, min_lon, max_lon);
 
-INSERT INTO highway (way_id, min_lat, max_lat, min_lon, max_lon)
-SELECT way_tags.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)
-FROM way_tags
-LEFT JOIN way_nodes ON way_tags.way_id=way_nodes.way_id
+INSERT INTO rtree_way (way_id, min_lat, max_lat, min_lon, max_lon)
+SELECT way_nodes.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)
+FROM way_nodes
 LEFT JOIN nodes ON way_nodes.node_id=nodes.node_id
-WHERE way_tags.key='highway'
-GROUP BY way_tags.way_id;
+GROUP BY way_nodes.way_id;
 ```
 
 Here are some examples for querying this index:
@@ -158,7 +156,7 @@ Find all elements of the index (ways) that are contained within the boundingbox:
 
 ``` sql
 SELECT way_id
-FROM highway
+FROM rtree_way
 WHERE min_lon>= 7.3280550 AND max_lon<= 7.3316550
  AND  min_lat>=49.3540703 AND max_lat<=49.3576703
 ```
@@ -167,7 +165,7 @@ Find all elements of the index (ways) that overlap the boundingbox:
 
 ``` sql
 SELECT way_id
-FROM highway
+FROM rtree_way
 WHERE max_lon>= 7.3280550 AND min_lon<= 7.3316550
  AND  max_lat>=49.3540703 AND min_lat<=49.3576703
 ```
@@ -176,7 +174,7 @@ Limits of an element of the index:
 
 ``` sql
 SELECT min_lon,max_lon,min_lat,max_lat
-FROM highway
+FROM rtree_way
 WHERE way_id=79235038
 ```
 
