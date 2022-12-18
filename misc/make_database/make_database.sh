@@ -40,8 +40,9 @@ time ../routing/calc_graph.py $database_file
 # check addr name (additional rtree index 'highway' is needed)
 #
 sqlite3 $database_file < ../../query/add_rtree_highway.sql
-../check_osm_data/check_addr_highway.py $database_file 791 > "$dir_results/error_addr_highway_$cdate.txt"
+../check_osm_data/check_addr_highway.py $database_file 791% > "$dir_results/error_addr_highway_$cdate.txt"
 #
 # print a simple map
 #
 ../print_map/print_map.py $database_file 7.807 47.982
+
