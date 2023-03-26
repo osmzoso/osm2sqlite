@@ -1,21 +1,20 @@
 /*
 ** osm2sqlite - Reads OpenStreetMap XML data into a SQLite database
 **
-** Copyright (C) 2022 Herbert Gläser
+** Copyright (C) 2022-2023 Herbert Gläser
 **
 */
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
+#include <sqlite3.h>
 #include <libxml/tree.h>
 #include <libxml/parser.h>
 #include <libxml/parserInternals.h>
-#include "sqlite3.h"
 
 #define HELP \
-"osm2sqlite 0.8.1 " \
-"(SQLite " SQLITE_VERSION ", compiled " __DATE__ " " __TIME__ ")\n" \
+"osm2sqlite 0.8.1\n" \
 "\n" \
 "Reads OpenStreetMap XML data into a SQLite database.\n" \
 "\n" \
