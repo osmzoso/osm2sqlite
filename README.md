@@ -103,9 +103,9 @@ After reading in the data, additional data can be created with various options.
 
 The `no-index` option suppresses the creation of the indexes (not recommended).
 
-### rtree-index
+### rtree-ways
 
-The `rtree-index` option creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
+The `rtree-ways` option creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
 index **rtree_way** for finding ways quickly.
 
 Internally, the index is generated with the following commands:
@@ -191,11 +191,15 @@ Compile:
 
 ---
 
-Reading a file compressed with bzip2:
+Reading a file compressed with bzip2 without unpacking it first:
 
 The C version is able to read from stdin.
 
-Example: `7z e -so germany.osm.bz2 | osm2sqlite - germany.db`
+Examples:
+```
+7z e -so germany.osm.bz2 | osm2sqlite - germany.db
+bzip2 -c -d ./xml/saarland-latest.osm.bz2 | osm2sqlite - ./database/saarland-latest.db addr rtree-ways
+```
 
 ---
 
