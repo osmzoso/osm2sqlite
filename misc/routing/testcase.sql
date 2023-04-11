@@ -1,5 +1,5 @@
 /*
-** Test der Tabelle 'graph_highway'
+** Test der Tabelle 'graph'
 */
 
 .mode table
@@ -7,7 +7,7 @@
 .print
 .print 'Testcase 1 (Anzahl der Kanten)'
 .print
-SELECT count(*) AS 'anz_edges' FROM graph_highway
+SELECT count(*) AS 'anz_edges' FROM graph
 ;
 
 .print
@@ -23,7 +23,7 @@ SELECT count(*) AS 'anz_edges' FROM graph_highway
 .print '+--------------+------------+------+----------+'
 .print 'Ausgabe der Query:'
 SELECT *
-FROM graph_highway
+FROM graph
 WHERE node_id_from=29160858 OR node_id_to=29160858
 ;
 

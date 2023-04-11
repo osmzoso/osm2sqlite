@@ -10,3 +10,4 @@ node\_id\_from | INTEGER             | node ID start
 node\_id\_to   | INTEGER             | node ID end
 dist           | INTEGER             | distance in meters
 way_id         | INTEGER             | way ID
+

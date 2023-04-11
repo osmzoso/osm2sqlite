@@ -110,26 +110,18 @@ WHERE wt.key='highway'
 ORDER BY wn.way_id,wn.node_order
 --LIMIT 1000
 ''')
-debug = False                                                                                              # DEBUG CODE
 for (way_id, node_id, node_order,
      node_id_crossing, lon, lat) in db.fetchall():
     #
     # Wenn neuer way aber noch Reste von vorigem way vorhanden sind dann neue Kante anlegen
     #
     if way_id != prev_way_id and edge_active:
-        if debug:                                                                                          # DEBUG CODE
-            print('=> edge rest:', node_id_from, prev_node_id, round(dist), prev_way_id)                   # DEBUG CODE
         db.execute('INSERT INTO graph (node_id_from,node_id_to,dist,way_id) VALUES (?,?,?,?)',
          (node_id_from, prev_node_id, round(dist), prev_way_id))
         edge_active = False
     #
     prev_dist = distance(prev_lon, prev_lat, lon, lat)
     dist = dist + prev_dist
-    #                                                                                                      # DEBUG CODE
-    if debug:                                                                                              # DEBUG CODE
-        print("%12d" % (way_id), "%12d" % (node_id), "%5d" % (node_order),                                 # DEBUG CODE
-              "%12d" % (node_id_crossing), "%12.7f" % (lon), "%12.7f" % (lat),                             # DEBUG CODE
-              "prev_dist: %12.7f" % (prev_dist), sep=' ')                                                  # DEBUG CODE
     #
     edge_active = True
     #
@@ -142,8 +134,6 @@ for (way_id, node_id, node_order,
         prev_dist = 0
     if node_id_crossing > 0 and way_id == prev_way_id:
         if node_id_from != -1:
-            if debug:                                                                                      # DEBUG CODE
-                print('=> edge:', node_id_from, node_id, round(dist), way_id)                              # DEBUG CODE
             db.execute('INSERT INTO graph (node_id_from,node_id_to,dist,way_id) VALUES (?,?,?,?)',
              (node_id_from, node_id, round(dist), way_id))
             edge_active = False
@@ -157,8 +147,6 @@ for (way_id, node_id, node_order,
     prev_node_id = node_id
 
 if edge_active:
-    if debug:                                                                                              # DEBUG CODE
-        print('=> edge last:', node_id_from, node_id, round(dist), way_id)                                 # DEBUG CODE
     db.execute('INSERT INTO graph (node_id_from,node_id_to,dist,way_id) VALUES (?,?,?,?)',
      (node_id_from, node_id, round(dist), way_id))
 
