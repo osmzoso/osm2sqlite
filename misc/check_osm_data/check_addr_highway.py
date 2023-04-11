@@ -14,6 +14,12 @@ postcode = sys.argv[2]
 db_connect = sqlite3.connect(database)
 db = db_connect.cursor()   # new database cursor
 
+print('<html>')
+print('''
+<p>
+Street names in addr:street that do not have a corresponding street nearby:
+</p>
+''')
 #
 query = """
 SELECT street_id,postcode,city,street,min_lon,min_lat,max_lon,max_lat
@@ -52,14 +58,15 @@ for (street_id,postcode,city,street,min_lon,min_lat,max_lon,max_lat) in db.fetch
                 check_successful = True
     #
     if not check_successful:
-        print('------------------------------------------------------')
-        print(postcode, city, street, '(street_id: '+str(street_id)+')', sep='\t')
+        print('<hr>')
+        print(f'<h2>{postcode} {city}, {street} (street_id: {street_id})</h2>')
         # Show all relevant nodes and ways
         query2 = 'SELECT node_id,way_id FROM addr_housenumber WHERE street_id=?'
         db.execute(query2, (street_id,))
         for (node_id, way_id,) in db.fetchall():
             if node_id!=-1:
-                print('https://www.openstreetmap.org/node/' + str(node_id))
+                print(f'<span>node </span><a href="https://www.openstreetmap.org/node/{node_id}" target="_blank">{node_id}</a><br>')
             if way_id!=-1:
-                print('https://www.openstreetmap.org/way/' + str(way_id))
+                print(f'<span>way </span><a href="https://www.openstreetmap.org/way/{way_id}" target="_blank">{way_id}</a><br>')
+print('</html>')
 
