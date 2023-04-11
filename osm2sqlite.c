@@ -14,14 +14,14 @@
 #include <libxml/parserInternals.h>
 
 #define HELP \
-"osm2sqlite 0.8.1\n" \
+"osm2sqlite 0.8.2\n" \
 "\n" \
 "Reads OpenStreetMap XML data into a SQLite database.\n" \
 "\n" \
 "Usage:\nosm2sqlite FILE_OSM_XML FILE_SQLITE_DB [option ...]\n" \
 "\n" \
 "Options:\n" \
-"  no-index       Do not create indexes\n" \
+"  no-index       Do not create indexes (not recommended)\n" \
 "  rtree-ways     Add R*Tree index for ways\n" \
 "  addr           Add address tables\n"
 

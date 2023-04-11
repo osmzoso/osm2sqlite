@@ -2,11 +2,11 @@
 #
 # osm2sqlite - Reads OpenStreetMap XML data into a SQLite database
 #
-# Copyright (C) 2021-2022 Herbert Gläser
+# Copyright (C) 2021-2023 Herbert Gläser
 #
 import xml.sax, sqlite3, sys
 
-help = '''osm2sqlite.py 0.8.1
+help = '''osm2sqlite.py 0.8.2
 
 Reads OpenStreetMap XML data into a SQLite database.
 
@@ -14,7 +14,7 @@ Usage:
 osm2sqlite FILE_OSM_XML FILE_SQLITE_DB [option ...]
 
 Options:
-  no-index       Do not create indexes
+  no-index       Do not create indexes (not recommended)
   rtree-ways     Add R*Tree index for ways
   addr           Add address tables'''
 

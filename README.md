@@ -1,6 +1,6 @@
 # osm2sqlite
 
-Reads OpenStreetMap XML data into a SQLite database.
+A command line tool for reading OpenStreetMap XML data into a SQLite database.
 
 ```
 Usage:
@@ -188,6 +188,8 @@ Compiling the C version on Linux (Fedora 37):
 Compile:
 
     gcc osm2sqlite.c -lsqlite3 -lxml2 -o osm2sqlite -Wall -Os -s -I/usr/include/libxml2
+
+See also file *compile_osm2sqlite_c.sh*.
 
 ---
 
