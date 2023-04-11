@@ -48,16 +48,29 @@ WHERE
  nf.lat<=? AND
  nt.lat<=?
 '''
-# Faster query but less precise...
-# WHERE g.way_id IN (
-#     SELECT way_id
-#     FROM rtree_way
-#     WHERE max_lon>=? AND min_lon<=?
-#     AND  max_lat>=? AND min_lat<=?
+#
+# A faster query but less precise... R*Tree 'rtree_way' is required
+#
+query2 = '''
+SELECT
+ --g.node_id_from,g.node_id_to,g.dist,g.way_id,
+ nf.lon,nf.lat,
+ nt.lon,nt.lat
+FROM graph AS g
+LEFT JOIN nodes AS nf ON g.node_id_from=nf.node_id
+LEFT JOIN nodes AS nt ON g.node_id_to=nt.node_id
+WHERE g.way_id IN (
+    SELECT way_id
+    FROM rtree_way
+    WHERE max_lon>=? AND min_lon<=?
+    AND  max_lat>=? AND min_lat<=?
+    )
+'''
 
 #
 m1.print_script_start()
-db.execute(query, (min_lon, min_lon, max_lon, max_lon, min_lat, min_lat, max_lat, max_lat))
+#db.execute(query, (min_lon, min_lon, max_lon, max_lon, min_lat, min_lat, max_lat, max_lat))
+db.execute(query2, (min_lon, max_lon, min_lat, max_lat))
 for (from_lon,from_lat,to_lon,to_lat) in db.fetchall():
     m1.add_line(from_lon, from_lat, to_lon, to_lat)
 #

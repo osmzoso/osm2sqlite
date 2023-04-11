@@ -6,7 +6,7 @@ if len(sys.argv) != 6:
     print('''
     Creates a map of all addresses in a given area.
     The addresses must be in table "addr_view".
-    The file is written to stdout in HTML format.
+    Output is HTML on stdout.
     Usage:
     print_addr_map_html.py DATABASE MIN_LON MIN_LAT MAX_LON MAX_LAT
     ''')
@@ -63,8 +63,17 @@ print('<table>')
 print('<tr><th>way_id</th><th>node_id</th><th>addr:postcode</th><th>addr:city</th><th>addr:street</th><th>addr:housenumber</th><th>lon</th><th>lat</th></tr>')
 db.execute(query, (min_lon, min_lat, max_lon, max_lat))
 for (way_id,node_id,postcode,city,street,housenumber,lon,lat) in db.fetchall():
-    print(f'<tr><td>{way_id}</td><td>{node_id}</td><td>{postcode}</td><td>{city}</td> \
-    <td>{street}</td><td>{housenumber}</td><td>{lon}</td><td>{lat}</td></tr>')
+    print(f'<tr>')
+    if way_id != -1:
+        print(f'<td><a href="https://www.openstreetmap.org/way/{way_id}" target="_blank">{way_id}</a></td>')
+    else:
+        print(f'<td>{way_id}</td>')
+    if node_id != -1:
+        print(f'<td><a href="https://www.openstreetmap.org/node/{node_id}" target="_blank">{node_id}</a></td>')
+    else:
+        print(f'<td>{node_id}</td>')
+    print(f'<td>{postcode}</td><td>{city}</td>')
+    print(f'<td>{street}</td><td>{housenumber}</td><td>{lon}</td><td>{lat}</td></tr>')
 print('</table>')
 
 print('</body>')
