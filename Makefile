@@ -1,6 +1,4 @@
 #
-# compile osm2sqlite.c
-#
 CC = gcc
 CFLAGS = -Wall -Os -s
 INC = -I/usr/include/libxml2
