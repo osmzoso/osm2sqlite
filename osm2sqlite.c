@@ -14,7 +14,7 @@
 #include <libxml/parserInternals.h>
 
 #define HELP \
-"osm2sqlite 0.8.2\n" \
+"osm2sqlite 0.8.3\n" \
 "\n" \
 "Reads OpenStreetMap XML data into a SQLite database.\n" \
 "\n" \

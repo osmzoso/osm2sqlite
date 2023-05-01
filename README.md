@@ -178,18 +178,9 @@ C      : 47 seconds
 
 ---
 
-Compiling the C version on Linux (Fedora 37):  
+Compiling the C version on Linux:  
 
-*libsqlite3* and *libxml2* are required. Additional the *devel*-packages are required:  
-
-    sudo dnf sqlite-devel.x86_64
-    sudo dnf libxml2-devel.x86_64
-
-Compile:
-
-    gcc osm2sqlite.c -lsqlite3 -lxml2 -o osm2sqlite -Wall -Os -s -I/usr/include/libxml2
-
-See also file *compile_osm2sqlite_c.sh*.
+See file **compile_osm2sqlite_c.sh**.
 
 ---
 

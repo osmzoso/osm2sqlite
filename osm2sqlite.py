@@ -6,7 +6,7 @@
 #
 import xml.sax, sqlite3, sys
 
-help = '''osm2sqlite.py 0.8.2
+help = '''osm2sqlite.py 0.8.3
 
 Reads OpenStreetMap XML data into a SQLite database.
 
