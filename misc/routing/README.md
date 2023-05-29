@@ -1,4 +1,8 @@
+# Routing
+
 ## Calculation of a simple graph for routing purposes
+
+First, routable data must be created from the OSM data.
 
 The testscript `calc_graph.py` creates a simple table with the graph data.
 
@@ -13,5 +17,7 @@ dist         | INTEGER             | distance in meters
 way_id       | INTEGER             | way ID
 
 
-![Visualization of the table 'graph'](./graph.jpg)
+Visualization of the table 'graph':  
+
+![Table 'graph'](./table_graph.jpg)
 
