@@ -4,10 +4,14 @@ The testscript `calc_graph.py` creates a simple table with the graph data.
 
 ### Table 'graph'
 
-column         | type                | description
----------------|---------------------|-------------------------------------
-node\_id\_from | INTEGER             | node ID start
-node\_id\_to   | INTEGER             | node ID end
-dist           | INTEGER             | distance in meters
-way_id         | INTEGER             | way ID
+column       | type                | description
+-------------|---------------------|-------------------------------------
+edge_id      | INTEGER PRIMARY KEY | edge ID
+edge_start   | INTEGER             | edge start node ID
+edge_end     | INTEGER             | edge end node ID
+dist         | INTEGER             | distance in meters
+way_id       | INTEGER             | way ID
+
+
+![Visualization of the table 'graph'](./graph.jpg)
 
