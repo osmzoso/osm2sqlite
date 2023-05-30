@@ -15,7 +15,7 @@ Checks if the address street name is identical with the street name.
 Simple library "leaflet.py" for creating HTML files with Leaflet.js.
 
 
-## ./print_map
+## ./interactive_map
 
 Python script to show a simple interactive map.
 
