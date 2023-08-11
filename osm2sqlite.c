@@ -14,7 +14,7 @@
 #include <libxml/parserInternals.h>
 
 #define HELP \
-"osm2sqlite 0.8.3\n" \
+"osm2sqlite 0.8.4\n" \
 "\n" \
 "Reads OpenStreetMap XML data into a SQLite database.\n" \
 "\n" \
@@ -250,9 +250,9 @@ void add_std_index() {
   "CREATE INDEX node_tags__key                ON node_tags (key);\n"
   "CREATE INDEX way_tags__way_id              ON way_tags (way_id);\n"
   "CREATE INDEX way_tags__key                 ON way_tags (key);\n"
-  "CREATE INDEX way_nodes__way_id             ON way_nodes (way_id);\n"
+  "CREATE INDEX way_nodes__way_id             ON way_nodes (way_id, node_order);\n"
   "CREATE INDEX way_nodes__node_id            ON way_nodes (node_id);\n"
-  "CREATE INDEX relation_members__relation_id ON relation_members (relation_id);\n"
+  "CREATE INDEX relation_members__relation_id ON relation_members (relation_id, member_order);\n"
   "CREATE INDEX relation_members__type        ON relation_members (type, ref);\n"
   "CREATE INDEX relation_tags__relation_id    ON relation_tags (relation_id);\n"
   "CREATE INDEX relation_tags__key            ON relation_tags (key);\n",
@@ -426,6 +426,7 @@ void add_addr() {
 int main(int argc, char **argv){
   if( argc<3 ){
     printf(HELP);
+    printf("\nSQLite %s is used.\n\n", sqlite3_libversion());
     return EXIT_FAILURE;
   }
 

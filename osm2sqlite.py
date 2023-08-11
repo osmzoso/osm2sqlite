@@ -6,7 +6,7 @@
 #
 import xml.sax, sqlite3, sys
 
-help = '''osm2sqlite.py 0.8.3
+help = '''osm2sqlite.py 0.8.4
 
 Reads OpenStreetMap XML data into a SQLite database.
 
@@ -135,9 +135,9 @@ def add_std_index():
     db.execute('CREATE INDEX node_tags__key                ON node_tags (key)')
     db.execute('CREATE INDEX way_tags__way_id              ON way_tags (way_id)')
     db.execute('CREATE INDEX way_tags__key                 ON way_tags (key)')
-    db.execute('CREATE INDEX way_nodes__way_id             ON way_nodes (way_id)')
+    db.execute('CREATE INDEX way_nodes__way_id             ON way_nodes (way_id, node_order)')
     db.execute('CREATE INDEX way_nodes__node_id            ON way_nodes (node_id)')
-    db.execute('CREATE INDEX relation_members__relation_id ON relation_members (relation_id)')
+    db.execute('CREATE INDEX relation_members__relation_id ON relation_members (relation_id, member_order)')
     db.execute('CREATE INDEX relation_members__type        ON relation_members (type, ref)')
     db.execute('CREATE INDEX relation_tags__relation_id    ON relation_tags (relation_id)')
     db.execute('CREATE INDEX relation_tags__key            ON relation_tags (key)')
@@ -337,6 +337,7 @@ def main():
     global db_connect, db
     if len(sys.argv)<3:
         print(help)
+        print('\nSQLite '+sqlite3.sqlite_version+' is used.\n')
         sys.exit(1)
     # check options
     std_index = True

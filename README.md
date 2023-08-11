@@ -15,6 +15,8 @@ The option `no-index` suppresses the creation of the indexes (not recommended).
 
 The database can be easily queried with the [SQLite CLI tool](https://www.sqlite.org/cli.html).
 
+OSM data can be obtained from a provider such as [Geofabrik](https://download.geofabrik.de).
+
 |[**Download the latest version**](https://github.com/osmzoso/osm2sqlite/releases/latest)|
 |----------------------------------------------------------------------------------------|
 
@@ -51,7 +53,7 @@ way_id       | INTEGER             | way ID
 node_id      | INTEGER             | node ID
 node_order   | INTEGER             | node order
 
-- INDEX way_nodes__way_id  ON way_nodes (way_id)
+- INDEX way_nodes__way_id  ON way_nodes (way_id, node_order)
 - INDEX way_nodes__node_id ON way_nodes (node_id)
 
 
@@ -77,7 +79,7 @@ ref          | INTEGER             | node, way or relation ID
 role         | TEXT                | describes a particular feature
 member_order | INTEGER             | member order
 
-- INDEX relation_members__relation_id ON relation_members (relation_id)
+- INDEX relation_members__relation_id ON relation_members (relation_id, member_order)
 - INDEX relation_members__type        ON relation_members (type, ref)
 
 
