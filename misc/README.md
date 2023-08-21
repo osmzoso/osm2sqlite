@@ -8,7 +8,7 @@ The bash script `0_make_database.sh` invokes some of the scripts.
 
 First, routable data must be created from the OSM data.
 
-The script `create_table_graph.py` creates a simple table with the graph data.
+The script `create_table_graph.py` creates a simple table *graph* with the whole graph data.
 
 ### Table 'graph'
 
@@ -20,12 +20,11 @@ edge_end     | INTEGER             | edge end node ID
 dist         | INTEGER             | distance in meters
 way_id       | INTEGER             | way ID
 
-
 Visualization of the table 'graph':  
 
 ![table_graph.jpg](./table_graph.jpg)
 
-#### Create a subgraph
+#### Queries to create a subgraph
 
 ``` sql
 /*
@@ -72,8 +71,6 @@ LEFT JOIN nodes AS n ON s.node_id=n.node_id
 ;
 ```
 
-#### Useful queries
-
 ``` sql
 -- Number of nodes in the subgraph
 SELECT max(no) FROM subgraph_nodes
@@ -88,13 +85,17 @@ LEFT JOIN subgraph_nodes AS sne ON s.edge_end=sne.node_id
 ```
 
 
-### Route shortest way
+### Calculate shortest path
 
 The command
 ```
 route.py DATABASE LON_START LAT_START LON_DEST LAT_DEST
 ```
 outputs a list of coordinates.
+
+Visualization of a routing path:  
+
+![routing_path.jpg](./routing_path.jpg)
 
 
 # 2. Draw map
@@ -125,17 +126,16 @@ TODOs:
 - map projection (Web Mercator EPSG:3857)
 - define the colors in a table
 
-# 3. Check data
 
-Checks if the address street name is identical with the street name.
+# 3. Show map with tileserver
 
-
-
-
-
-## ./leaflet
+TODO
 
 Simple library "leaflet.py" for creating HTML files with Leaflet.js.
 
 
+# 4. Check data
+
+The script `check_data_addr_highway.py` checks if the address street name is
+identical with the street name.
 

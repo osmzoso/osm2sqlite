@@ -28,9 +28,9 @@ time bzip2 -c -d $osm_xml_bz2_file | ../osm2sqlite - $database_file addr rtree-w
 #
 # Routing (experimental table 'graph' is required)
 #
-./routing/create_table_graph.py $database_file
+./create_table_graph.py $database_file
 # St. Georgen -> Halde
-./routing/route.py $database_file 7.808 47.983 7.889 47.897 > $dir_results/route.txt 
+./route.py $database_file 7.808 47.983 7.889 47.897 > $dir_results/route.txt 
 ./leaflet/print_route_map_html.py $dir_results/route.txt > "$dir_results/$cdate-map_routing_path1.html"
 #
 # create an HTML file with a map of the addresses
