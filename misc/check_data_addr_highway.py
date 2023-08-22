@@ -2,10 +2,10 @@
 import sys, sqlite3
 
 if len(sys.argv)!=3:
-    print('''
+    print(f'''
     Checks whether the street name of the address in this range also exists as a highway.
     Usage:
-    check_addr_highway.py DATABASE POSTCODE
+    {sys.argv[0]} DATABASE POSTCODE
     ''')
     sys.exit(1)
 database = sys.argv[1]

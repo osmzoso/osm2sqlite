@@ -5,10 +5,11 @@
 import sys, sqlite3, math
 
 if len(sys.argv)!=2:
-    print('''
-    Calculate routing data.
+    print(f'''
+    Creates a table 'graph' in the database.
+    The table contains all the edges of the graph.
     Usage:
-    calc_graph.py DATABASE
+    {sys.argv[0]} DATABASE
     ''')
     sys.exit(1)
 

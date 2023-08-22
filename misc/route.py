@@ -5,10 +5,10 @@
 import sys, sqlite3, math, queue
 
 if len(sys.argv)!=6:
-    print('''
-    Route shortest way.
+    print(f'''
+    Calculate shortest way.
     Usage:
-    route.py DATABASE LON_START LAT_START LON_DEST LAT_DEST
+    {sys.argv[0]} DATABASE LON_START LAT_START LON_DEST LAT_DEST
     ''')
     sys.exit(1)
 

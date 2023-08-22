@@ -7,10 +7,10 @@ from tkinter import ttk
 import sys, sqlite3
 
 if len(sys.argv)!=4:
-    print('''
-    Print a very simple map.
+    print(f'''
+    Print a very simple map in a window.
     Usage:
-    print_map.py DATABASE LON LAT
+    {sys.argv[0]} DATABASE LON LAT
     ''')
     sys.exit(1)
 
@@ -91,7 +91,7 @@ def move_down(*args):
     draw_map()
 
 def draw_map(*args):
-    print(map_lon, map_lat)
+    #print(map_lon, map_lat)    # TEST
     calc_boundingbox()
     cv.delete("all")
     query = """
@@ -224,7 +224,7 @@ def draw_map(*args):
             way_unknown = way_unknown + 1
         #
         #way_list.append([way_id, 12, 'line', 2, '#ff0000', '', ''])
-    print(way_unknown, 'ways unknown')
+    #print(way_unknown, 'ways unknown') # TEST
     # draw layer 0-12
     for draw_layer in range(0,12):
         for way_info in way_list:

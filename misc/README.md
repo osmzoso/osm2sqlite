@@ -4,11 +4,10 @@ The bash script `0_make_database.sh` invokes some of the scripts.
 
 # 1. Routing
 
-## Calculation of a simple graph for routing purposes
-
 First, routable data must be created from the OSM data.
 
-The script `create_table_graph.py` creates a simple table *graph* with the whole graph data.
+The script `create_table_graph.py` creates a table 'graph' in the database.
+This table contains the complete graph data.
 
 ### Table 'graph'
 
@@ -98,40 +97,42 @@ Visualization of a routing path:
 ![routing_path.jpg](./routing_path.jpg)
 
 
-# 2. Draw map
+# 2. Draw own map
 
 The python script *draw_map_interactive.py* read data directly from the database
 and draw a very simple map in a window.
 
 The library tkinter is used for drawing.
+Therefore no street names can be displayed.
 
 The script is only a test to investigate how fast the data can be accessed.
 
 The map is drawn in layers. Layer 1 is drawn first.
 
 Layer 1: grassland, farmland  
-Layer 2: forest, orchard, wineyard, parks  
+Layer 2: forest, orchard, wineyard, parks   
 Layer 3: sports field, playground  
 Layer 4: water  
 Layer 5: building, Swimming-Pools  
-Layer 6: Bei zweifarbigen Strassen unterer Teil  
-Layer 7: Bei zweifarbigen Strassen oberer Teil  
-Layer 8: Hochwertige Strassen (Bundesstr. Autobahn)  
-Layer 9: Brücken, Bäume, POI  
-Layer 10: Stromleitungen  
-Layer 11: Unbekannte Ways (rot)  
+Layer 6: For two-colour roads lower part  
+Layer 7: For two-colour roads upper part  
+Layer 8: Superordinate roads (Bundesstr. Autobahn)  
+Layer 9: Bridges, Trees, POI  
+Layer 10: Powerline  
+Layer 11: Unknown Ways (red)  
 
 TODOs:
 
 - map projection (Web Mercator EPSG:3857)
 - define the colors in a table
+- output SVG
 
 
-# 3. Show map with tileserver
+# 3. Interactive map
 
-TODO
+Simple library "html_leaflet.py" for creating HTML files with Leaflet.js.
 
-Simple library "leaflet.py" for creating HTML files with Leaflet.js.
+The script `html_map_demo.py` shows the usage.
 
 
 # 4. Check data
