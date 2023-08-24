@@ -4,7 +4,7 @@
 #
 import html_leaflet
 
-m1 = leaflet.Leaflet()
+m1 = html_leaflet.Leaflet()
 m1.print_html_header('Demo Map')
 #
 print('<h1>Test Leaflet.js Python Wrapper</h1>')

@@ -92,7 +92,7 @@ def add_graph():
         #      format(lon,'15.7f'),
         #      format(lat,'15.7f'))
         #
-        # Wenn neuer way aber noch Reste von vorigem way vorhanden sind dann neue Kante anlegen
+        # If a new way is active but there are still remnants of the previous way, create a new edge.
         #
         if way_id != prev_way_id and edge_active:
             db.execute('INSERT INTO graph (edge_start,edge_end,dist,way_id) VALUES (?,?,?,?)',
@@ -103,8 +103,7 @@ def add_graph():
         #
         edge_active = True
         #
-        # Wenn sich way_id ändert oder crossing node vorhanden ist dann
-        # beginnt oder endet eine Kante.
+        # If way_id changes or crossing node is present then an edge begins or ends.
         #
         if way_id != prev_way_id:
             edge_start = node_id

@@ -4,8 +4,8 @@ import html_leaflet
 
 if len(sys.argv) != 6:
     print(f'''
-    Creates a map of the routing graph in a given area.
-    The file is written to stdout in HTML format.
+    Creates a map of the routing graph in table "graph" in a given area.
+    Output is HTML on stdout.
     Usage:
     {sys.argv[0]} DATABASE MIN_LON MIN_LAT MAX_LON MAX_LAT
     ''')
