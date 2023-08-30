@@ -2,9 +2,11 @@
 #
 # Calculation of a simple graph for routing purposes
 #
-import sys, sqlite3, math
+import sys
+import sqlite3
+import math
 
-if len(sys.argv)!=2:
+if len(sys.argv) != 2:
     print(f'''
     Creates a table 'graph' in the database.
     The table contains all the edges of the graph.
@@ -12,6 +14,7 @@ if len(sys.argv)!=2:
     {sys.argv[0]} DATABASE
     ''')
     sys.exit(1)
+
 
 def distance(lon1, lat1, lon2, lat2):
     """
@@ -28,11 +31,12 @@ def distance(lon1, lat1, lon2, lat2):
     lon2 = math.radians(lon2)
     lat2 = math.radians(lat2)
     # Great circle with earth radius Europe 6371 km (alternatively radius equator 6378 km)
-    dist =  math.acos(
+    dist = math.acos(
                 math.sin(lat1) * math.sin(lat2) +
                 math.cos(lat1) * math.cos(lat2) * math.cos(lon2 - lon1)
             ) * 6371000
     return dist
+
 
 def add_graph():
     db.execute('''
@@ -85,7 +89,7 @@ def add_graph():
     edge_start = -1
     dist = 0
     for (way_id, node_id, node_order, node_id_crossing, lon, lat) in db.fetchall():
-        #print(format(way_id, '12d'),
+        # print(format(way_id, '12d'),
         #      format(node_id, '12d'),
         #      format(node_order, '5d'),
         #      format(node_id_crossing, '12d'),
@@ -96,7 +100,7 @@ def add_graph():
         #
         if way_id != prev_way_id and edge_active:
             db.execute('INSERT INTO graph (edge_start,edge_end,dist,way_id) VALUES (?,?,?,?)',
-             (edge_start, prev_node_id, round(dist), prev_way_id))
+                       (edge_start, prev_node_id, round(dist), prev_way_id))
             edge_active = False
         #
         dist = dist + distance(prev_lon, prev_lat, lon, lat)
@@ -111,7 +115,7 @@ def add_graph():
         if node_id_crossing > -1 and way_id == prev_way_id:
             if edge_start != -1:
                 db.execute('INSERT INTO graph (edge_start,edge_end,dist,way_id) VALUES (?,?,?,?)',
-                 (edge_start, node_id, round(dist), way_id))
+                           (edge_start, node_id, round(dist), way_id))
                 edge_active = False
             edge_start = node_id
             dist = 0
@@ -123,7 +127,7 @@ def add_graph():
     #
     if edge_active:
         db.execute('INSERT INTO graph (edge_start,edge_end,dist,way_id) VALUES (?,?,?,?)',
-         (edge_start, node_id, round(dist), way_id))
+                   (edge_start, node_id, round(dist), way_id))
     #
     db.execute('CREATE INDEX graph__way_id ON graph (way_id)')
     # write data to database
@@ -136,4 +140,3 @@ db = db_connect.cursor()   # new database cursor
 print("add experimental table 'graph'...")
 db.execute('DROP TABLE IF EXISTS graph')
 add_graph()
-

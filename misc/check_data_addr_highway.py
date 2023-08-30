@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-import sys, sqlite3
+import sys
+import sqlite3
 
-if len(sys.argv)!=3:
+if len(sys.argv) != 3:
     print(f'''
     Checks whether the street name of the address in this range also exists as a highway.
     Usage:
@@ -28,7 +29,7 @@ WHERE street!='' AND postcode LIKE ?
 ORDER BY postcode,city,street
 """
 db.execute(query, (postcode,))
-for (street_id,postcode,city,street,min_lon,min_lat,max_lon,max_lat) in db.fetchall():
+for (street_id, postcode, city, street, min_lon, min_lat, max_lon, max_lat) in db.fetchall():
     check_successful = False
     # Expand the search range a bit
     expand = 0.002
@@ -54,7 +55,7 @@ for (street_id,postcode,city,street,min_lon,min_lat,max_lon,max_lat) in db.fetch
         db.execute(query3, (way_id,))
         for (value,) in db.fetchall():
             # Name of highway==Name of address street?
-            if street==value:
+            if street == value:
                 check_successful = True
     #
     if not check_successful:
@@ -64,9 +65,8 @@ for (street_id,postcode,city,street,min_lon,min_lat,max_lon,max_lat) in db.fetch
         query2 = 'SELECT node_id,way_id FROM addr_housenumber WHERE street_id=?'
         db.execute(query2, (street_id,))
         for (node_id, way_id,) in db.fetchall():
-            if node_id!=-1:
+            if node_id != -1:
                 print(f'<span>node </span><a href="https://www.openstreetmap.org/node/{node_id}" target="_blank">{node_id}</a><br>')
-            if way_id!=-1:
+            if way_id != -1:
                 print(f'<span>way </span><a href="https://www.openstreetmap.org/way/{way_id}" target="_blank">{way_id}</a><br>')
 print('</html>')
-

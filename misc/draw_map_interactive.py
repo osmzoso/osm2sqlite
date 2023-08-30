@@ -4,9 +4,10 @@
 #
 from tkinter import *
 from tkinter import ttk
-import sys, sqlite3
+import sys
+import sqlite3
 
-if len(sys.argv)!=4:
+if len(sys.argv) != 4:
     print(f'''
     Print a very simple map in a window.
     Usage:
@@ -25,7 +26,7 @@ db = db_connect.cursor()   # new database cursor
 map_width = 1200
 map_height = 800
 # Zentrale Koordinaten der Karte
-map_lon =  7.80742505  # Freiburg, St. Georgen
+map_lon = 7.80742505  # Freiburg, St. Georgen
 map_lat = 47.98203435
 # TODO Bereich berechnen aufgrund des Seitenverhältnis map_width/map_height
 range_lon = 0.0029
@@ -48,6 +49,7 @@ except ValueError:
     print('error : lon lat not numeric')
     sys.exit(1)
 
+
 def calc_boundingbox():
     global min_lon, max_lon, min_lat, max_lat, range_lon, range_lat
     global m_lon, n_lon, m_lat, n_lat
@@ -61,37 +63,45 @@ def calc_boundingbox():
     m_lat = map_height / (max_lat - min_lat)    # lat: Steigung
     n_lat = -1 * m_lat * min_lat                # lat: Y-Achsenabschnitt
 
+
 def exit_app(*args):
     root.destroy()
+
 
 def lon2px(lon):
     return int(m_lon * lon + n_lon)
 
+
 def lat2px(lat):
     return map_height - int(m_lat * lat + n_lat)
+
 
 def move_up(*args):
     global map_lat
     map_lat = map_lat + 0.0002
     draw_map()
 
+
 def move_left(*args):
     global map_lon
     map_lon = map_lon - 0.0002
     draw_map()
+
 
 def move_right(*args):
     global map_lon
     map_lon = map_lon + 0.0002
     draw_map()
 
+
 def move_down(*args):
     global map_lat
     map_lat = map_lat - 0.0002
     draw_map()
 
+
 def draw_map(*args):
-    #print(map_lon, map_lat)    # TEST
+    # print(map_lon, map_lat)    # TEST
     calc_boundingbox()
     cv.delete("all")
     query = """
@@ -111,108 +121,108 @@ def draw_map(*args):
         for (key, value) in db.fetchall():
             # Layer 1
             if key == 'landuse' and value == 'farmland':
-                way1 = {'layer':1, 'style':'polygon', 'width':0, 'fill':'#eef0d5', 'outline':'', 'dash':''}
+                way1 = {'layer': 1, 'style': 'polygon', 'width': 0, 'fill': '#eef0d5', 'outline': '', 'dash': ''}
             elif key == 'landuse' and value == 'commercial':
-                way1 = {'layer':1, 'style':'polygon', 'width':0, 'fill':'#f2dad9', 'outline':'', 'dash':''}
+                way1 = {'layer': 1, 'style': 'polygon', 'width': 0, 'fill': '#f2dad9', 'outline': '', 'dash': ''}
             elif key == 'natural' and value == 'grassland':
-                way1 = {'layer':1, 'style':'polygon', 'width':0, 'fill':'#cdebb0', 'outline':'', 'dash':''}
+                way1 = {'layer': 1, 'style': 'polygon', 'width': 0, 'fill': '#cdebb0', 'outline': '', 'dash': ''}
             elif key == 'landuse' and value == 'residential':
-                way1 = {'layer':1, 'style':'polygon', 'width':0, 'fill':'#e0dfdf', 'outline':'#cbcdc9', 'dash':''}
+                way1 = {'layer': 1, 'style': 'polygon', 'width': 0, 'fill': '#e0dfdf', 'outline': '#cbcdc9', 'dash': ''}
             elif key == 'landuse' and value == 'industrial':
-                way1 = {'layer':1, 'style':'polygon', 'width':0, 'fill':'#ebdbe8', 'outline':'#988e96', 'dash':''}
+                way1 = {'layer': 1, 'style': 'polygon', 'width': 0, 'fill': '#ebdbe8', 'outline': '#988e96', 'dash': ''}
             # Layer 2
             elif key == 'landuse' and value in ('grass', 'meadow'):
-                way1 = {'layer':2, 'style':'polygon', 'width':0, 'fill':'#cdebb0', 'outline':'', 'dash':''}
+                way1 = {'layer': 2, 'style': 'polygon', 'width': 0, 'fill': '#cdebb0', 'outline': '', 'dash': ''}
             elif key == 'landuse' and value == 'forest':
-                way1 = {'layer':2, 'style':'polygon', 'width':0, 'fill':'#add19e', 'outline':'', 'dash':''}
+                way1 = {'layer': 2, 'style': 'polygon', 'width': 0, 'fill': '#add19e', 'outline': '', 'dash': ''}
             elif key == 'natural' and value == 'wood':
-                way1 = {'layer':2, 'style':'polygon', 'width':0, 'fill':'#add19e', 'outline':'', 'dash':''}
+                way1 = {'layer': 2, 'style': 'polygon', 'width': 0, 'fill': '#add19e', 'outline': '', 'dash': ''}
             elif key == 'landuse' and value == 'vineyard':
-                way1 = {'layer':2, 'style':'polygon', 'width':0, 'fill':'#bddc9a', 'outline':'', 'dash':''}
+                way1 = {'layer': 2, 'style': 'polygon', 'width': 0, 'fill': '#bddc9a', 'outline': '', 'dash': ''}
             elif key == 'landuse' and value == 'farmyard':
-                way1 = {'layer':2, 'style':'polygon', 'width':0, 'fill':'#f5dcba', 'outline':'#d8be98', 'dash':''}
+                way1 = {'layer': 2, 'style': 'polygon', 'width': 0, 'fill': '#f5dcba', 'outline': '#d8be98', 'dash': ''}
             elif key == 'landuse' and value == 'orchard':
-                way1 = {'layer':2, 'style':'polygon', 'width':0, 'fill':'#aedfa3', 'outline':'', 'dash':''}
+                way1 = {'layer': 2, 'style': 'polygon', 'width': 0, 'fill': '#aedfa3', 'outline': '', 'dash': ''}
             elif key == 'landuse' and value == 'allotments':
-                way1 = {'layer':2, 'style':'polygon', 'width':0, 'fill':'#d5e4cb', 'outline':'', 'dash':''}
+                way1 = {'layer': 2, 'style': 'polygon', 'width': 0, 'fill': '#d5e4cb', 'outline': '', 'dash': ''}
             elif key == 'leisure' and value == 'park':
-                way1 = {'layer':2, 'style':'polygon', 'width':0, 'fill':'#c8facc', 'outline':'', 'dash':''}
+                way1 = {'layer': 2, 'style': 'polygon', 'width': 0, 'fill': '#c8facc', 'outline': '', 'dash': ''}
             elif key == 'landuse' and value == 'recreation_ground':
-                way1 = {'layer':2, 'style':'polygon', 'width':0, 'fill':'#dffce2', 'outline':'#9dd5a1', 'dash':''}
+                way1 = {'layer': 2, 'style': 'polygon', 'width': 0, 'fill': '#dffce2', 'outline': '#9dd5a1', 'dash': ''}
             elif key == 'landuse' and value == 'construction':
-                way1 = {'layer':2, 'style':'polygon', 'width':0, 'fill':'#c7c7b4', 'outline':'', 'dash':''}
+                way1 = {'layer': 2, 'style': 'polygon', 'width': 0, 'fill': '#c7c7b4', 'outline': '', 'dash': ''}
             # Layer 3
             elif key == 'leisure' and value == 'playground':
-                way1 = {'layer':3, 'style':'polygon', 'width':0, 'fill':'#dffce2', 'outline':'#a1dea6', 'dash':''}
+                way1 = {'layer': 3, 'style': 'polygon', 'width': 0, 'fill': '#dffce2', 'outline': '#a1dea6', 'dash': ''}
             elif key == 'leisure' and value == 'pitch':
-                way1 = {'layer':3, 'style':'polygon', 'width':0, 'fill':'#aae0cb', 'outline':'#8ecfb5', 'dash':''}
+                way1 = {'layer': 3, 'style': 'polygon', 'width': 0, 'fill': '#aae0cb', 'outline': '#8ecfb5', 'dash': ''}
             # Layer 4
             elif key == 'natural' and value == 'water':
-                way1 = {'layer':4, 'style':'polygon', 'width':0, 'fill':'#aad3df', 'outline':'', 'dash':''}
+                way1 = {'layer': 4, 'style': 'polygon', 'width': 0, 'fill': '#aad3df', 'outline': '', 'dash': ''}
             elif key == 'waterway' and value == 'stream':
-                way1 = {'layer':4, 'style':'line', 'width':4, 'fill':'#aad3df', 'outline':'', 'dash':''}
+                way1 = {'layer': 4, 'style': 'line', 'width': 4, 'fill': '#aad3df', 'outline': '', 'dash': ''}
             elif key == 'barrier':
-                way1 = {'layer':4, 'style':'line', 'width':1, 'fill':'#9fb0a1', 'outline':'', 'dash':''}
+                way1 = {'layer': 4, 'style': 'line', 'width': 1, 'fill': '#9fb0a1', 'outline': '', 'dash': ''}
             #
             elif key == 'highway' and value == 'track':
-                way1 = {'layer':5, 'style':'line', 'width':2, 'fill':'#a5832c', 'outline':'', 'dash':'9 3'}
+                way1 = {'layer': 5, 'style': 'line', 'width': 2, 'fill': '#a5832c', 'outline': '', 'dash': '9 3'}
             elif key == 'highway' and value == 'service':
-                way1 = {'layer':5, 'style':'line', 'width':8, 'fill':'#cccccc', 'outline':'', 'dash':''}
-                way2 = {'layer':7, 'style':'line', 'width':6, 'fill':'#ffffff', 'outline':'', 'dash':''}
+                way1 = {'layer': 5, 'style': 'line', 'width': 8, 'fill': '#cccccc', 'outline': '', 'dash': ''}
+                way2 = {'layer': 7, 'style': 'line', 'width': 6, 'fill': '#ffffff', 'outline': '', 'dash': ''}
             elif key == 'highway' and value in ('residential', 'unclassified'):
-                way1 = {'layer':5, 'style':'line', 'width':14, 'fill':'#cccccc', 'outline':'', 'dash':''}
-                way2 = {'layer':7, 'style':'line', 'width':12, 'fill':'#ffffff', 'outline':'', 'dash':''}
+                way1 = {'layer': 5, 'style': 'line', 'width': 14, 'fill': '#cccccc', 'outline': '', 'dash': ''}
+                way2 = {'layer': 7, 'style': 'line', 'width': 12, 'fill': '#ffffff', 'outline': '', 'dash': ''}
             elif key == 'highway' and value in ('living_street', 'pedestrian'):
-                way1 = {'layer':5, 'style':'line', 'width':14, 'fill':'#c4c4c4', 'outline':'', 'dash':''}
-                way2 = {'layer':6, 'style':'line', 'width':12, 'fill':'#ededed', 'outline':'', 'dash':''}
+                way1 = {'layer': 5, 'style': 'line', 'width': 14, 'fill': '#c4c4c4', 'outline': '', 'dash': ''}
+                way2 = {'layer': 6, 'style': 'line', 'width': 12, 'fill': '#ededed', 'outline': '', 'dash': ''}
             elif key == 'highway' and value in ('path', 'footway'):
-                way1 = {'layer':5, 'style':'line', 'width':2, 'fill':'#ffffff', 'outline':'', 'dash':''}
-                way2 = {'layer':6, 'style':'line', 'width':2, 'fill':'#fa8274', 'outline':'', 'dash':'4 4'}
+                way1 = {'layer': 5, 'style': 'line', 'width': 2, 'fill': '#ffffff', 'outline': '', 'dash': ''}
+                way2 = {'layer': 6, 'style': 'line', 'width': 2, 'fill': '#fa8274', 'outline': '', 'dash': '4 4'}
             elif key == 'highway' and value == 'steps':
-                way1 = {'layer':5, 'style':'line', 'width':5, 'fill':'#ffffff', 'outline':'', 'dash':''}
-                way2 = {'layer':6, 'style':'line', 'width':5, 'fill':'#fa8274', 'outline':'', 'dash':'2 2'}
+                way1 = {'layer': 5, 'style': 'line', 'width': 5, 'fill': '#ffffff', 'outline': '', 'dash': ''}
+                way2 = {'layer': 6, 'style': 'line', 'width': 5, 'fill': '#fa8274', 'outline': '', 'dash': '2 2'}
             elif key == 'highway' and value == 'cycleway':
-                way1 = {'layer':5, 'style':'line', 'width':2, 'fill':'#ffffff', 'outline':'', 'dash':''}
-                way2 = {'layer':6, 'style':'line', 'width':2, 'fill':'#0e0efe', 'outline':'', 'dash':'4 4'}
+                way1 = {'layer': 5, 'style': 'line', 'width': 2, 'fill': '#ffffff', 'outline': '', 'dash': ''}
+                way2 = {'layer': 6, 'style': 'line', 'width': 2, 'fill': '#0e0efe', 'outline': '', 'dash': '4 4'}
             elif key == 'highway' and value in ('tertiary', 'tertiary_link'):
-                way1 = {'layer':5, 'style':'line', 'width':18, 'fill':'#888888', 'outline':'', 'dash':''}
-                way2 = {'layer':8, 'style':'line', 'width':16, 'fill':'#ffffff', 'outline':'', 'dash':''}
+                way1 = {'layer': 5, 'style': 'line', 'width': 18, 'fill': '#888888', 'outline': '', 'dash': ''}
+                way2 = {'layer': 8, 'style': 'line', 'width': 16, 'fill': '#ffffff', 'outline': '', 'dash': ''}
             elif key == 'highway' and value in ('secondary', 'secondary_link'):
-                way1 = {'layer':5, 'style':'line', 'width':18, 'fill':'#888888', 'outline':'', 'dash':''}
-                way2 = {'layer':8, 'style':'line', 'width':16, 'fill':'#f7fabf', 'outline':'', 'dash':''}
+                way1 = {'layer': 5, 'style': 'line', 'width': 18, 'fill': '#888888', 'outline': '', 'dash': ''}
+                way2 = {'layer': 8, 'style': 'line', 'width': 16, 'fill': '#f7fabf', 'outline': '', 'dash': ''}
             elif key == 'highway' and value in ('trunk', 'trunk_link'):
-                way1 = {'layer':5, 'style':'line', 'width':18, 'fill':'#888888', 'outline':'', 'dash':''}
-                way2 = {'layer':7, 'style':'line', 'width':16, 'fill':'#f9b29c', 'outline':'', 'dash':''}
+                way1 = {'layer': 5, 'style': 'line', 'width': 18, 'fill': '#888888', 'outline': '', 'dash': ''}
+                way2 = {'layer': 7, 'style': 'line', 'width': 16, 'fill': '#f9b29c', 'outline': '', 'dash': ''}
             elif key == 'highway' and value in ('primary', 'primary_link'):
-                way1 = {'layer':5, 'style':'line', 'width':18, 'fill':'#a26e04', 'outline':'', 'dash':''}
-                way2 = {'layer':7, 'style':'line', 'width':16, 'fill':'#fcd6a4', 'outline':'', 'dash':''}
+                way1 = {'layer': 5, 'style': 'line', 'width': 18, 'fill': '#a26e04', 'outline': '', 'dash': ''}
+                way2 = {'layer': 7, 'style': 'line', 'width': 16, 'fill': '#fcd6a4', 'outline': '', 'dash': ''}
             elif key == 'highway' and value in ('motorway', 'motorway_link'):
-                way1 = {'layer':5, 'style':'line', 'width':18, 'fill':'#de3a71', 'outline':'', 'dash':''}
-                way2 = {'layer':7, 'style':'line', 'width':16, 'fill':'#e892a2', 'outline':'', 'dash':''}
+                way1 = {'layer': 5, 'style': 'line', 'width': 18, 'fill': '#de3a71', 'outline': '', 'dash': ''}
+                way2 = {'layer': 7, 'style': 'line', 'width': 16, 'fill': '#e892a2', 'outline': '', 'dash': ''}
             elif key == 'railway' and value == 'rail':
-                way1 = {'layer':5, 'style':'line', 'width':5, 'fill':'#707070', 'outline':'', 'dash':''}
-                way2 = {'layer':7, 'style':'line', 'width':3, 'fill':'#fefefe', 'outline':'', 'dash':'12 12'}
+                way1 = {'layer': 5, 'style': 'line', 'width': 5, 'fill': '#707070', 'outline': '', 'dash': ''}
+                way2 = {'layer': 7, 'style': 'line', 'width': 3, 'fill': '#fefefe', 'outline': '', 'dash': '12 12'}
             elif key == 'railway' and value == 'tram':
-                way1 = {'layer':8, 'style':'line', 'width':4, 'fill':'#6e6e6e', 'outline':'', 'dash':''}
+                way1 = {'layer': 8, 'style': 'line', 'width': 4, 'fill': '#6e6e6e', 'outline': '', 'dash': ''}
             elif key == 'building':
-                way1 = {'layer':4, 'style':'polygon', 'width':0, 'fill':'#d9d0c9', 'outline':'#c2b5aa', 'dash':''}
+                way1 = {'layer': 4, 'style': 'polygon', 'width': 0, 'fill': '#d9d0c9', 'outline': '#c2b5aa', 'dash': ''}
             elif key == 'amenity':
-                way1 = {'layer':2, 'style':'polygon', 'width':0, 'fill':'#eeeeee', 'outline':'#d8c3c2', 'dash':''}
+                way1 = {'layer': 2, 'style': 'polygon', 'width': 0, 'fill': '#eeeeee', 'outline': '#d8c3c2', 'dash': ''}
             elif key == 'landuse' and value == 'cemetery':
-                way1 = {'layer':1, 'style':'polygon', 'width':0, 'fill':'#aacbaf', 'outline':'', 'dash':''}
+                way1 = {'layer': 1, 'style': 'polygon', 'width': 0, 'fill': '#aacbaf', 'outline': '', 'dash': ''}
             elif key == 'landuse' and value == 'railway':
-                way1 = {'layer':1, 'style':'polygon', 'width':0, 'fill':'#e9dae7', 'outline':'#aaa5a8', 'dash':''}
+                way1 = {'layer': 1, 'style': 'polygon', 'width': 0, 'fill': '#e9dae7', 'outline': '#aaa5a8', 'dash': ''}
             elif key == 'leisure' and value == 'swimming_pool':
-                way1 = {'layer':3, 'style':'polygon', 'width':0, 'fill':'#aad3df', 'outline':'#7dc7dc', 'dash':''}
+                way1 = {'layer': 3, 'style': 'polygon', 'width': 0, 'fill': '#aad3df', 'outline': '#7dc7dc', 'dash': ''}
             elif key == 'natural' and value == 'scrub':
-                way1 = {'layer':2, 'style':'polygon', 'width':0, 'fill':'#c8d7ab', 'outline':'', 'dash':''}
+                way1 = {'layer': 2, 'style': 'polygon', 'width': 0, 'fill': '#c8d7ab', 'outline': '', 'dash': ''}
             elif key == 'natural' and value == 'tree_row':
-                way1 = {'layer':2, 'style':'line', 'width':4, 'fill':'#9cd79f', 'outline':'', 'dash':''}    # opacity 0.5
+                way1 = {'layer': 2, 'style': 'line', 'width': 4, 'fill': '#9cd79f', 'outline': '', 'dash': ''}    # opacity 0.5
             elif key == 'highway' and value == 'platform':
-                way1 = {'layer':3, 'style':'polygon', 'width':0, 'fill':'#bbbbbb', 'outline':'#929191', 'dash':''}
+                way1 = {'layer': 3, 'style': 'polygon', 'width': 0, 'fill': '#bbbbbb', 'outline': '#929191', 'dash': ''}
         # no definition than mark with red line
         if way1 == {}:
-            way1 = {'layer':11, 'style':'line', 'width':2, 'fill':'#ff0000', 'outline':'', 'dash':''}
+            way1 = {'layer': 11, 'style': 'line', 'width': 2, 'fill': '#ff0000', 'outline': '', 'dash': ''}
         #
         # TODO
         # - key='bridge' und value='yes' -> Layer erhöhen (Python way1['layer'] = way1['layer'] + 3)
@@ -223,10 +233,10 @@ def draw_map(*args):
             way_list.append([way_id, way2['layer'], way2['style'], way2['width'], way2['fill'], way2['outline'], way2['dash']])
             way_unknown = way_unknown + 1
         #
-        #way_list.append([way_id, 12, 'line', 2, '#ff0000', '', ''])
-    #print(way_unknown, 'ways unknown') # TEST
+        # way_list.append([way_id, 12, 'line', 2, '#ff0000', '', ''])
+    # print(way_unknown, 'ways unknown') # TEST
     # draw layer 0-12
-    for draw_layer in range(0,12):
+    for draw_layer in range(0, 12):
         for way_info in way_list:
             way_id = way_info[0]
             way_layer = way_info[1]
@@ -248,7 +258,7 @@ def draw_map(*args):
             db.execute(query3, (way_id,))
             coord_list = ()
             for (lon, lat) in db.fetchall():
-                coord_list = coord_list + ( lon2px(lon), lat2px(lat) )
+                coord_list = coord_list + (lon2px(lon), lat2px(lat))
             #
             if way_style == 'line':
                 cv.create_line(coord_list, fill=way_fill, width=way_width, dash=way_dash)
@@ -286,4 +296,3 @@ draw_map()
 
 #
 root.mainloop()
-

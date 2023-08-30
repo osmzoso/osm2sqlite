@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import sys, sqlite3
+import sys
+import sqlite3
 import html_leaflet
 
 if len(sys.argv) != 6:
@@ -13,10 +14,10 @@ if len(sys.argv) != 6:
     sys.exit(1)
 
 database = sys.argv[1]
-min_lon  = float(sys.argv[2])
-min_lat  = float(sys.argv[3])
-max_lon  = float(sys.argv[4])
-max_lat  = float(sys.argv[5])
+min_lon = float(sys.argv[2])
+min_lat = float(sys.argv[3])
+max_lon = float(sys.argv[4])
+max_lat = float(sys.argv[5])
 
 db_connect = sqlite3.connect(database)
 db = db_connect.cursor()   # new database cursor
@@ -43,7 +44,7 @@ ORDER BY postcode,street,abs(housenumber)
 #
 m1.print_script_start()
 db.execute(query, (min_lon, min_lat, max_lon, max_lat))
-for (way_id,node_id,postcode,city,street,housenumber,lon,lat) in db.fetchall():
+for (way_id, node_id, postcode, city, street, housenumber, lon, lat) in db.fetchall():
     popup_text = '<pre>'
     popup_text += f'addr:postcode    : {postcode}<br>'
     popup_text += f'addr:city        : {city}<br>'
@@ -52,8 +53,8 @@ for (way_id,node_id,postcode,city,street,housenumber,lon,lat) in db.fetchall():
     popup_text += '</pre>'
     m1.add_marker(lon, lat, popup_text, False)
 # Boundingbox
-m1.set_properties( '#000068', 1.0, 2, '5 5', 'none', 1.0 )
-m1.add_rectangle( m1.bbox_min_lon, m1.bbox_min_lat, m1.bbox_max_lon, m1.bbox_max_lat, '' )
+m1.set_properties('#000068', 1.0, 2, '5 5', 'none', 1.0)
+m1.add_rectangle(m1.bbox_min_lon, m1.bbox_min_lat, m1.bbox_max_lon, m1.bbox_max_lat, '')
 m1.print_script_end()
 
 #
@@ -62,7 +63,7 @@ m1.print_script_end()
 print('<table>')
 print('<tr><th>way_id</th><th>node_id</th><th>addr:postcode</th><th>addr:city</th><th>addr:street</th><th>addr:housenumber</th><th>lon</th><th>lat</th></tr>')
 db.execute(query, (min_lon, min_lat, max_lon, max_lat))
-for (way_id,node_id,postcode,city,street,housenumber,lon,lat) in db.fetchall():
+for (way_id, node_id, postcode, city, street, housenumber, lon, lat) in db.fetchall():
     print(f'<tr>')
     if way_id != -1:
         print(f'<td><a href="https://www.openstreetmap.org/way/{way_id}" target="_blank">{way_id}</a></td>')
@@ -81,4 +82,3 @@ print('</html>')
 
 db_connect.commit()
 db_connect.close()
-

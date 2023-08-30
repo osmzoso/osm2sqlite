@@ -2,9 +2,12 @@
 #
 # Routing
 #
-import sys, sqlite3, math, queue
+import sys
+import sqlite3
+import math
+import queue
 
-if len(sys.argv)!=6:
+if len(sys.argv) != 6:
     print(f'''
     Calculate shortest way.
     Usage:
@@ -15,19 +18,20 @@ if len(sys.argv)!=6:
 database = sys.argv[1]
 
 # Coordinates start and destination
-lon_start  = float(sys.argv[2])
-lat_start  = float(sys.argv[3])
-lon_dest   = float(sys.argv[4])
-lat_dest   = float(sys.argv[5])
+lon_start = float(sys.argv[2])
+lat_start = float(sys.argv[3])
+lon_dest = float(sys.argv[4])
+lat_dest = float(sys.argv[5])
 
 # database connection
 db_connect = sqlite3.connect(database)
 db = db_connect.cursor()   # new database cursor
 
+
 class Graph:
     """
     A class used to represent a graph
-    
+
     - The numbers of the nodes must be between 1 and N
     - There can be multiple edges between two nodes.
       Therefore, each edge must have a unique number.
@@ -193,9 +197,9 @@ def boundingbox_subgraph(lon1, lat1, lon2, lat2, enlarge=1.2):
 def part_way_coordinates(way_id, node_start, node_end):
     """Returns a list with the coordinates of a part way"""
     #
-    db.execute("SELECT node_order FROM way_nodes WHERE way_id=? AND node_id=?", (way_id, node_start) )
+    db.execute("SELECT node_order FROM way_nodes WHERE way_id=? AND node_id=?", (way_id, node_start))
     (node_start_order,) = db.fetchone()
-    db.execute("SELECT node_order FROM way_nodes WHERE way_id=? AND node_id=?", (way_id, node_end) )
+    db.execute("SELECT node_order FROM way_nodes WHERE way_id=? AND node_id=?", (way_id, node_end))
     (node_end_order,) = db.fetchone()
     #
     query = '''
@@ -232,7 +236,7 @@ FROM subgraph AS s
 LEFT JOIN subgraph_nodes AS sns ON s.edge_start=sns.node_id
 LEFT JOIN subgraph_nodes AS sne ON s.edge_end=sne.node_id
 ''')
-for (edge_id,node_start,node_end,dist,way_id) in db.fetchall():
+for (edge_id, node_start, node_end, dist, way_id) in db.fetchall():
     graph.add_edge(node_start, node_end, edge_id, dist)
 print('## graph number_of_nodes : ', graph.number_of_nodes)
 print('## graph number_of_edges : ', graph.number_of_edges)
@@ -242,14 +246,14 @@ print('## graph number_of_edges : ', graph.number_of_edges)
 dist_node_start = sys.maxsize
 graph_node_start = -1
 dist_node_end = sys.maxsize
-graph_node_end   = -1
+graph_node_end = -1
 db.execute('SELECT no,lon,lat FROM subgraph_nodes')
-for (no,lon,lat) in db.fetchall():
-    dist = math.sqrt( (lon_start-lon)**2 + (lat_start-lat)**2 )
+for (no, lon, lat) in db.fetchall():
+    dist = math.sqrt((lon_start-lon)**2 + (lat_start-lat)**2)
     if dist < dist_node_start:
         graph_node_start = no
         dist_node_start = dist
-    dist = math.sqrt( (lon_dest-lon)**2 + (lat_dest-lat)**2 )
+    dist = math.sqrt((lon_dest-lon)**2 + (lat_dest-lat)**2)
     if dist < dist_node_end:
         graph_node_end = no
         dist_node_end = dist
@@ -262,7 +266,7 @@ node_sequence, edge_sequence, distance = graph.shortest_way(graph_node_start, gr
 #
 print('## distance : ', distance, 'm')
 # a) simple method, only start and end coordinates of the edge
-#for graph_node in node_sequence:
+# for graph_node in node_sequence:
 #    db.execute('SELECT node_id,lon,lat FROM subgraph_nodes WHERE no=?', (graph_node,))
 #    (node_id, lon, lat) = db.fetchone()
 #    print(lon, lat)
@@ -286,4 +290,3 @@ for edge_id in edge_sequence:
     path_coordinates.extend(coordinates)
 for lon, lat in path_coordinates:
     print(lon, lat)
-

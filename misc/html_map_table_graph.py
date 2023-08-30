@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import sys, sqlite3
+import sys
+import sqlite3
 import html_leaflet
 
 if len(sys.argv) != 6:
@@ -12,10 +13,10 @@ if len(sys.argv) != 6:
     sys.exit(1)
 
 database = sys.argv[1]
-min_lon  = float(sys.argv[2])
-min_lat  = float(sys.argv[3])
-max_lon  = float(sys.argv[4])
-max_lat  = float(sys.argv[5])
+min_lon = float(sys.argv[2])
+min_lat = float(sys.argv[3])
+max_lon = float(sys.argv[4])
+max_lat = float(sys.argv[5])
 
 db_connect = sqlite3.connect(database)
 db = db_connect.cursor()   # new database cursor
@@ -43,12 +44,11 @@ WHERE g.way_id IN (
  WHERE max_lon>=? AND min_lon<=?
   AND  max_lat>=? AND min_lat<=?
 )
-''',
-(min_lon, max_lon, min_lat, max_lat))
+''', (min_lon, max_lon, min_lat, max_lat))
 for (lon_start, lat_start, lon_end, lat_end) in db.fetchall():
     m1.add_line(lon_start, lat_start, lon_end, lat_end)
 #
-m1.set_properties( '#ff0000', 1.0, 2, '5 5', 'none', 1.0 )
+m1.set_properties('#ff0000', 1.0, 2, '5 5', 'none', 1.0)
 m1.add_rectangle(min_lon, min_lat, max_lon, max_lat, '')
 #
 m1.print_script_end()
@@ -58,4 +58,3 @@ print('</html>')
 
 db_connect.commit()
 db_connect.close()
-
