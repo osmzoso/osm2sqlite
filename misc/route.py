@@ -219,13 +219,13 @@ def part_way_coordinates(way_id, node_start, node_end):
 
 
 #
-print('## start : ', lon_start, lat_start)
-print('## dest  : ', lon_dest,  lat_dest)
+print('# start:', lon_start, lat_start)
+print('# dest:', lon_dest,  lat_dest)
 #
 # 1. Fill graph
 #
 lon1, lat1, lon2, lat2 = boundingbox_subgraph(lon_start, lat_start, lon_dest, lat_dest, 1.3)
-print('## subgraph boundingbox', lon1, lat1, lon2, lat2)
+print('# subgraph_boundingbox:', lon1, lat1, lon2, lat2)
 number_of_nodes = create_subgraph_tables(lon1, lat1, lon2, lat2)
 #
 graph = Graph(number_of_nodes)
@@ -238,8 +238,8 @@ LEFT JOIN subgraph_nodes AS sne ON s.edge_end=sne.node_id
 ''')
 for (edge_id, node_start, node_end, dist, way_id) in db.fetchall():
     graph.add_edge(node_start, node_end, edge_id, dist)
-print('## graph number_of_nodes : ', graph.number_of_nodes)
-print('## graph number_of_edges : ', graph.number_of_edges)
+print('# subgraph_number_of_nodes:', graph.number_of_nodes)
+print('# subgraph_number_of_edges:', graph.number_of_edges)
 #
 # 2. Find the nodes in the graph that are closest to the coordinates of the start point and end point
 #
@@ -264,7 +264,7 @@ node_sequence, edge_sequence, distance = graph.shortest_way(graph_node_start, gr
 #
 # 4. Output the coordinates of the path
 #
-print('## distance : ', distance, 'm')
+print('# distance:', distance, 'm')
 # a) simple method, only start and end coordinates of the edge
 # for graph_node in node_sequence:
 #    db.execute('SELECT node_id,lon,lat FROM subgraph_nodes WHERE no=?', (graph_node,))
@@ -288,5 +288,5 @@ for edge_id in edge_sequence:
         first_node_id = edge_start
     coordinates.pop(0)  # remove the first coordinates
     path_coordinates.extend(coordinates)
-for lon, lat in path_coordinates:
-    print(lon, lat)
+for (lon, lat) in path_coordinates:
+    print(str(lon) + ',' + str(lat))

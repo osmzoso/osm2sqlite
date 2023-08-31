@@ -30,8 +30,8 @@ time bzip2 -c -d $osm_xml_bz2_file | ../osm2sqlite - $database_file addr rtree-w
 #
 ./create_table_graph.py $database_file
 # Freiburg -> Schauinsland
-./route.py $database_file 7.808 47.983 7.889 47.897 > $dir_results/route.txt 
-./html_map_path.py $dir_results/route.txt > "$dir_results/$cdate-map_routing_path1.html"
+./route.py $database_file 7.808 47.983 7.889 47.897 > $dir_results/routing_path.csv
+./html_map_csv.py $dir_results/routing_path.csv > "$dir_results/$cdate-map_routing_path1.html"
 #
 # create HTML file with a map of the addresses
 ./html_map_addr.py $database_file 7.791 47.975 7.809 47.983 > "$dir_results/$cdate-map_adressen_freiburg_st_georgen.html"

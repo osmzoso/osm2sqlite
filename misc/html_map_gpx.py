@@ -1,17 +1,6 @@
 #!/usr/bin/env python
 #
-# https://de.wikipedia.org/wiki/GPS_Exchange_Format
 #
-# https://www.gpsbabel.org/htmldoc-development/The_Formats.html
-# https://www.gpsbabel.org/htmldoc-development/fmt_gpx.html
-# https://www.topografix.com/gpx.asp
-#
-# https://www.j-berkemeier.de/ShowGPX.html
-#
-# Problem Namespaces...
-# https://gis.stackexchange.com/questions/228966/how-to-properly-get-coordinates-from-gpx-file-in-python
-# https://stackoverflow.com/questions/14853243/parsing-xml-with-namespace-in-python-via-elementtree
-# https://docs.python.org/3/library/xml.etree.elementtree.html#parsing-xml-with-namespaces
 #
 import sys
 import xml.etree.ElementTree as ET
