@@ -99,11 +99,7 @@ value        | TEXT                | tag value
 
 ## Options
 
-After reading in the data, additional data can be created with various options.
-
-### no-index
-
-The `no-index` option suppresses the creation of the indexes (not recommended).
+After reading in the data, additional data can be created with some options.
 
 ### rtree-ways
 
@@ -168,6 +164,10 @@ Table **addr_street** contains postcode, city, street and boundingbox of the str
 Table **addr_housenumber** contains the coordinates of each housenumber.  
 In addition, a view **addr_view** is created.  
 
+### no-index
+
+The `no-index` option suppresses the creation of the indexes (not recommended).
+
 
 ---
 
@@ -195,6 +195,18 @@ Examples:
 7z e -so germany.osm.bz2 | osm2sqlite - germany.db
 bzip2 -c -d ./xml/saarland-latest.osm.bz2 | osm2sqlite - ./database/saarland-latest.db addr rtree-ways
 ```
+
+---
+
+Directory /misc
+
+Contains first experiments with the created database (e.g. drawing a map or routing).
+
+---
+
+Directory /query
+
+Contains some perhaps useful queries.
 
 ---
 

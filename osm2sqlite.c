@@ -21,9 +21,9 @@
 "Usage:\nosm2sqlite FILE_OSM_XML FILE_SQLITE_DB [option ...]\n" \
 "\n" \
 "Options:\n" \
-"  no-index       Do not create indexes (not recommended)\n" \
 "  rtree-ways     Add R*Tree index for ways\n" \
-"  addr           Add address tables\n"
+"  addr           Add address tables\n" \
+"  no-index       Do not create indexes (not recommended)\n"
 
 /*
 ** Public variables
@@ -426,7 +426,7 @@ void add_addr() {
 int main(int argc, char **argv){
   if( argc<3 ){
     printf(HELP);
-    printf("\nSQLite %s is used.\n\n", sqlite3_libversion());
+    printf("\n(SQLite %s is used)\n\n", sqlite3_libversion());
     return EXIT_FAILURE;
   }
 

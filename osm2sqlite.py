@@ -14,9 +14,9 @@ Usage:
 osm2sqlite FILE_OSM_XML FILE_SQLITE_DB [option ...]
 
 Options:
-  no-index       Do not create indexes (not recommended)
   rtree-ways     Add R*Tree index for ways
-  addr           Add address tables'''
+  addr           Add address tables
+  no-index       Do not create indexes (not recommended)'''
 
 db_connect = None     # SQLite Database connection
 db         = None     # SQLite Database cursor
@@ -337,7 +337,7 @@ def main():
     global db_connect, db
     if len(sys.argv)<3:
         print(help)
-        print('\nSQLite '+sqlite3.sqlite_version+' is used.\n')
+        print('\n(SQLite '+sqlite3.sqlite_version+' is used)\n')
         sys.exit(1)
     # check options
     std_index = True
