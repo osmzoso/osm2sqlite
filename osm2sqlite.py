@@ -4,7 +4,9 @@
 #
 # Copyright (C) 2021-2023 Herbert Gläser
 #
-import xml.sax, sqlite3, sys
+import sys
+import xml.sax
+import sqlite3
 
 help = '''osm2sqlite.py 0.8.4
 
@@ -18,8 +20,9 @@ Options:
   addr           Add address tables
   no-index       Do not create indexes (not recommended)'''
 
-db_connect = None     # SQLite Database connection
-db         = None     # SQLite Database cursor
+db_connect = None  # SQLite Database connection
+db = None          # SQLite Database cursor
+
 
 class OsmHandler(xml.sax.ContentHandler):
     """
@@ -40,39 +43,39 @@ class OsmHandler(xml.sax.ContentHandler):
 
     # call when an element starts
     def startElement(self, element, attrib):
-        if   element == 'node':
+        if element == 'node':
             self.element_node_active = True
             self.node_id = attrib['id']
             db.execute('INSERT INTO nodes (node_id,lon,lat) VALUES (?,?,?)',
-             (self.node_id, attrib['lon'], attrib['lat']))
+                       (self.node_id, attrib['lon'], attrib['lat']))
         elif element == 'tag':
             if self.element_node_active:
                 db.execute('INSERT INTO node_tags (node_id,key,value) VALUES (?,?,?)',
-                 (self.node_id, attrib['k'], attrib['v']))
+                           (self.node_id, attrib['k'], attrib['v']))
             elif self.element_way_active:
                 db.execute('INSERT INTO way_tags (way_id,key,value) VALUES (?,?,?)',
-                 (self.way_id, attrib['k'], attrib['v']))
+                           (self.way_id, attrib['k'], attrib['v']))
             elif self.element_relation_active:
                 db.execute('INSERT INTO relation_tags (relation_id,key,value) VALUES (?,?,?)',
-                 (self.relation_id, attrib['k'], attrib['v']))
+                           (self.relation_id, attrib['k'], attrib['v']))
         elif element == 'way':
             self.element_way_active = True
             self.way_id = attrib['id']
         elif element == 'nd':
             self.way_node_order += 1
             db.execute('INSERT INTO way_nodes (way_id,node_id,node_order) VALUES (?,?,?)',
-             (self.way_id, attrib['ref'], self.way_node_order))
+                       (self.way_id, attrib['ref'], self.way_node_order))
         elif element == 'relation':
             self.element_relation_active = True
             self.relation_id = attrib['id']
         elif element == 'member':
             self.relation_member_order += 1
             db.execute('INSERT INTO relation_members (relation_id,type,ref,role,member_order) VALUES (?,?,?,?,?)',
-             (self.relation_id, attrib['type'], attrib['ref'], attrib['role'], self.relation_member_order))
+                       (self.relation_id, attrib['type'], attrib['ref'], attrib['role'], self.relation_member_order))
 
     # call when an element ends
     def endElement(self, element):
-        if   element == 'node':
+        if element == 'node':
             self.element_node_active = False
             self.node_id = -1
         elif element == 'way':
@@ -83,6 +86,7 @@ class OsmHandler(xml.sax.ContentHandler):
             self.element_relation_active = False
             self.relation_id = -1
             self.relation_member_order = 0
+
 
 def add_tables():
     db.execute('''
@@ -130,6 +134,7 @@ def add_tables():
     )
     ''')
 
+
 def add_std_index():
     db.execute('CREATE INDEX node_tags__node_id            ON node_tags (node_id)')
     db.execute('CREATE INDEX node_tags__key                ON node_tags (key)')
@@ -143,6 +148,7 @@ def add_std_index():
     db.execute('CREATE INDEX relation_tags__key            ON relation_tags (key)')
     db_connect.commit()
 
+
 def add_rtree_ways():
     db.execute('CREATE VIRTUAL TABLE rtree_way USING rtree(way_id, min_lat, max_lat, min_lon, max_lon)')
     db.execute('''
@@ -153,6 +159,7 @@ def add_rtree_ways():
     GROUP BY way_nodes.way_id
     ''')
     db_connect.commit()
+
 
 def add_addr():
     #
@@ -330,12 +337,10 @@ def add_addr():
     #
     db.execute('COMMIT TRANSACTION')
 
-#
-# Main
-#
+
 def main():
     global db_connect, db
-    if len(sys.argv)<3:
+    if len(sys.argv) < 3:
         print(help)
         print('\n(SQLite '+sqlite3.sqlite_version+' is used)\n')
         sys.exit(1)
@@ -343,13 +348,13 @@ def main():
     std_index = True
     rtree_ways = False
     addr = False
-    if len(sys.argv)>3:
+    if len(sys.argv) > 3:
         for i in range(3, len(sys.argv)):
-            if sys.argv[i]=='no-index':
+            if sys.argv[i] == 'no-index':
                 std_index = False
-            elif sys.argv[i]=='rtree-ways':
+            elif sys.argv[i] == 'rtree-ways':
                 rtree_ways = True
-            elif sys.argv[i]=='addr':
+            elif sys.argv[i] == 'addr':
                 addr = True
             else:
                 print("abort - option '"+sys.argv[i]+"' unknown")
@@ -358,8 +363,8 @@ def main():
     db_connect = sqlite3.connect(sys.argv[2])
     db = db_connect.cursor()   # new database cursor
     # tuning database
-    db.execute('PRAGMA journal_mode = OFF');
-    db.execute('PRAGMA page_size = 65536');
+    db.execute('PRAGMA journal_mode = OFF')
+    db.execute('PRAGMA page_size = 65536')
     # create all tables
     add_tables()
     # create an XMLReader
@@ -383,4 +388,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
