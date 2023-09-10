@@ -101,9 +101,9 @@ value        | TEXT                | tag value
 
 After reading in the data, additional data can be created with some options.
 
-### rtree-ways
+### Option `rtree-ways`
 
-The `rtree-ways` option creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
+This option creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
 index **rtree_way** for finding ways quickly.
 
 Internally, the index is generated with the following commands:
@@ -157,16 +157,44 @@ FROM rtree_way
 WHERE way_id=79235038
 ```
 
-### addr
+### Option `addr`
 
-The `addr` option creates 2 tables with address data.
-Table **addr_street** contains postcode, city, street and boundingbox of the street.  
-Table **addr_housenumber** contains the coordinates of each housenumber.  
-In addition, a view **addr_view** is created.  
+This option creates 2 tables with address data.
 
-### no-index
+Table **addr_street**:
 
-The `no-index` option suppresses the creation of the indexes (not recommended).
+column       | type                | description
+-------------|---------------------|-------------------------------------
+street_id    | INTEGER PRIMARY KEY | street ID
+postcode     | TEXT                | postcode
+city         | TEXT                | city
+street       | TEXT                | street
+min_lon      | REAL                | boundingbox min. longitude
+min_lat      | REAL                | boundingbox min. latitude
+max_lon      | REAL                | boundingbox max. longitude
+max_lat      | REAL                | boundingbox max. latitude
+
+- INDEX addr_street_1 ON addr_street (postcode,city,street)
+
+Table **addr_housenumber**:
+
+column         | type                | description
+---------------|---------------------|-------------------------------------
+housenumber_id | INTEGER PRIMARY KEY | housenumber ID
+street_id      | INTEGER             | street ID
+housenumber    | TEXT                | housenumber
+lon            | REAL                | longitude
+lat            | REAL                | latitude
+way_id         | INTEGER             | way ID
+node_id        | INTEGER             | node ID
+
+- INDEX addr_housenumber_1 ON addr_housenumber (street_id)
+
+The view **addr_view** join the two tables.  
+
+### Option `no-index`
+
+This option suppresses the creation of the indexes (not recommended).
 
 
 ---
