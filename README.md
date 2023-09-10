@@ -228,7 +228,7 @@ bzip2 -c -d ./xml/saarland-latest.osm.bz2 | osm2sqlite - ./database/saarland-lat
 
 Directory /misc
 
-Contains first experiments with the created database (e.g. drawing a map or [mis/README.md](routing)).
+Contains first experiments with the created database (e.g. drawing a map or [routing](mis/README.md)).
 
 ---
 
