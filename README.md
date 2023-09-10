@@ -207,7 +207,7 @@ Directory **/route+draw** contains some experiments with the created database.
 - drawing a map
 - check the data
 
-Directory **/query** contains some perhaps useful queries.
+Directory **/queries** contains some perhaps useful queries.
 
 Directory **/test** contains testcases.
 
@@ -220,9 +220,7 @@ C      : 47 seconds
 
 ---
 
-Compiling the C version on Linux:  
-
-See file **compile_osm2sqlite_c.sh**.
+Compiling the C version on Linux for Windows, see file **cross_compile_win.sh**.
 
 ---
 
