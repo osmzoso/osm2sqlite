@@ -1,13 +1,14 @@
-The folder **/misc** contains first experiments with the created database.
+The directory **/misc** contains first experiments with the created database.
 
-The bash script `0_make_database.sh` invokes some of the scripts.
+The bash script `0_make_database.sh` invokes the scripts to show the function.
+
 
 # 1. Routing
 
-First, routable data must be created from the OSM data.
+First, routable data must be created from the OSM data in the database.
 
-The script `create_table_graph.py` creates a table 'graph' in the database.
-This table contains the complete graph data.
+The script `create_table_graph.py` creates a table 'graph' in the database.  
+This table contains the complete graph of all streets and roads.  
 
 ### Table 'graph'
 
@@ -84,7 +85,7 @@ LEFT JOIN subgraph_nodes AS sne ON s.end_node_id=sne.node_id
 ```
 
 
-### Calculate shortest path
+#### Calculate shortest path
 
 The command
 ```
@@ -97,7 +98,7 @@ Visualization of a routing path:
 ![routing_path.jpg](./routing_path.jpg)
 
 
-# 2. Draw own map
+# 2. Map Drawing
 
 The python script *draw_map_interactive.py* read data directly from the database
 and draw a very simple map in a window.
@@ -107,35 +108,20 @@ Therefore no street names can be displayed.
 
 The script is only a test to investigate how fast the data can be accessed.
 
-The map is drawn in layers. Layer 1 is drawn first.
-
-Layer 1: grassland, farmland  
-Layer 2: forest, orchard, wineyard, parks   
-Layer 3: sports field, playground  
-Layer 4: water  
-Layer 5: building, Swimming-Pools  
-Layer 6: For two-colour roads lower part  
-Layer 7: For two-colour roads upper part  
-Layer 8: Superordinate roads (Bundesstr. Autobahn)  
-Layer 9: Bridges, Trees, POI  
-Layer 10: Powerline  
-Layer 11: Unknown Ways (red)  
-
 TODOs:
 
 - map projection (Web Mercator EPSG:3857)
 - define the colors in a table
 - output SVG
 
-
-# 3. Interactive map
+#### Interactive map
 
 Simple library "html_leaflet.py" for creating HTML files with Leaflet.js.
 
 The script `html_map_demo.py` shows the usage.
 
 
-# 4. Check data
+# 3. Check OSM data
 
 The script `check_data_addr_highway.py` checks if the address street name is
 identical with the street name.
