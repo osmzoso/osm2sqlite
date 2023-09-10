@@ -22,7 +22,7 @@ way_id          | INTEGER             | way ID
 
 Visualization of the table 'graph':  
 
-![table_graph.jpg](./table_graph.jpg)
+![table_graph.jpg](../images/table_graph.jpg)
 
 #### Queries to create a subgraph
 
@@ -95,7 +95,7 @@ outputs a list of coordinates.
 
 Visualization of a routing path:  
 
-![routing_path.jpg](./routing_path.jpg)
+![routing_path.jpg](../images/routing_path.jpg)
 
 
 # 2. Map Drawing
