@@ -27,7 +27,7 @@ m1.print_html_header('Map Routing Graph')
 print(f'<h2>Map Routing Graph ({min_lon} {min_lat}) ({max_lon} {max_lat})</h2>')
 print('''
 <p>
-<div id="mapid" style="width: 1400px; height: 800px;"></div>
+<div id="mapid" style="width: 100%; height: 700px;"></div>
 </p>
 ''')
 
@@ -36,8 +36,8 @@ m1.print_script_start()
 db.execute('''
 SELECT ns.lon,ns.lat,ne.lon,ne.lat
 FROM graph AS g
-LEFT JOIN nodes AS ns ON g.edge_start=ns.node_id
-LEFT JOIN nodes AS ne ON g.edge_end=ne.node_id
+LEFT JOIN nodes AS ns ON g.start_node_id=ns.node_id
+LEFT JOIN nodes AS ne ON g.end_node_id=ne.node_id
 WHERE g.way_id IN (
  SELECT way_id
  FROM rtree_way

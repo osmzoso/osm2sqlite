@@ -137,7 +137,7 @@ def create_subgraph_tables(lon1, lat1, lon2, lat2):
     db.execute('DROP TABLE IF EXISTS subgraph')
     db.execute('''
     CREATE TEMP TABLE subgraph AS
-    SELECT edge_id,edge_start,edge_end,dist,way_id
+    SELECT edge_id,start_node_id,end_node_id,dist,way_id
     FROM graph
     WHERE way_id IN (
      SELECT way_id
@@ -159,9 +159,9 @@ def create_subgraph_tables(lon1, lat1, lon2, lat2):
     INSERT INTO subgraph_nodes (node_id, lon, lat)
     SELECT s.node_id,n.lon,n.lat FROM
     (
-     SELECT edge_start AS node_id FROM subgraph
+     SELECT start_node_id AS node_id FROM subgraph
      UNION
-     SELECT edge_end AS node_id FROM subgraph
+     SELECT end_node_id AS node_id FROM subgraph
     ) AS s
     LEFT JOIN nodes AS n ON s.node_id=n.node_id
     ''')
@@ -233,8 +233,8 @@ graph = Graph(number_of_nodes)
 db.execute('''
 SELECT s.edge_id,sns.no,sne.no,s.dist,s.way_id
 FROM subgraph AS s
-LEFT JOIN subgraph_nodes AS sns ON s.edge_start=sns.node_id
-LEFT JOIN subgraph_nodes AS sne ON s.edge_end=sne.node_id
+LEFT JOIN subgraph_nodes AS sns ON s.start_node_id=sns.node_id
+LEFT JOIN subgraph_nodes AS sne ON s.end_node_id=sne.node_id
 ''')
 for (edge_id, node_start, node_end, dist, way_id) in db.fetchall():
     graph.add_edge(node_start, node_end, edge_id, dist)
@@ -278,14 +278,14 @@ db.execute('SELECT node_id,lon,lat FROM subgraph_nodes WHERE no=?', (node_sequen
 path_coordinates.append((lon, lat))
 #
 for edge_id in edge_sequence:
-    db.execute('SELECT edge_start,edge_end,way_id FROM graph WHERE edge_id=?', (edge_id,))
-    (edge_start, edge_end, way_id) = db.fetchone()
-    if first_node_id == edge_start:
-        coordinates = part_way_coordinates(way_id, edge_start, edge_end)
-        first_node_id = edge_end
+    db.execute('SELECT start_node_id,end_node_id,way_id FROM graph WHERE edge_id=?', (edge_id,))
+    (start_node_id, end_node_id, way_id) = db.fetchone()
+    if first_node_id == start_node_id:
+        coordinates = part_way_coordinates(way_id, start_node_id, end_node_id)
+        first_node_id = end_node_id
     else:
-        coordinates = part_way_coordinates(way_id, edge_end, edge_start)
-        first_node_id = edge_start
+        coordinates = part_way_coordinates(way_id, end_node_id, start_node_id)
+        first_node_id = start_node_id
     coordinates.pop(0)  # remove the first coordinates
     path_coordinates.extend(coordinates)
 for (lon, lat) in path_coordinates:

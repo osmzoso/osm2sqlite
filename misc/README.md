@@ -11,13 +11,13 @@ This table contains the complete graph data.
 
 ### Table 'graph'
 
-column       | type                | description
--------------|---------------------|-------------------------------------
-edge_id      | INTEGER PRIMARY KEY | edge ID
-edge_start   | INTEGER             | edge start node ID
-edge_end     | INTEGER             | edge end node ID
-dist         | INTEGER             | distance in meters
-way_id       | INTEGER             | way ID
+column          | type                | description
+----------------|---------------------|-------------------------------------
+edge_id         | INTEGER PRIMARY KEY | edge ID
+start\_node\_id | INTEGER             | edge start node ID
+end\_node\_id   | INTEGER             | edge end node ID
+dist            | INTEGER             | distance in meters
+way_id          | INTEGER             | way ID
 
 Visualization of the table 'graph':  
 
@@ -37,7 +37,7 @@ Visualization of the table 'graph':
 ** max_lat (y2): 47.98
 */
 CREATE TEMP TABLE subgraph AS
-SELECT edge_id,edge_start,edge_end,dist,way_id
+SELECT edge_id,start_node_id,end_node_id,dist,way_id
 FROM graph
 WHERE way_id IN (
  SELECT way_id
@@ -62,9 +62,9 @@ CREATE TEMP TABLE subgraph_nodes (
 INSERT INTO subgraph_nodes (node_id, lon, lat)
 SELECT s.node_id,n.lon,n.lat FROM
 (
- SELECT edge_start AS node_id FROM subgraph
+ SELECT start_node_id AS node_id FROM subgraph
  UNION
- SELECT edge_end AS node_id FROM subgraph
+ SELECT end_node_id AS node_id FROM subgraph
 ) AS s
 LEFT JOIN nodes AS n ON s.node_id=n.node_id
 ;
@@ -79,8 +79,8 @@ SELECT max(no) FROM subgraph_nodes
 -- Edges with number of nodes from 1 to N
 SELECT s.edge_id,sns.no,sne.no,s.dist,s.way_id
 FROM subgraph AS s
-LEFT JOIN subgraph_nodes AS sns ON s.edge_start=sns.node_id
-LEFT JOIN subgraph_nodes AS sne ON s.edge_end=sne.node_id
+LEFT JOIN subgraph_nodes AS sns ON s.start_node_id=sns.node_id
+LEFT JOIN subgraph_nodes AS sne ON s.end_node_id=sne.node_id
 ```
 
 

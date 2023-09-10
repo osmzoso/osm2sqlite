@@ -41,16 +41,14 @@ def distance(lon1, lat1, lon2, lat2):
 def add_graph():
     db.execute('''
     CREATE TABLE graph (
-     edge_id    INTEGER PRIMARY KEY,  -- edge ID
-     edge_start INTEGER,              -- edge start node ID
-     edge_end   INTEGER,              -- edge end node ID
-     dist       INTEGER,              -- distance in meters
-     way_id     INTEGER               -- way ID
+     edge_id       INTEGER PRIMARY KEY,  -- edge ID
+     start_node_id INTEGER,              -- edge start node ID
+     end_node_id   INTEGER,              -- edge end node ID
+     dist          INTEGER,              -- distance in meters
+     way_id        INTEGER               -- way ID
     )
     ''')
-    #
     # Create a table with all nodes that are crossing points
-    #
     db.execute('''
     CREATE TEMP TABLE highway_nodes_crossing
     (
@@ -86,52 +84,37 @@ def add_graph():
     prev_way_id = -1
     prev_node_id = -1
     edge_active = False
-    edge_start = -1
+    start_node_id = -1
     dist = 0
     for (way_id, node_id, node_order, node_id_crossing, lon, lat) in db.fetchall():
-        # print(format(way_id, '12d'),
-        #      format(node_id, '12d'),
-        #      format(node_order, '5d'),
-        #      format(node_id_crossing, '12d'),
-        #      format(lon,'15.7f'),
-        #      format(lat,'15.7f'))
-        #
         # If a new way is active but there are still remnants of the previous way, create a new edge.
-        #
         if way_id != prev_way_id and edge_active:
-            db.execute('INSERT INTO graph (edge_start,edge_end,dist,way_id) VALUES (?,?,?,?)',
-                       (edge_start, prev_node_id, round(dist), prev_way_id))
+            db.execute('INSERT INTO graph (start_node_id,end_node_id,dist,way_id) VALUES (?,?,?,?)',
+                       (start_node_id, prev_node_id, round(dist), prev_way_id))
             edge_active = False
-        #
         dist = dist + distance(prev_lon, prev_lat, lon, lat)
-        #
         edge_active = True
-        #
         # If way_id changes or crossing node is present then an edge begins or ends.
-        #
         if way_id != prev_way_id:
-            edge_start = node_id
+            start_node_id = node_id
             dist = 0
         if node_id_crossing > -1 and way_id == prev_way_id:
-            if edge_start != -1:
-                db.execute('INSERT INTO graph (edge_start,edge_end,dist,way_id) VALUES (?,?,?,?)',
-                           (edge_start, node_id, round(dist), way_id))
+            if start_node_id != -1:
+                db.execute('INSERT INTO graph (start_node_id,end_node_id,dist,way_id) VALUES (?,?,?,?)',
+                           (start_node_id, node_id, round(dist), way_id))
                 edge_active = False
-            edge_start = node_id
+            start_node_id = node_id
             dist = 0
-        #
         prev_lon = lon
         prev_lat = lat
         prev_way_id = way_id
         prev_node_id = node_id
-    #
     if edge_active:
-        db.execute('INSERT INTO graph (edge_start,edge_end,dist,way_id) VALUES (?,?,?,?)',
-                   (edge_start, node_id, round(dist), way_id))
-    #
+        db.execute('INSERT INTO graph (start_node_id,end_node_id,dist,way_id) VALUES (?,?,?,?)',
+                   (start_node_id, node_id, round(dist), way_id))
     db.execute('CREATE INDEX graph__way_id ON graph (way_id)')
-    # write data to database
-    db_connect.commit()
+    db_connect.commit()  # write data to database
+
 
 # database connection
 db_connect = sqlite3.connect(sys.argv[1])

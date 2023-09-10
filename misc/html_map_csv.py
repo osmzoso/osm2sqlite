@@ -15,7 +15,7 @@ if len(sys.argv) != 2:
     Creates a map from a csv file containing waypoints (lon,lat).
     Output is HTML on stdout.
     Usage:
-    {sys.argv[0]} FILE
+    {sys.argv[0]} CSV_FILE
     ''')
     sys.exit(1)
 
@@ -35,7 +35,7 @@ for line in fobj:
     try:
         lon = float(lonlat[0])
         lat = float(lonlat[1])
-    except:
+    except ValueError:
         continue
     path_coordinates.append((lon, lat))
 fobj.close()
@@ -47,7 +47,7 @@ print('<h1>Map Routing Path</h1>')
 print(f'<pre>{infotext}</pre>')
 print('''
 <p>
-<div id="mapid" style="width: 1200px; height: 700px;"></div>
+<div id="mapid" style="width: 100%; height: 700px;"></div>
 </p>
 ''')
 m1.print_script_start()

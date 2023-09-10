@@ -34,7 +34,7 @@ class Leaflet:
         lat_lon_str = ''
         for lon, lat in lonlat:
             if lat_lon_str != '':
-                lat_lon_str += ','
+                lat_lon_str += ',\n'
             lat_lon_str += '[' + str(lat) + ',' + str(lon) + ']'
             self.adjust_boundingbox(lon, lat)
         return lat_lon_str
@@ -73,6 +73,7 @@ class Leaflet:
         return True
 
     def print_html_header(self, title):
+        # Leaflet 1.5.1 - Documentation: https://web.archive.org/web/20201202155513/https://leafletjs.com/reference-1.5.1.html
         print(f'''
 <!DOCTYPE html>
 <html>
@@ -124,6 +125,9 @@ L.tileLayer( tile_server, {
    maxZoom: 19,
    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
 }).addTo(mymap);
+
+// show scale
+L.control.scale( { position: 'bottomleft', maxWidth: 200, metric:true, imperial:false } ).addTo(mymap);
 ''')
 
     def add_marker(self, lon, lat, popuptext, openpopup):

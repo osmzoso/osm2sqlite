@@ -28,7 +28,7 @@ m1.print_html_header('Map OSM addresses')
 print(f'<h2>Map of the OpenStreetMap addresses ({min_lon} {min_lat}) ({max_lon} {max_lat})</h2>')
 print('''
 <p>
-<div id="mapid" style="width: 1200px; height: 800px;"></div>
+<div id="mapid" style="width: 100%; height: 700px;"></div>
 </p>
 ''')
 

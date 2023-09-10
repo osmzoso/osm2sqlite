@@ -40,12 +40,13 @@ def print_map(filename):
     m1.print_html_header('Show GPX')
     print('<h1>Map Path</h1>')
     print(f'<p>\nFile: <b>{filename}</b> Tracks: <b>{num_tracks}</b> Trackpoints: <b>{num_trackpoints}</b>\n</p>\n')
-    print('<p><div id="mapid" style="width: 1200px; height: 700px;"></div></p>')
+    print('<p><div id="mapid" style="width: 100%; height: 700px;"></div></p>')
     m1.print_script_start()
     m1.set_properties('#ff0000', 0.6, 6, '', '#00ffff', 0.7)
     m1.add_polyline(path_coordinates)
     m1.print_script_end()
     print('</body>\n</html>')
+
 
 if __name__ == "__main__":
     filename = sys.argv[1]

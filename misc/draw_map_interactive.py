@@ -265,6 +265,7 @@ def draw_map(*args):
             elif way_style == 'polygon':
                 cv.create_polygon(coord_list, fill=way_fill, outline=way_outline)
 
+
 #
 # Show map from database with GUI
 #
