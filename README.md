@@ -118,7 +118,7 @@ LEFT JOIN nodes ON way_nodes.node_id=nodes.node_id
 GROUP BY way_nodes.way_id;
 ```
 
-Here are some examples for querying this index:
+Here are some examples for using this index:
 
 ``` sql
 --
@@ -201,6 +201,18 @@ This option suppresses the creation of the indexes (not recommended).
 
 ## Miscellaneous
 
+Directory **/route+draw** contains some experiments with the created database.
+
+- [Routing shortest path](route+draw/README.md)
+- drawing a map
+- check the data
+
+Directory **/query** contains some perhaps useful queries.
+
+Directory **/test** contains testcases.
+
+---
+
 Time measurement for **saarland.osm (700 MB)** (Intel(R) Pentium(R) Silver J5005 CPU @ 1.50GHz):  
 
 Python : 2 minutes 36 seconds  
@@ -214,25 +226,11 @@ See file **compile_osm2sqlite_c.sh**.
 
 ---
 
-Reading a file compressed with bzip2 without unpacking it first:
-
 The C version is able to read from stdin.
 
-Examples:
+Reading a file compressed with bzip2 without unpacking it first:
 ```
 7z e -so germany.osm.bz2 | osm2sqlite - germany.db
 bzip2 -c -d ./xml/saarland-latest.osm.bz2 | osm2sqlite - ./database/saarland-latest.db addr rtree-ways
 ```
-
----
-
-Directory **/route+draw** contains some experiments with the created database.
-
-- [Routing shortest path](route+draw/README.md)
-- drawing a map
-- check the data
-
-Directory **/query** contains some perhaps useful queries.
-
-Directory **/test** contains testcases.
 
