@@ -41,7 +41,7 @@ time bzip2 -c -d $osm_xml_bz2_file | ../osm2sqlite - $database_file addr rtree-w
 ./html_map_table_graph.py $database_file 7.81 47.97 7.83 47.98 > "$dir_results/$cdate-map_table_graph_freiburg.html"
 #
 # check addr name (additional rtree index 'highway' is needed)
-sqlite3 $database_file < ../query/add_rtree_highway.sql
+sqlite3 $database_file < ../queries/add_rtree_highway.sql
 ./check_data_addr_highway.py $database_file 791% > "$dir_results/$cdate-error_addr_highway.html"
 #
 # show a simple interactive map

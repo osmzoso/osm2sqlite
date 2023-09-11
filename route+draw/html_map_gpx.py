@@ -6,17 +6,18 @@ import sys
 import xml.etree.ElementTree as ET
 import html_leaflet
 
-if len(sys.argv) != 2:
+if len(sys.argv) == 1:
     print(f'''
-    Creates a map with the path from a gpx file.
+    Creates a map with all paths from the specified GPX files.
     Output is HTML on stdout.
     Usage:
-    {sys.argv[0]} GPX_FILE
+    {sys.argv[0]} GPX_FILE ...
     ''')
     sys.exit(1)
 
 
-def read_gpx_file(filename, namespace='{http://www.topografix.com/GPX/1/1}'):
+def read_gpx_file(filename):
+    namespace = '{http://www.topografix.com/GPX/1/1}'
     path_coordinates = []
     num_tracks = 0
     tree = ET.parse(filename)
@@ -26,28 +27,32 @@ def read_gpx_file(filename, namespace='{http://www.topografix.com/GPX/1/1}'):
             lon = float(trkpt.attrib['lon'])
             lat = float(trkpt.attrib['lat'])
             path_coordinates.append((lon, lat))
-    return num_tracks, path_coordinates
-
-
-def print_map(filename):
-    num_tracks, path_coordinates = read_gpx_file(filename)
-    # if no tracks are found then search without namespace
-    if num_tracks == 0 and len(path_coordinates) == 0:
-        num_tracks, path_coordinates = read_gpx_file(filename, '')
-    num_trackpoints = len(path_coordinates)
-    #
-    m1 = html_leaflet.Leaflet()
-    m1.print_html_header('Show GPX')
-    print('<h1>Map Path</h1>')
-    print(f'<p>\nFile: <b>{filename}</b> Tracks: <b>{num_tracks}</b> Trackpoints: <b>{num_trackpoints}</b>\n</p>\n')
-    print('<p><div id="mapid" style="width: 100%; height: 700px;"></div></p>')
-    m1.print_script_start()
-    m1.set_properties('#ff0000', 0.6, 6, '', '#00ffff', 0.7)
-    m1.add_polyline(path_coordinates)
-    m1.print_script_end()
-    print('</body>\n</html>')
+    return path_coordinates, num_tracks
 
 
 if __name__ == "__main__":
-    filename = sys.argv[1]
-    print_map(filename)
+    # https://www.graphviz.org/doc/info/colors.html
+    color_scheme = ['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e', '#e6ab02', '#a6761d']
+    color_number = 0
+    m1 = html_leaflet.Leaflet()
+    m1.print_html_header('Map GPX Files')
+    print('<h1>Map GPX Files</h1>')
+    print('<p><div id="mapid" style="width: 100%; height: 700px;"></div></p>')
+    m1.print_script_start()
+    infotext = '<tr><th>file</th><th>tracks</th><th>trackpoints</th></tr>\n'
+    for filename in sys.argv:
+        if filename == sys.argv[0]:
+            continue
+        path_coordinates, num_tracks = read_gpx_file(filename)
+        num_trackpoints = len(path_coordinates)
+        color = color_scheme[color_number]
+        color_number = color_number + 1
+        if color_number == len(color_scheme):
+            color_number = 0
+        m1.set_color(color)
+        m1.set_opacity(0.5)
+        m1.add_polyline(path_coordinates)
+        infotext = infotext + f'<tr><td>{filename}</td><td bgcolor="{color}">{num_tracks}</td><td>{num_trackpoints}</td></tr>\n'
+    m1.print_script_end()
+    print('<table>\n' + infotext + '</table>\n')
+    print('</body>\n</html>')
