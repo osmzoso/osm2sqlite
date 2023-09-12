@@ -1,14 +1,27 @@
 #
 # Simple Python Leaflet.js Wrapper
 #
-# https://leafletjs.com/examples/quick-start/
-#
-# https://leafletjs.com/reference-1.5.1.html
-#
 
 
 class Leaflet:
+    """
+    A class used to produce HTML code with Leaflet.js
+    """
     def __init__(self):
+        """Initialize the class attributes:
+        Attributes that contains the actual boundingbox coordinates:
+          bbox_min_lon : init value is 180
+          bbox_min_lat : init value is 90
+          bbox_max_lon : init value is -180
+          bbox_max_lat : init value is -90
+        Colors and size attributes:
+          color        : hexcolor or 'none'       - init value is '#0000ff'
+          opacity      : opacity from 0 to 1      - init value is 0.5
+          weight       : line thickness in px     - init value is 4
+          dasharray    : examples: '5 5', '2 8 4' - init value is 'none'
+          fillcolor    : hexcolor or 'none'       - init value is '#ff7800'
+          fillopacity  : opacity from 0 to 1      - init value is 0.5
+        """
         self.bbox_min_lon = 180
         self.bbox_min_lat = 90
         self.bbox_max_lon = -180
@@ -16,11 +29,12 @@ class Leaflet:
         self.color = '#0000ff'
         self.opacity = 0.5
         self.weight = 4
-        self.dasharray = 'none'      # '5 5' or 'none'
-        self.fillcolor = '#ff7800'   # hexcolor or 'none'
+        self.dasharray = 'none'
+        self.fillcolor = '#ff7800'
         self.fillopacity = 0.5
 
     def adjust_boundingbox(self, lon, lat):
+        """Adjusts boundingbox."""
         if self.bbox_min_lon > lon:
             self.bbox_min_lon = lon
         if self.bbox_min_lat > lat:
@@ -31,39 +45,48 @@ class Leaflet:
             self.bbox_max_lat = lat
 
     def lonlat2str(self, lonlat):
-        lat_lon_str = ''
+        """Converts a list [(lon1,lat1),(lon2,lat2),...] into
+        a string with JavaScript array code."""
+        latlon_str = ''
         for lon, lat in lonlat:
-            if lat_lon_str != '':
-                lat_lon_str += ',\n'
-            lat_lon_str += '[' + str(lat) + ',' + str(lon) + ']'
+            if latlon_str != '':
+                latlon_str += ',\n'
+            latlon_str += '[' + str(lat) + ',' + str(lon) + ']'
             self.adjust_boundingbox(lon, lat)
-        return lat_lon_str
+        return latlon_str
 
-    def set_color(self, new_color):
-        self.color = new_color
+    def set_color(self, color):
+        """Set attribute color."""
+        self.color = color
         return True
 
-    def set_opacity(self, new_opacity):
-        self.opacity = new_opacity
+    def set_opacity(self, opacity):
+        """Set attribute opacity."""
+        self.opacity = opacity
         return True
 
-    def set_weight(self, new_weight):
-        self.weight = new_weight
+    def set_weight(self, weight):
+        """Set attribute weight."""
+        self.weight = weight
         return True
 
-    def set_dasharray(self, new_dasharray):
-        self.dasharray = new_dasharray
+    def set_dasharray(self, dasharray):
+        """Set attribute dasharray."""
+        self.dasharray = dasharray
         return True
 
-    def set_fillcolor(self, new_fillcolor):
-        self.fillcolor = new_fillcolor
+    def set_fillcolor(self, fillcolor):
+        """Set attribute fillcolor."""
+        self.fillcolor = fillcolor
         return True
 
-    def set_fillopacity(self, new_fillopacity):
-        self.fillopacity = new_fillopacity
+    def set_fillopacity(self, fillopacity):
+        """Set attribute fillopacity."""
+        self.fillopacity = fillopacity
         return True
 
     def set_properties(self, color, opacity, weight, dasharray, fillcolor, fillopacity):
+        """Set all attributes at once."""
         self.set_color(color)
         self.set_opacity(opacity)
         self.set_weight(weight)
@@ -73,7 +96,11 @@ class Leaflet:
         return True
 
     def print_html_header(self, title):
-        # Leaflet 1.5.1 - Documentation: https://web.archive.org/web/20201202155513/https://leafletjs.com/reference-1.5.1.html
+        """Print HTML header with link to Leaflet 1.5.1 and a simple CSS."""
+        # Leaflet 1.5.1
+        # https://leafletjs.com/reference-1.5.1.html
+        # Documentation: https://web.archive.org/web/20201202155513/https://leafletjs.com/reference-1.5.1.html
+        # https://leafletjs.com/examples/quick-start/
         print(f'''
 <!DOCTYPE html>
 <html>
@@ -90,6 +117,8 @@ class Leaflet:
 body {
  font-family: Verdana, Arial;
  font-size: 1.0em;
+ color: #bbbbbb;
+ background: #333333;
 }
 table {
  border: 2px solid #bbbbbb;
@@ -97,11 +126,10 @@ table {
 }
 th {
  border: 1px solid #cccccc;
- font-size: 0.8em;
+ background: #555555;
 }
 td {
  border: 1px solid #aaaaaa;
- font-size: 0.8em;
 }
 </style>
 </head>
@@ -109,6 +137,7 @@ td {
 ''')
 
     def print_script_start(self):
+        """Print tag <script> and JavaScript code to init Leaflet.js."""
         print('''
 <script>
 // define boundingbox
@@ -130,7 +159,8 @@ L.tileLayer( tile_server, {
 L.control.scale( { position: 'bottomleft', maxWidth: 200, metric:true, imperial:false } ).addTo(mymap);
 ''')
 
-    def add_marker(self, lon, lat, popuptext, openpopup):
+    def add_marker(self, lon, lat, popuptext='', openpopup=False):
+        """Print Leaflet.js code to display a marker."""
         print(f'L.marker([{lat}, {lon}])', end='')
         if popuptext != '':
             print(f".bindPopup('{popuptext}')", end='')
@@ -141,15 +171,18 @@ L.control.scale( { position: 'bottomleft', maxWidth: 200, metric:true, imperial:
         self.adjust_boundingbox(lon, lat)
 
     def add_polyline(self, lonlat):
+        """Print Leaflet.js code to display a polyline."""
         lat_lon_str = self.lonlat2str(lonlat)
         print(f'L.polyline( [ {lat_lon_str} ]', end='')
         print(f", {{ color:'{self.color}', opacity:{self.opacity}, weight:{self.weight}, dashArray:'{self.dasharray}', stroke:true }} )", end='')
         print(".addTo(mymap);")
 
     def add_line(self, lon1, lat1, lon2, lat2):
+        """Print Leaflet.js code to display a simple line."""
         self.add_polyline([(lon1, lat1), (lon2, lat2)])   # wrapper for a simple line
 
-    def add_polygon(self, lonlat, popuptext):
+    def add_polygon(self, lonlat, popuptext=''):
+        """Print Leaflet.js code to display a polygon."""
         lat_lon_str = self.lonlat2str(lonlat)
         print(f'L.polygon( [ {lat_lon_str} ]', end='')
         print(f", {{ color:'{self.color}', opacity:{self.opacity}, weight:{self.weight}, dashArray:'{self.dasharray}', stroke:true }} )", end='')
@@ -158,7 +191,8 @@ L.control.scale( { position: 'bottomleft', maxWidth: 200, metric:true, imperial:
             print(f".bindPopup('{popuptext}')", end='')
         print(';')
 
-    def add_circle(self, lon, lat, radius, popuptext):
+    def add_circle(self, lon, lat, radius, popuptext=''):
+        """Print Leaflet.js code to display a circle."""
         print(f'L.circle([{lat}, {lon}], {radius}', end='')
         print(f", {{ color:'{self.color}', opacity:{self.opacity}, weight:{self.weight}, dashArray:'{self.dasharray}', fillColor:'{self.fillcolor}', fillOpacity:{self.fillopacity} }} )", end='')
         print(".addTo(mymap)", end='')
@@ -168,12 +202,14 @@ L.control.scale( { position: 'bottomleft', maxWidth: 200, metric:true, imperial:
         self.adjust_boundingbox(lon, lat)
 
     def add_circlemarker(self, lon, lat):
+        """Print Leaflet.js code to display a circlemarker."""
         print(f'L.circleMarker([{lat}, {lon}]', end='')
         print(f", {{ color:'{self.color}', opacity:{self.opacity}, weight:{self.weight}, dashArray:'{self.dasharray}', fillColor:'{self.fillcolor}', fillOpacity:{self.fillopacity} }} )", end='')
         print(".addTo(mymap);")
         self.adjust_boundingbox(lon, lat)
 
-    def add_rectangle(self, lon1, lat1, lon2, lat2, popuptext):
+    def add_rectangle(self, lon1, lat1, lon2, lat2, popuptext=''):
+        """Print Leaflet.js code to display a rectangle."""
         print(f'L.rectangle( [ [ {lat1}, {lon1} ], [ {lat2}, {lon2} ] ]', end='')
         print(f", {{ color:'{self.color}', opacity:{self.opacity}, weight:{self.weight}, dashArray:'{self.dasharray}', fillColor:'{self.fillcolor}', fillOpacity:{self.fillopacity} }} )", end='')
         print(".addTo(mymap)", end='')
@@ -184,6 +220,7 @@ L.control.scale( { position: 'bottomleft', maxWidth: 200, metric:true, imperial:
         self.adjust_boundingbox(lon2, lat2)
 
     def print_script_end(self):
+        """Print JavaScript code to finish Leaflet.js code and tag </script>."""
         print(f'''
 //
 function resize_boundingbox() {{
@@ -214,3 +251,8 @@ mymap.on('click', onMapClick);
 
 </script>
 ''')
+
+
+if __name__ == "__main__":
+    print("This is a module, use 'import html_leaflet'")
+    help(Leaflet)
