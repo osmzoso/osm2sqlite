@@ -21,28 +21,30 @@ database_file="$dir_database/$name.db"
 echo "file osm xml  : " $osm_xml_bz2_file
 echo "file database : " $database_file
 #
-# read data
+# Read data and create database
 #
 rm $database_file
 time bzip2 -c -d $osm_xml_bz2_file | ../osm2sqlite - $database_file addr rtree-ways
+./create_table_graph.py $database_file
 #
 # Routing (experimental table 'graph' is required)
 #
-./create_table_graph.py $database_file
 # Freiburg -> Schauinsland
 ./route.py $database_file 7.808 47.983 7.889 47.897 > $dir_results/freiburg_schauinsland.csv
 ./html_map_csv.py $dir_results/freiburg_schauinsland.csv > "$dir_results/$cdate-map_route_freiburg_schauinsland.html"
 ./convert_csv2gpx.py $dir_results/freiburg_schauinsland.csv > $dir_results/freiburg_schauinsland.gpx
 #
+# Tilemaps with Leaflet.js
+#
 # create HTML file with a map of the addresses
 ./html_map_addr.py $database_file 7.791 47.975 7.809 47.983 > "$dir_results/$cdate-map_adressen_freiburg_st_georgen.html"
-#
 # create HTML file with a map of the routing graph
 ./html_map_table_graph.py $database_file 7.81 47.97 7.83 47.98 > "$dir_results/$cdate-map_table_graph_freiburg.html"
-#
 # check addr name (additional rtree index 'highway' is needed)
 sqlite3 $database_file < ../queries/add_rtree_highway.sql
 ./check_data_addr_highway.py $database_file 791% > "$dir_results/$cdate-error_addr_highway.html"
+#
+# Draw own map
 #
 # show a simple interactive map
 ./draw_map_interactive.py $database_file 7.807 47.982
