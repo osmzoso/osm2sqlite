@@ -201,6 +201,14 @@ This option suppresses the creation of the indexes (not recommended).
 
 ## Miscellaneous
 
+There is a version in Python as a prototype and there is a version in C.
+
+Time measurement for **saarland.osm (700 MB)**:  
+Python : 2 minutes 36 seconds  
+C      : 47 seconds  
+
+---
+
 Directory **/route+draw** contains some experiments with the created database.
 
 - [Routing shortest path](route+draw/README.md)
@@ -210,13 +218,6 @@ Directory **/route+draw** contains some experiments with the created database.
 Directory **/queries** contains some perhaps useful queries.
 
 Directory **/test** contains testcases.
-
----
-
-Time measurement for **saarland.osm (700 MB)** (Intel(R) Pentium(R) Silver J5005 CPU @ 1.50GHz):  
-
-Python : 2 minutes 36 seconds  
-C      : 47 seconds  
 
 ---
 

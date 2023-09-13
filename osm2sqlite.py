@@ -8,12 +8,12 @@ import sys
 import xml.sax
 import sqlite3
 
-help = '''osm2sqlite.py 0.8.4
+help = f'''osm2sqlite.py 0.8.5
 
 Reads OpenStreetMap XML data into a SQLite database.
 
 Usage:
-osm2sqlite FILE_OSM_XML FILE_SQLITE_DB [option ...]
+{sys.argv[0]} FILE_OSM_XML FILE_SQLITE_DB [option ...]
 
 Options:
   rtree-ways     Add R*Tree index for ways
