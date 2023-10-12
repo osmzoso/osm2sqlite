@@ -6,6 +6,7 @@
 */
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 #include <string.h>
 #include <inttypes.h>
 #include <sqlite3.h>
@@ -14,16 +15,19 @@
 #include <libxml/parserInternals.h>
 
 #define HELP \
-"osm2sqlite 0.8.5\n" \
+"osm2sqlite 0.9.0 ALPHA\n" \
 "\n" \
 "Reads OpenStreetMap XML data into a SQLite database.\n" \
 "\n" \
-"Usage:\nosm2sqlite FILE_OSM_XML FILE_SQLITE_DB [option ...]\n" \
+"Usage:\nosm2sqlite FILE_OSM_XML FILE_SQLITE_DB [OPTION]...\n" \
 "\n" \
 "Options:\n" \
 "  rtree-ways     Add R*Tree index for ways\n" \
 "  addr           Add address tables\n" \
-"  no-index       Do not create indexes (not recommended)\n"
+"  graph          Add graph table\n" \
+"  no-index       Do not create indexes (not recommended)\n" \
+"\n" \
+"When FILE_OSM_XML is -, read standard input.\n"
 
 /*
 ** Public variables
@@ -173,43 +177,43 @@ void add_tables()
 {
     rc = sqlite3_exec(
              db,
-             "CREATE TABLE nodes (\n"
-             " node_id      INTEGER PRIMARY KEY,  -- node ID\n"
-             " lon          REAL,                 -- longitude\n"
-             " lat          REAL                  -- latitude\n"
-             ");\n"
+             " CREATE TABLE nodes ("
+             "  node_id      INTEGER PRIMARY KEY,  /* node ID */"
+             "  lon          REAL,                 /* longitude */"
+             "  lat          REAL                  /* latitude */"
+             " );"
 
-             "CREATE TABLE node_tags (\n"
-             " node_id      INTEGER,              -- node ID\n"
-             " key          TEXT,                 -- tag key\n"
-             " value        TEXT                  -- tag value\n"
-             ");\n"
+             " CREATE TABLE node_tags ("
+             "  node_id      INTEGER,              /* node ID */"
+             "  key          TEXT,                 /* tag key */"
+             "  value        TEXT                  /* tag value */"
+             " );"
 
-             "CREATE TABLE way_nodes (\n"
-             " way_id       INTEGER,              -- way ID\n"
-             " node_id      INTEGER,              -- node ID\n"
-             " node_order   INTEGER               -- node order\n"
-             ");\n"
+             " CREATE TABLE way_nodes ("
+             "  way_id       INTEGER,              /* way ID */"
+             "  node_id      INTEGER,              /* node ID */"
+             "  node_order   INTEGER               /* node order */"
+             " );"
 
-             "CREATE TABLE way_tags (\n"
-             " way_id       INTEGER,              -- way ID\n"
-             " key          TEXT,                 -- tag key\n"
-             " value        TEXT                  -- tag value\n"
-             ");\n"
+             " CREATE TABLE way_tags ("
+             "  way_id       INTEGER,              /* way ID */"
+             "  key          TEXT,                 /* tag key */"
+             "  value        TEXT                  /* tag value */"
+             " );"
 
-             "CREATE TABLE relation_members (\n"
-             " relation_id  INTEGER,              -- relation ID\n"
-             " type         TEXT,                 -- type ('node','way','relation')\n"
-             " ref          INTEGER,              -- node, way or relation ID\n"
-             " role         TEXT,                 -- describes a particular feature\n"
-             " member_order INTEGER               -- member order\n"
-             ");\n"
+             " CREATE TABLE relation_members ("
+             "  relation_id  INTEGER,              /* relation ID */"
+             "  type         TEXT,                 /* type ('node','way','relation') */"
+             "  ref          INTEGER,              /* node, way or relation ID */"
+             "  role         TEXT,                 /* describes a particular feature */"
+             "  member_order INTEGER               /* member order */"
+             " );"
 
-             "CREATE TABLE relation_tags (\n"
-             " relation_id  INTEGER,              -- relation ID\n"
-             " key          TEXT,                 -- tag key\n"
-             " value        TEXT                  -- tag value\n"
-             ");\n",
+             " CREATE TABLE relation_tags ("
+             "  relation_id  INTEGER,              /* relation ID */"
+             "  key          TEXT,                 /* tag key */"
+             "  value        TEXT                  /* tag value */"
+             " );",
              NULL, NULL, NULL);
     if( rc!=SQLITE_OK ) abort_db_error(rc);
 }
@@ -262,16 +266,16 @@ void add_std_index()
 {
     rc = sqlite3_exec(
              db,
-             "CREATE INDEX node_tags__node_id            ON node_tags (node_id);\n"
-             "CREATE INDEX node_tags__key                ON node_tags (key);\n"
-             "CREATE INDEX way_tags__way_id              ON way_tags (way_id);\n"
-             "CREATE INDEX way_tags__key                 ON way_tags (key);\n"
-             "CREATE INDEX way_nodes__way_id             ON way_nodes (way_id, node_order);\n"
-             "CREATE INDEX way_nodes__node_id            ON way_nodes (node_id);\n"
-             "CREATE INDEX relation_members__relation_id ON relation_members (relation_id, member_order);\n"
-             "CREATE INDEX relation_members__type        ON relation_members (type, ref);\n"
-             "CREATE INDEX relation_tags__relation_id    ON relation_tags (relation_id);\n"
-             "CREATE INDEX relation_tags__key            ON relation_tags (key);\n",
+             " CREATE INDEX node_tags__node_id            ON node_tags (node_id);"
+             " CREATE INDEX node_tags__key                ON node_tags (key);"
+             " CREATE INDEX way_tags__way_id              ON way_tags (way_id);"
+             " CREATE INDEX way_tags__key                 ON way_tags (key);"
+             " CREATE INDEX way_nodes__way_id             ON way_nodes (way_id, node_order);"
+             " CREATE INDEX way_nodes__node_id            ON way_nodes (node_id);"
+             " CREATE INDEX relation_members__relation_id ON relation_members (relation_id, member_order);"
+             " CREATE INDEX relation_members__type        ON relation_members (type, ref);"
+             " CREATE INDEX relation_tags__relation_id    ON relation_tags (relation_id);"
+             " CREATE INDEX relation_tags__key            ON relation_tags (key);",
              NULL, NULL, NULL);
     if( rc!=SQLITE_OK ) abort_db_error(rc);
 }
@@ -440,6 +444,162 @@ void add_addr()
     if( rc!=SQLITE_OK ) abort_db_error(rc);
 }
 
+/* Calculates great circle distance between two coordinates in degrees */
+double distance(double lon1, double lat1, double lon2, double lat2)
+{
+    /* Avoid a acos error if the two points are identical */
+    if( lon1 == lon2 && lat1 == lat2 ) return 0;
+    lon1 = lon1 * (M_PI / 180.0);   /* Conversion degree to radians */
+    lat1 = lat1 * (M_PI / 180.0);
+    lon2 = lon2 * (M_PI / 180.0);
+    lat2 = lat2 * (M_PI / 180.0);
+    /* Use earth radius Europe 6371 km (alternatively radius equator 6378 km) */
+    double dist = acos(sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(lon2 - lon1)) * 6371000;
+    return dist;    /* distance in meters */
+}
+
+void add_graph()
+{
+    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+    rc = sqlite3_exec(
+             db,
+             " CREATE TABLE graph ("
+             "  edge_id       INTEGER PRIMARY KEY,  /* edge ID */"
+             "  start_node_id INTEGER,              /* edge start node ID */"
+             "  end_node_id   INTEGER,              /* edge end node ID */"
+             "  dist          INTEGER,              /* distance in meters */"
+             "  way_id        INTEGER               /* way ID */"
+             " )",
+             NULL, NULL, NULL);
+    if( rc!=SQLITE_OK ) abort_db_error(rc);
+    /* Create a table with all nodes that are crossing points */
+    rc = sqlite3_exec(
+             db,
+             " CREATE TEMP TABLE highway_nodes_crossing"
+             " ("
+             "  node_id INTEGER PRIMARY KEY"
+             " )",
+             NULL, NULL, NULL);
+    if( rc!=SQLITE_OK ) abort_db_error(rc);
+    rc = sqlite3_exec(
+             db,
+             " INSERT INTO highway_nodes_crossing"
+             " SELECT node_id FROM"
+             " ("
+             "  SELECT wn.node_id"
+             "  FROM way_tags AS wt"
+             "  LEFT JOIN way_nodes AS wn ON wt.way_id=wn.way_id"
+             "  WHERE wt.key='highway'"
+             " )"
+             " GROUP BY node_id HAVING count(*)>1",
+             NULL, NULL, NULL);
+    if( rc!=SQLITE_OK ) abort_db_error(rc);
+    /* */
+    double prev_lon = 0;
+    double prev_lat = 0;
+    long long int prev_way_id = -1;
+    long long int prev_node_id = -1;
+    int edge_active = 0;
+    long long int start_node_id = -1;
+    double dist = 0;
+
+    sqlite3_stmt *stmt_insert_graph;
+    rc = sqlite3_prepare_v2(
+             db,
+             "INSERT INTO graph (start_node_id,end_node_id,dist,way_id) VALUES (?1,?2,?3,?4)",
+             -1, &stmt_insert_graph, NULL);
+    if( rc!=SQLITE_OK ) abort_db_error(rc);
+
+    sqlite3_stmt *stmt = NULL;
+    rc = sqlite3_prepare_v2(
+             db,
+             " SELECT"
+             "  wn.way_id,wn.node_id,"
+             "  ifnull(hnc.node_id,-1) AS node_id_crossing,"
+             "  n.lon,n.lat"
+             " FROM way_tags AS wt"
+             " LEFT JOIN way_nodes AS wn ON wt.way_id=wn.way_id"
+             " LEFT JOIN highway_nodes_crossing AS hnc ON wn.node_id=hnc.node_id"
+             " LEFT JOIN nodes AS n ON wn.node_id=n.node_id"
+             " WHERE wt.key='highway'"
+             " ORDER BY wn.way_id,wn.node_order",
+             -1, &stmt, NULL);
+    if( rc!=SQLITE_OK ) abort_db_error(rc);
+
+    long long int way_id;
+    long long int node_id;
+    long long int node_id_crossing;
+    double lon;
+    double lat;
+    rc = sqlite3_step(stmt);
+    while( rc!=SQLITE_DONE && rc!=SQLITE_OK ){
+        way_id = sqlite3_column_int64(stmt, 0);
+        node_id = sqlite3_column_int64(stmt, 1);
+        node_id_crossing = sqlite3_column_int64(stmt, 2);
+        lon = sqlite3_column_double(stmt, 3);
+        lat = sqlite3_column_double(stmt, 4);
+        /* If a new way is active but there are still remnants of the previous way, create a new edge. */
+        if( way_id != prev_way_id && edge_active ) {
+            sqlite3_bind_int64(stmt_insert_graph, 1, start_node_id);
+            sqlite3_bind_int64(stmt_insert_graph, 2, prev_node_id);
+            sqlite3_bind_int  (stmt_insert_graph, 3, lroundf(dist));
+            sqlite3_bind_int64(stmt_insert_graph, 4, prev_way_id);
+            rc = sqlite3_step(stmt_insert_graph);
+            if( rc==SQLITE_DONE ) {
+                sqlite3_reset(stmt_insert_graph);
+            } else {
+                abort_db_error(rc);
+            }
+            edge_active = 0;
+        }
+        dist = dist + distance(prev_lon, prev_lat, lon, lat);
+        edge_active = 1;
+        /* If way_id changes or crossing node is present then an edge begins or ends. */
+        if( way_id != prev_way_id ) {
+            start_node_id = node_id;
+            dist = 0;
+        }
+        if( node_id_crossing > -1 && way_id == prev_way_id ) {
+            if( start_node_id != -1 ) {
+                sqlite3_bind_int64(stmt_insert_graph, 1, start_node_id);
+                sqlite3_bind_int64(stmt_insert_graph, 2, node_id);
+                sqlite3_bind_int  (stmt_insert_graph, 3, lroundf(dist));
+                sqlite3_bind_int64(stmt_insert_graph, 4, way_id);
+                rc = sqlite3_step(stmt_insert_graph);
+                if( rc==SQLITE_DONE ) {
+                    sqlite3_reset(stmt_insert_graph);
+                } else {
+                    abort_db_error(rc);
+                }
+                edge_active = 0;
+            }
+            start_node_id = node_id;
+            dist = 0;
+        }
+        prev_lon = lon;
+        prev_lat = lat;
+        prev_way_id = way_id;
+        prev_node_id = node_id;
+
+        rc = sqlite3_step(stmt);
+    }
+    if( edge_active ) {
+        sqlite3_bind_int64(stmt_insert_graph, 1, start_node_id);
+        sqlite3_bind_int64(stmt_insert_graph, 2, node_id);
+        sqlite3_bind_int  (stmt_insert_graph, 3, lroundf(dist));
+        sqlite3_bind_int64(stmt_insert_graph, 4, way_id);
+        rc = sqlite3_step(stmt_insert_graph);
+        if( rc==SQLITE_DONE ) {
+            sqlite3_reset(stmt_insert_graph);
+        } else {
+            abort_db_error(rc);
+        }
+    }
+    rc = sqlite3_exec(db, "CREATE INDEX graph__way_id ON graph (way_id)", NULL, NULL, NULL);
+    if( rc!=SQLITE_OK ) abort_db_error(rc);
+    sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+}
+
 /*
 ** Main
 */
@@ -455,15 +615,18 @@ int main(int argc, char **argv)
     int std_index = 1;
     int rtree_ways = 0;
     int addr = 0;
+    int graph = 0;
     int i;
     if( argc>3 ) {
         for(i=3; i < argc; i++) {
-            if     ( strcmp("no-index",   argv[i])==0 ) {
+            if( strcmp("no-index", argv[i])==0 ) {
                 std_index = 0;
             } else if( strcmp("rtree-ways", argv[i])==0 ) {
                 rtree_ways = 1;
-            } else if( strcmp("addr",       argv[i])==0 ) {
+            } else if( strcmp("addr", argv[i])==0 ) {
                 addr = 1;
+            } else if( strcmp("graph", argv[i])==0 ) {
+                graph = 1;
             } else {
                 fprintf(stderr, "abort - option '%s' unknown\n", argv[i]);
                 return EXIT_FAILURE;
@@ -499,6 +662,7 @@ int main(int argc, char **argv)
     if( rtree_ways ) add_rtree_ways();
     sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
     if( addr ) add_addr();
+    if( graph ) add_graph();
     destroy_prep_stmt();
     sqlite3_close(db);
 

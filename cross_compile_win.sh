@@ -17,7 +17,7 @@
 # /usr/lib64/libsqlite3.so.0
 # /usr/lib64/libxml2.so.2
 #
-gcc osm2sqlite.c -lsqlite3 -lxml2 -o osm2sqlite -Wall -Os -s -I/usr/include/libxml2
+gcc osm2sqlite.c -lsqlite3 -lxml2 -lm -o osm2sqlite -Wall -Os -s -I/usr/include/libxml2
 # show shared object dependencies for osm2sqlite
 ldd osm2sqlite
 

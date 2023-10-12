@@ -7,18 +7,22 @@
 import sys
 import xml.sax
 import sqlite3
+import math
 
-help = f'''osm2sqlite.py 0.8.5
+help = f'''osm2sqlite.py 0.9.0 ALPHA
 
 Reads OpenStreetMap XML data into a SQLite database.
 
 Usage:
-{sys.argv[0]} FILE_OSM_XML FILE_SQLITE_DB [option ...]
+{sys.argv[0]} FILE_OSM_XML FILE_SQLITE_DB [OPTION]...
 
 Options:
   rtree-ways     Add R*Tree index for ways
   addr           Add address tables
-  no-index       Do not create indexes (not recommended)'''
+  graph          Add graph table
+  no-index       Do not create indexes (not recommended)
+
+When FILE_OSM_XML is -, read standard input.'''
 
 db_connect = None  # SQLite Database connection
 db = None          # SQLite Database cursor
@@ -91,46 +95,46 @@ class OsmHandler(xml.sax.ContentHandler):
 def add_tables():
     db.execute('''
     CREATE TABLE nodes (
-     node_id      INTEGER PRIMARY KEY,  -- node ID
-     lon          REAL,                 -- longitude
-     lat          REAL                  -- latitude
+     node_id      INTEGER PRIMARY KEY,  /* node ID */
+     lon          REAL,                 /* longitude */
+     lat          REAL                  /* latitude */
     )
     ''')
     db.execute('''
     CREATE TABLE node_tags (
-     node_id      INTEGER,              -- node ID
-     key          TEXT,                 -- tag key
-     value        TEXT                  -- tag value
+     node_id      INTEGER,              /* node ID */
+     key          TEXT,                 /* tag key */
+     value        TEXT                  /* tag value */
     )
     ''')
     db.execute('''
     CREATE TABLE way_nodes (
-     way_id       INTEGER,              -- way ID
-     node_id      INTEGER,              -- node ID
-     node_order   INTEGER               -- node order
+     way_id       INTEGER,              /* way ID */
+     node_id      INTEGER,              /* node ID */
+     node_order   INTEGER               /* node order */
     )
     ''')
     db.execute('''
     CREATE TABLE way_tags (
-     way_id       INTEGER,              -- way ID
-     key          TEXT,                 -- tag key
-     value        TEXT                  -- tag value
+     way_id       INTEGER,              /* way ID */
+     key          TEXT,                 /* tag key */
+     value        TEXT                  /* tag value */
     )
     ''')
     db.execute('''
     CREATE TABLE relation_members (
-     relation_id  INTEGER,              -- relation ID
-     type         TEXT,                 -- type ('node','way','relation')
-     ref          INTEGER,              -- node, way or relation ID
-     role         TEXT,                 -- describes a particular feature
-     member_order INTEGER               -- member order
+     relation_id  INTEGER,              /* relation ID */
+     type         TEXT,                 /* type ('node','way','relation') */
+     ref          INTEGER,              /* node, way or relation ID */
+     role         TEXT,                 /* describes a particular feature */
+     member_order INTEGER               /* member order */
     )
     ''')
     db.execute('''
     CREATE TABLE relation_tags (
-     relation_id  INTEGER,              -- relation ID
-     key          TEXT,                 -- tag key
-     value        TEXT                  -- tag value
+     relation_id  INTEGER,              /* relation ID */
+     key          TEXT,                 /* tag key */
+     value        TEXT                  /* tag value */
     )
     ''')
 
@@ -338,6 +342,102 @@ def add_addr():
     db.execute('COMMIT TRANSACTION')
 
 
+def distance(lon1, lat1, lon2, lat2):
+    """Calculates great circle distance between two coordinates in degrees"""
+    # Avoid a math.acos ValueError if the two points are identical
+    if lon1 == lon2 and lat1 == lat2:
+        return 0
+    lon1 = math.radians(lon1)   # Conversion degree to radians
+    lat1 = math.radians(lat1)
+    lon2 = math.radians(lon2)
+    lat2 = math.radians(lat2)
+    # Use earth radius Europe 6371 km (alternatively radius equator 6378 km)
+    dist = math.acos(
+                math.sin(lat1) * math.sin(lat2) +
+                math.cos(lat1) * math.cos(lat2) * math.cos(lon2 - lon1)
+            ) * 6371000
+    return dist     # distance in meters
+
+
+def add_graph():
+    db.execute('BEGIN TRANSACTION')
+    db.execute('''
+    CREATE TABLE graph (
+     edge_id       INTEGER PRIMARY KEY,  /* edge ID */
+     start_node_id INTEGER,              /* edge start node ID */
+     end_node_id   INTEGER,              /* edge end node ID */
+     dist          INTEGER,              /* distance in meters */
+     way_id        INTEGER               /* way ID */
+    )
+    ''')
+    # Create a table with all nodes that are crossing points
+    db.execute('''
+    CREATE TEMP TABLE highway_nodes_crossing
+    (
+     node_id INTEGER PRIMARY KEY
+    )
+    ''')
+    db.execute('''
+    INSERT INTO highway_nodes_crossing
+    SELECT node_id FROM
+    (
+     SELECT wn.node_id
+     FROM way_tags AS wt
+     LEFT JOIN way_nodes AS wn ON wt.way_id=wn.way_id
+     WHERE wt.key='highway'
+    )
+    GROUP BY node_id HAVING count(*)>1
+    ''')
+    #
+    prev_lon = 0
+    prev_lat = 0
+    prev_way_id = -1
+    prev_node_id = -1
+    edge_active = False
+    start_node_id = -1
+    dist = 0
+    db.execute('''
+    SELECT
+     wn.way_id,wn.node_id,
+     ifnull(hnc.node_id,-1) AS node_id_crossing,
+     n.lon,n.lat
+    FROM way_tags AS wt
+    LEFT JOIN way_nodes AS wn ON wt.way_id=wn.way_id
+    LEFT JOIN highway_nodes_crossing AS hnc ON wn.node_id=hnc.node_id
+    LEFT JOIN nodes AS n ON wn.node_id=n.node_id
+    WHERE wt.key='highway'
+    ORDER BY wn.way_id,wn.node_order
+    ''')
+    for (way_id, node_id, node_id_crossing, lon, lat) in db.fetchall():
+        # If a new way is active but there are still remnants of the previous way, create a new edge.
+        if way_id != prev_way_id and edge_active:
+            db.execute('INSERT INTO graph (start_node_id,end_node_id,dist,way_id) VALUES (?,?,?,?)',
+                       (start_node_id, prev_node_id, round(dist), prev_way_id))
+            edge_active = False
+        dist = dist + distance(prev_lon, prev_lat, lon, lat)
+        edge_active = True
+        # If way_id changes or crossing node is present then an edge begins or ends.
+        if way_id != prev_way_id:
+            start_node_id = node_id
+            dist = 0
+        if node_id_crossing > -1 and way_id == prev_way_id:
+            if start_node_id != -1:
+                db.execute('INSERT INTO graph (start_node_id,end_node_id,dist,way_id) VALUES (?,?,?,?)',
+                           (start_node_id, node_id, round(dist), way_id))
+                edge_active = False
+            start_node_id = node_id
+            dist = 0
+        prev_lon = lon
+        prev_lat = lat
+        prev_way_id = way_id
+        prev_node_id = node_id
+    if edge_active:
+        db.execute('INSERT INTO graph (start_node_id,end_node_id,dist,way_id) VALUES (?,?,?,?)',
+                   (start_node_id, node_id, round(dist), way_id))
+    db.execute('CREATE INDEX graph__way_id ON graph (way_id)')
+    db.execute('COMMIT TRANSACTION')
+
+
 def main():
     global db_connect, db
     if len(sys.argv) < 3:
@@ -348,6 +448,7 @@ def main():
     std_index = True
     rtree_ways = False
     addr = False
+    graph = False
     if len(sys.argv) > 3:
         for i in range(3, len(sys.argv)):
             if sys.argv[i] == 'no-index':
@@ -356,6 +457,8 @@ def main():
                 rtree_ways = True
             elif sys.argv[i] == 'addr':
                 addr = True
+            elif sys.argv[i] == 'graph':
+                graph = True
             else:
                 print("abort - option '"+sys.argv[i]+"' unknown")
                 sys.exit(1)
@@ -375,7 +478,10 @@ def main():
     handler = OsmHandler()
     parser.setContentHandler(handler)
     # parse osm xml data
-    parser.parse(sys.argv[1])
+    if sys.argv[1] == '-':
+        parser.parse(sys.stdin)
+    else:
+        parser.parse(sys.argv[1])
     # write data to database
     db_connect.commit()
     # create index
@@ -385,6 +491,9 @@ def main():
         add_rtree_ways()
     if addr:
         add_addr()
+    if graph:
+        add_graph()
+    db_connect.commit()
 
 if __name__ == "__main__":
     main()

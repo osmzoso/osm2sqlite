@@ -192,6 +192,25 @@ node_id        | INTEGER             | node ID
 
 The view **addr_view** join the two tables.  
 
+### Option `graph`
+
+This option creates a table **graph** in the database.  
+This table contains the complete graph of all streets.  
+
+Table **graph**:
+
+column          | type                | description
+----------------|---------------------|-------------------------------------
+edge_id         | INTEGER PRIMARY KEY | edge ID
+start\_node\_id | INTEGER             | edge start node ID
+end\_node\_id   | INTEGER             | edge end node ID
+dist            | INTEGER             | distance in meters
+way_id          | INTEGER             | way ID
+
+Visualization of the table 'graph':  
+
+![table_graph.jpg](./images/table_graph.jpg)
+
 ### Option `no-index`
 
 This option suppresses the creation of the indexes (not recommended).
@@ -209,15 +228,11 @@ C      : 47 seconds
 
 ---
 
-Directory **/route+draw** contains some experiments with the created database.
-
-- [Routing shortest path](route+draw/README.md)
-- drawing a map
-- check the data
-
-Directory **/queries** contains some perhaps useful queries.
-
-Directory **/test** contains testcases.
+Directory [/routing](routing/README.md) contains some routing experiments.  
+Directory [/mapdrawing](mapdrawing/README.md) contains some scripts to draw a map.  
+Directory [/check_data](check_data/README.md) contains some scripts to check the data.  
+Directory [/queries](queries/README.md) contains some perhaps useful queries.  
+Directory [/test](test/README.md) contains testcases.  
 
 ---
 
@@ -225,11 +240,11 @@ Compiling the C version on Linux for Windows, see file **cross_compile_win.sh**.
 
 ---
 
-The C version is able to read from stdin.
+To avoid unpacking the bzip2 file, both versions can read from stdin.
 
-Reading a file compressed with bzip2 without unpacking it first:
+Examples:
 ```
 7z e -so germany.osm.bz2 | osm2sqlite - germany.db
-bzip2 -c -d ./xml/saarland-latest.osm.bz2 | osm2sqlite - ./database/saarland-latest.db addr rtree-ways
+bzip2 -c -d ./xml/saarland.osm.bz2 | osm2sqlite.py - ./database/saarland.db addr
 ```
 

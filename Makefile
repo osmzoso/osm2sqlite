@@ -5,7 +5,7 @@ INC = -I/usr/include/libxml2
 
 # compile
 osm2sqlite: osm2sqlite.c
-	$(CC) osm2sqlite.c -lsqlite3 -lxml2 -o osm2sqlite $(CFLAGS) $(INC)
+	$(CC) osm2sqlite.c -lsqlite3 -lxml2 -lm -o osm2sqlite $(CFLAGS) $(INC)
 
 # install
 install: osm2sqlite
