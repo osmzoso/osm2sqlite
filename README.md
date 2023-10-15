@@ -106,42 +106,18 @@ After reading in the data, additional data can be created with some options.
 This option creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
 index **rtree_way** for finding ways quickly.
 
-Internally, the index is generated with the following commands:
-
-``` sql
-CREATE VIRTUAL TABLE rtree_way USING rtree(way_id, min_lat, max_lat, min_lon, max_lon);
-
-INSERT INTO rtree_way (way_id, min_lat, max_lat, min_lon, max_lon)
-SELECT way_nodes.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)
-FROM way_nodes
-LEFT JOIN nodes ON way_nodes.node_id=nodes.node_id
-GROUP BY way_nodes.way_id;
-```
-
 Instructions for use can be found [here](queries/README.md).
 
 ### Option `addr`
 
-This option creates 2 tables with address data.  
+This option creates tables **addr_street** and **addr_housenumber** with address data.  
 A description of the tables can be found [here](queries/README.md).  
 
 ### Option `graph`
 
-This option creates a table in the database with the complete graph of all highways.
-
-Table **graph**:
-
-column          | type                | description
-----------------|---------------------|-------------------------------------
-edge_id         | INTEGER PRIMARY KEY | edge ID
-start\_node\_id | INTEGER             | edge start node ID
-end\_node\_id   | INTEGER             | edge end node ID
-dist            | INTEGER             | distance in meters
-way_id          | INTEGER             | way ID
-
-Visualization of the table 'graph':  
-
-![table_graph.jpg](./images/table_graph.jpg)
+This option creates an additional table **graph** with the complete graph
+of all highways. This data is required for routing purposes.  
+More information can be found [here](routing/README.md).
 
 ### Option `no-index`
 
