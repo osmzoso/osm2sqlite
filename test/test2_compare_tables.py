@@ -35,7 +35,8 @@ def compare_table(table, columns):
     if diff_c2py == 0 and diff_py2c == 0:
         print('\033[32m' + 'OK' + '\033[0m')
     else:
-        print('\033[31m' + 'ERROR' + '\033[0m' + f' -> diff_c2py {diff_c2py}, diff_py2c {diff_py2c}')
+        print('\033[31m' + 'ERROR' + '\033[0m' +
+              f' -> diff: c2py {diff_c2py}, py2c {diff_py2c}')
 
 
 print("----------------------------------------------")
@@ -47,14 +48,16 @@ db = db_connect.cursor()   # new database cursor
 db.execute("ATTACH DATABASE './osm_c.db'  AS db_c")
 db.execute("ATTACH DATABASE './osm_py.db' AS db_py")
 
-# compare_table('nodes', 'node_id,lon,lat')   # see "show_diff_floating_point.sql"
+# for floating point columns CAST needed, see "show_diff_floating_point.sql"
 compare_table('nodes', 'node_id,CAST(lon AS TEXT),CAST(lat AS TEXT)')
 compare_table('node_tags', 'node_id,key,value')
 compare_table('way_nodes', 'way_id,node_id,node_order')
 compare_table('way_tags', 'way_id,key,value')
 compare_table('relation_members', 'relation_id,type,ref,role,member_order')
 compare_table('relation_tags', 'relation_id,key,value')
-compare_table('addr_street', 'street_id,postcode,city,street,min_lon,min_lat,max_lon,max_lat')
-# compare_table('addr_housenumber', 'housenumber_id,street_id,housenumber,lon,lat,way_id,node_id')
-compare_table('addr_housenumber', 'housenumber_id,street_id,housenumber,CAST(lon AS TEXT),CAST(lat AS TEXT),way_id,node_id')
+compare_table('addr_street', 'street_id,postcode,city,street,'
+              'CAST(min_lon AS TEXT),CAST(min_lat AS TEXT),'
+              'CAST(max_lon AS TEXT),CAST(max_lat AS TEXT)')
+compare_table('addr_housenumber', 'housenumber_id,street_id,housenumber,'
+              'CAST(lon AS TEXT),CAST(lat AS TEXT),way_id,node_id')
 compare_table('graph', 'edge_id,start_node_id,end_node_id,dist,way_id')

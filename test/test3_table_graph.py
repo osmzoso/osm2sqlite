@@ -41,7 +41,8 @@ def check_table_graph():
                 edge_first_node = start_node_id
             edge_last_node = end_node_id
         #
-        if way_first_node != edge_first_node or way_last_node != edge_last_node:
+        if way_first_node != edge_first_node or \
+                way_last_node != edge_last_node:
             errors = errors + 1
             print('Error way_id', way_id)
     return errors
@@ -59,4 +60,3 @@ if errors == 0:
     print('\033[32m' + 'OK' + '\033[0m')
 else:
     print('\033[31m' + 'ERROR' + '\033[0m' + f' -> errors {errors}')
-
