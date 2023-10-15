@@ -8,16 +8,18 @@ Therefore no street names can be displayed.
 
 The script is only a test to investigate how fast the data can be accessed.
 
-TODOs:
 
-- map projection (Web Mercator EPSG:3857)
-- define the colors in a table
+## Map projection (Web Mercator EPSG:3857)
+
+See `test_proj.py`
+
+
+## Future goals..
+
 - output SVG
+- define the colors in a table
 
-
-# Notes
-
-The map is drawn in layers. Layer 1 is drawn first.
+The map will be drawn in layers. Layer 1 is drawn first.
 
 Layer 1: grassland, farmland  
 Layer 2: forest, orchard, wineyard, parks   
@@ -30,11 +32,4 @@ Layer 8: Superordinate roads (Bundesstr. Autobahn)
 Layer 9: Bridges, Trees, POI  
 Layer 10: Powerline  
 Layer 11: Unknown Ways (red)  
-
-
-# EPSG 3857
-
-<https://gis.stackexchange.com/questions/120636/math-formula-for-transforming-from-epsg4326-to-epsg3857>
-
-<https://matplotlib.org/basemap/users/merc.html>
 
