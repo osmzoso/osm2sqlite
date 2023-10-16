@@ -5,7 +5,7 @@ This directory may contain useful queries.
 The database can be easily queried with the [SQLite CLI tool](https://www.sqlite.org/cli.html).
 
 
-## Query  R*Tree index "rtree_way"
+## R*Tree index "rtree_way"
 
 Internally, the index is generated with the following commands:
 
@@ -59,7 +59,7 @@ WHERE way_id=79235038
 ```
 
 
-## Structure of the tables created with the 'addr' option
+## Adress tables
 
 Table **addr_street**:
 
