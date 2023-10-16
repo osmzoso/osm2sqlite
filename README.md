@@ -105,12 +105,12 @@ After reading in the data, additional data can be created with some options.
 
 This option creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
 index **rtree_way** for finding ways quickly.  
-Examples of querying this index can be found [here](queries/README.md#adress-tables).
+Examples of querying this index can be found [here](queries/README.md).
 
 ### Option `addr`
 
 This option creates tables **addr_street** and **addr_housenumber** with addresses.  
-A description of these tables can be found [here](queries/README.md).  
+A description of these tables can be found [here](queries/README.md#adress-tables).  
 
 ### Option `graph`
 
