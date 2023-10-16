@@ -289,4 +289,5 @@ for edge_id in edge_sequence:
     coordinates.pop(0)  # remove the first coordinates
     path_coordinates.extend(coordinates)
 for (lon, lat) in path_coordinates:
-    print(str(lon) + ',' + str(lat))
+    ele = 0
+    print(str(lon) + ',' + str(lat) + ',' + str(ele))

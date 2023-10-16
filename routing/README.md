@@ -1,8 +1,6 @@
 # Routing
 
-## Create table "graph"
-
-See option "graph".
+The "graph" table is required for the calculation of shortest paths.
 
 Table **graph**:
 
@@ -84,10 +82,10 @@ The command
 ```
 route.py DATABASE LON_START LAT_START LON_DEST LAT_DEST
 ```
-outputs a csv list of coordinates.
+calculates the shortest path and outputs the result
+as a csv list (lon,lat,ele) on stdout.
 
 Visualization of a routing path:  
 
 ![routing_path.jpg](../images/routing_path.jpg)
-
 
