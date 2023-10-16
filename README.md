@@ -105,7 +105,7 @@ After reading in the data, additional data can be created with some options.
 
 This option creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
 index **rtree_way** for finding ways quickly.  
-Examples of querying this index can be found [here](queries/README.md).
+Examples of querying this index can be found [here](queries/README.md#adress-tables).
 
 ### Option `addr`
 
