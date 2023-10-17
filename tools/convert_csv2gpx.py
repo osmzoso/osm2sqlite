@@ -19,13 +19,14 @@ def read_csv_file(filename):
     path_coordinates = []
     fobj = open(filename, "r")
     for line in fobj:
-        lonlat = line.split(',')
+        columns = line.split(',')
         try:
-            lon = float(lonlat[0])
-            lat = float(lonlat[1])
+            lon = float(columns[0])
+            lat = float(columns[1])
+            ele = float(columns[2])
         except ValueError:
             continue
-        path_coordinates.append((lon, lat))
+        path_coordinates.append((lon, lat, ele))
     fobj.close()
     return path_coordinates
 
@@ -39,8 +40,10 @@ def write_gpx_file(path_coordinates):
     print('    <extensions>')
     print('    </extensions>')
     print('    <trkseg>')
-    for (lon, lat) in path_coordinates:
-        print('      <trkpt lat="' + str(lat) + '" lon="' + str(lon) + '">' + '</trkpt>')
+    for (lon, lat, ele) in path_coordinates:
+        print('      <trkpt lat="' + str(lat) + '" lon="' + str(lon) + '">')
+        print('        <ele>' + str(ele) + '</ele>')
+        print('      </trkpt>')
     print('    </trkseg>')
     print('  </trk>')
     print('</gpx>')
