@@ -108,7 +108,7 @@ INSERT INTO addr_street (postcode,city,street,min_lon,min_lat,max_lon,max_lat)
  SELECT postcode,city,street,min(lon),min(lat),max(lon),max(lat)
  FROM tmp_addr
  GROUP BY postcode,city,street;
-CREATE INDEX addr_street_1 ON addr_street (postcode,city,street);
+CREATE INDEX addr_street__postcode_city_street ON addr_street (postcode,city,street);
 CREATE TABLE addr_housenumber (
  housenumber_id INTEGER PRIMARY KEY,
  street_id      INTEGER,
@@ -122,7 +122,7 @@ INSERT INTO addr_housenumber (street_id,housenumber,lon,lat,way_id,node_id)
  SELECT s.street_id,a.housenumber,a.lon,a.lat,a.way_id,a.node_id
  FROM tmp_addr AS a
  LEFT JOIN addr_street AS s ON a.postcode=s.postcode AND a.city=s.city AND a.street=s.street;
-CREATE INDEX addr_housenumber_1 ON addr_housenumber (street_id);
+CREATE INDEX addr_housenumber__street_id ON addr_housenumber (street_id);
 CREATE VIEW addr_view AS
 SELECT s.street_id,s.postcode,s.city,s.street,h.housenumber,h.lon,h.lat,h.way_id,h.node_id
 FROM addr_street AS s
