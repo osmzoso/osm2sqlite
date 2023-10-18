@@ -151,7 +151,7 @@ To avoid unpacking the bzip2 file, both versions can read from stdin.
 
 Examples:
 ```
-7z e -so germany.osm.bz2 | osm2sqlite - germany.db
-bzip2 -c -d ./xml/saarland.osm.bz2 | osm2sqlite.py - ./database/saarland.db addr
+7z e -so germany.osm.bz2 | osm2sqlite - germany.db addr
+bzip2 -c -d ./xml/saarland.osm.bz2 | osm2sqlite.py - ./database/saarland.db
 ```
 

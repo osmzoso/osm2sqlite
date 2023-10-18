@@ -34,7 +34,7 @@ time bzip2 -c -d "$dir_xml_bz2/$name.osm.bz2" | ./osm2sqlite - "$dir_database/$n
 #
 # Check data
 #
-# check addr name (additional rtree index 'highway' is needed)
+# check addr name (additional rtree index 'rtree_highway' is needed)
 sqlite3 "$dir_database/$name.db" < ./queries/add_rtree_highway.sql
 ./check_data/check_data_addr_highway.py "$dir_database/$name.db" 791% > "$dir_results/$cdate-error_addr_highway.html"
 #

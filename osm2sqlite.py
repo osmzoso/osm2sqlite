@@ -9,7 +9,7 @@ import xml.sax
 import sqlite3
 import math
 
-help = f'''osm2sqlite.py 0.9.0 ALPHA
+help = f'''osm2sqlite.py 0.9.0
 
 Reads OpenStreetMap XML data into a SQLite database.
 
@@ -306,7 +306,7 @@ def add_addr():
      FROM tmp_addr
      GROUP BY postcode,city,street
     ''')
-    db.execute('CREATE INDEX addr_street_1 ON addr_street (postcode,city,street)')
+    db.execute('CREATE INDEX addr_street__postcode_city_street ON addr_street (postcode,city,street)')
     db.execute('''
     CREATE TABLE addr_housenumber (
      housenumber_id INTEGER PRIMARY KEY,
@@ -324,7 +324,7 @@ def add_addr():
      FROM tmp_addr AS a
      LEFT JOIN addr_street AS s ON a.postcode=s.postcode AND a.city=s.city AND a.street=s.street
     ''')
-    db.execute('CREATE INDEX addr_housenumber_1 ON addr_housenumber (street_id)')
+    db.execute('CREATE INDEX addr_housenumber__street_id ON addr_housenumber (street_id)')
     db.execute('''
     CREATE VIEW addr_view AS
     SELECT s.street_id,s.postcode,s.city,s.street,h.housenumber,h.lon,h.lat,h.way_id,h.node_id
