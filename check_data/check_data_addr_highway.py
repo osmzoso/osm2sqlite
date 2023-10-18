@@ -40,7 +40,7 @@ for (street_id, postcode, city, street, min_lon, min_lat, max_lon, max_lat) in d
     # Search all highway in the search area
     query2 = '''
     SELECT way_id
-    FROM highway
+    FROM rtree_highway
     WHERE max_lon>=? AND min_lon<=?
      AND  max_lat>=? AND min_lat<=?
     '''
