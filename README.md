@@ -136,7 +136,7 @@ C      : 47 seconds
 ---
 
 Directory [/routing](routing/README.md) contains some routing experiments.  
-Directory [/mapdrawing](mapdrawing/README.md) contains some scripts to draw a map [info](doc/mapdrawing.md).  
+Directory [/mapdrawing](doc/mapdrawing.md) contains some scripts to draw a map.  
 Directory [/check_data](check_data/README.md) contains some scripts to check the data.  
 Directory [/queries](queries/README.md) contains some perhaps useful queries.  
 Directory [/test](test/README.md) contains testcases.  
