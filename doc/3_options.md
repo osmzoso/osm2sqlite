@@ -1,5 +1,17 @@
 # 3. Options
 
+## Overview
+
+The `rtree-ways` option creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
+index **rtree_way** for finding ways quickly.  
+
+The `addr` option creates tables **addr_street** and **addr_housenumber** with addresses.  
+
+The `graph` option creates an additional table **graph** with the complete graph
+of all highways. This data is required for routing purposes.  
+
+The `no-index` option suppresses the creation of the indexes (not recommended).
+
 
 ## Option "rtree-ways"
 
