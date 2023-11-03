@@ -1,31 +1,27 @@
 # osm2sqlite
 
-A command line tool for reading OpenStreetMap XML data into a SQLite database.
+A simple command line tool for reading OpenStreetMap XML data into a SQLite database.
 
 ```
 Usage:
-osm2sqlite FILE_OSM_XML FILE_SQLITE_DB [option ...]
+osm2sqlite FILE_OSM_XML FILE_SQLITE_DB [OPTION]...
+
+Options:
+  rtree-ways     Add R*Tree index for ways
+  addr           Add address tables
+  graph          Add graph table
+  no-index       Do not create indexes (not recommended)
+
+When FILE_OSM_XML is -, read standard input.
 ```
 
 The command `osm2sqlite input.osm output.db` reads the
 [OSM XML](https://wiki.openstreetmap.org/wiki/OSM_XML) file **input.osm** and
-creates in the database **output.db** the tables and indexes.  
-A description of the tables can be found [here](doc/2_tables.md)
+creates in the database **output.db** the [tables and indexes](doc/2_tables.md).  
 
 OSM data can be obtained from a provider such as [Geofabrik](https://download.geofabrik.de).
 
-After reading in the data, additional data can be created with some options.  
-More information about the options can be found [here](doc/3_options.md)
-
-The `rtree-ways` option creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
-index **rtree_way** for finding ways quickly.  
-
-The `addr` option creates tables **addr_street** and **addr_housenumber** with addresses.  
-
-The `graph` option creates an additional table **graph** with the complete graph
-of all highways. This data is required for routing purposes.  
-
-The `no-index` option suppresses the creation of the indexes (not recommended).
+After reading in the data, additional data can be created with some [options](doc/3_options.md).
 
 |[**Download the latest version**](https://github.com/osmzoso/osm2sqlite/releases/latest)|
 |----------------------------------------------------------------------------------------|
