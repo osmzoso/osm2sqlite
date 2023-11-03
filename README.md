@@ -9,41 +9,26 @@ osm2sqlite FILE_OSM_XML FILE_SQLITE_DB [option ...]
 
 The command `osm2sqlite input.osm output.db` reads the
 [OSM XML](https://wiki.openstreetmap.org/wiki/OSM_XML) file **input.osm** and
-creates in the database **output.db** the tables and indexes below.
+creates in the database **output.db** the tables and indexes.  
+A description of the tables can be found [here](doc/2_tables.md)
 
 OSM data can be obtained from a provider such as [Geofabrik](https://download.geofabrik.de).
-
-The bash script `example_db.sh` invokes the scripts to show the function.
-
-|[**Download the latest version**](https://github.com/osmzoso/osm2sqlite/releases/latest)|
-|----------------------------------------------------------------------------------------|
-
-
----
-
-## Options
 
 After reading in the data, additional data can be created with some options.  
 More information about the options can be found [here](doc/3_options.md)
 
-### Option `rtree-ways`
-
-This option creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
+The `rtree-ways` option creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
 index **rtree_way** for finding ways quickly.  
 
-### Option `addr`
+The `addr` option creates tables **addr_street** and **addr_housenumber** with addresses.  
 
-This option creates tables **addr_street** and **addr_housenumber** with addresses.  
-
-### Option `graph`
-
-This option creates an additional table **graph** with the complete graph
+The `graph` option creates an additional table **graph** with the complete graph
 of all highways. This data is required for routing purposes.  
 
-### Option `no-index`
+The `no-index` option suppresses the creation of the indexes (not recommended).
 
-This option suppresses the creation of the indexes (not recommended).
-
+|[**Download the latest version**](https://github.com/osmzoso/osm2sqlite/releases/latest)|
+|----------------------------------------------------------------------------------------|
 
 ---
 
@@ -66,4 +51,8 @@ Directory [/test](test/README.md) contains testcases.
 ---
 
 Compiling the C version on Linux for Windows, see file **cross_compile_win.sh**.
+
+---
+
+The bash script `example_db.sh` invokes the scripts to show the function.
 
