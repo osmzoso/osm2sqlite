@@ -9,7 +9,7 @@ import xml.sax
 import sqlite3
 import math
 
-help = f'''osm2sqlite.py 0.9.0
+help = f'''osm2sqlite.py 0.9.1
 
 Reads OpenStreetMap XML data into a SQLite database.
 
@@ -147,7 +147,7 @@ def add_std_index():
     db.execute('CREATE INDEX way_nodes__way_id             ON way_nodes (way_id, node_order)')
     db.execute('CREATE INDEX way_nodes__node_id            ON way_nodes (node_id)')
     db.execute('CREATE INDEX relation_members__relation_id ON relation_members (relation_id, member_order)')
-    db.execute('CREATE INDEX relation_members__type        ON relation_members (type, ref)')
+    db.execute('CREATE INDEX relation_members__ref         ON relation_members (ref)')
     db.execute('CREATE INDEX relation_tags__relation_id    ON relation_tags (relation_id)')
     db.execute('CREATE INDEX relation_tags__key            ON relation_tags (key)')
     db_connect.commit()

@@ -15,7 +15,7 @@
 #include <libxml/parserInternals.h>
 
 #define HELP \
-"osm2sqlite 0.9.0\n" \
+"osm2sqlite 0.9.1\n" \
 "\n" \
 "Reads OpenStreetMap XML data into a SQLite database.\n" \
 "\n" \
@@ -273,7 +273,7 @@ void add_std_index()
              " CREATE INDEX way_nodes__way_id             ON way_nodes (way_id, node_order);"
              " CREATE INDEX way_nodes__node_id            ON way_nodes (node_id);"
              " CREATE INDEX relation_members__relation_id ON relation_members (relation_id, member_order);"
-             " CREATE INDEX relation_members__type        ON relation_members (type, ref);"
+             " CREATE INDEX relation_members__ref         ON relation_members (ref);"
              " CREATE INDEX relation_tags__relation_id    ON relation_tags (relation_id);"
              " CREATE INDEX relation_tags__key            ON relation_tags (key);",
              NULL, NULL, NULL);
