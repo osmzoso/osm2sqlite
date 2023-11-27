@@ -1,18 +1,25 @@
 # 4. Map Drawing
 
-For map drawing R*Tree index **"rtree_way"** is required.
+See directory **./mapdrawing**.
+
+For map drawing R*Tree index **"rtree_way"** is required.  
+Further a table **map_def** is required in the database.  
+This table contains definitions for some zoomlevels.  
 
 ```
+Creates a simple map in SVG format on stdout.
 Usage:
-./mapdrawing/osm2sqlite_map.py DATABASE LON LAT ZOOMLEVEL SIZE_X SIZE_Y
+./map.py DATABASE LON LAT ZOOMLEVEL SIZE_X SIZE_Y
 ```
 
-Example to generate a map in SVG format to stdout:  
-`osm2sqlite_map.py ../freiburg.db 7.800 47.979 16 900 600 > tmp_zoom16.svg`
+Example to generate a map with zoomlevel 16 and size 900 x 600px:  
+```
+sqlite3 ../freiburg.db < map_def.sql
+./map.py ../freiburg.db 7.800 47.979 16 900 600 > map_zoom16.svg
+```
 
-Many TODOs:  
-1. define the colors in a table **"map_def"**  
-2. The map will be drawn in layers. Layer 1 is drawn first:  
+TODOs:  
+1. The map will be drawn in layers. Layer 1 is drawn first:  
 Layer 1: grassland, farmland  
 Layer 2: forest, orchard, wineyard, parks   
 Layer 3: sports field, playground  
@@ -24,13 +31,12 @@ Layer 8: Superordinate roads (Bundesstr. Autobahn)
 Layer 9: Bridges, Trees, POI  
 Layer 10: Powerline  
 Layer 11: Unknown Ways (red)  
-3. Faster access  
-4. Don't print points outside the boundingbox  
+2. Don't print points outside the boundingbox  
 
 
 ## Map projection Web Mercator (EPSG:3857)
 
-See `map_proj.py`
+See `proj.py`
 
 ```
 Help on module map_proj:
@@ -108,15 +114,4 @@ FUNCTIONS
 FILE
     /osm2sqlite/mapdrawing/map_proj.py
 ```
-
-
-## draw_map_interactive.py
-
-The Python script *draw_map_interactive.py* read data directly from the database
-and draw a very simple map in a window.
-
-The library tkinter is used for drawing.
-Therefore no street names can be displayed.
-
-The script is only a test to investigate how fast the data can be accessed.
 
