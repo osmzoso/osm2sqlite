@@ -7,7 +7,7 @@ Visualization of the table 'graph':
 
 The command
 ```
-route.py DATABASE LON_START LAT_START LON_DEST LAT_DEST
+./src_py/route.py DATABASE LON_START LAT_START LON_DEST LAT_DEST
 ```
 calculates the shortest path and outputs the result
 as a csv list (lon,lat,ele) on stdout.

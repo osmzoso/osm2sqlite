@@ -1,15 +1,15 @@
 # 4. Map Drawing
 
-See directory **./mapdrawing**.
+See **./src_py/map.py**.
 
-For map drawing R*Tree index **"rtree_way"** is required.  
-Further a table **map_def** is required in the database.  
+For map drawing R*Tree index **"rtree_way"** and  
+a table **map_def** is required in the database.  
 This table contains definitions for some zoomlevels.  
 
 ```
 Creates a simple map in SVG format on stdout.
 Usage:
-./map.py DATABASE LON LAT ZOOMLEVEL SIZE_X SIZE_Y
+./src_py/map.py DATABASE LON LAT ZOOMLEVEL SIZE_X SIZE_Y
 ```
 
 Example to generate a map with zoomlevel 16 and size 900 x 600px:  
