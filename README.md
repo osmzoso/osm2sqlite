@@ -30,7 +30,9 @@ After reading in the data, additional data can be created with some [options](do
 
 ## Miscellaneous
 
-There is a version in Python as a prototype and there is a version in C.
+There are two programme versions:  
+- a version in Python as a prototype (./src_py)  
+- a version in C (./src)  
 
 Time measurement for **saarland.osm (700 MB)**:  
 Python : 2 minutes 36 seconds  
@@ -38,11 +40,9 @@ C      : 47 seconds
 
 ---
 
-Directory [/routing](doc/5_routing.md) contains some routing experiments.  
-Directory [/mapdrawing](doc/4_mapdrawing.md) contains some scripts to draw a map.  
-Directory [/check_data](check_data/README.md) contains some scripts to check the data.  
-Directory [/queries](queries/README.md) contains some perhaps useful queries.  
-Directory [/test](test/README.md) contains testcases.  
+Directory [/doc](doc/) contains some documentation.  
+Directory [/queries](queries/) contains some perhaps useful queries.  
+Directory [/test](test/) contains testcases.  
 
 ---
 

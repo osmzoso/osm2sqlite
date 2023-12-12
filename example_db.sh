@@ -16,12 +16,11 @@ db="$dir_database/$name.db"
 # Read data and create a new database
 #
 rm $db
-time bzip2 -c -d "$dir_xml_bz2/$name.osm.bz2" | ./osm2sqlite - $db addr rtree-ways graph
+time bzip2 -c -d "$dir_xml_bz2/$name.osm.bz2" | ./src/osm2sqlite - $db addr rtree-ways graph
 #
 # Routing (table 'graph' is required)
 #
-# Freiburg -> Schauinsland
-./routing/route.py $db 7.808 47.983 7.889 47.897 > "$dir_results/freiburg_schauinsland.csv"
+./src_py/route.py $db 7.808 47.983 7.889 47.897 > "$dir_results/freiburg_schauinsland.csv"
 ./tools/html_map_csv.py "$dir_results/freiburg_schauinsland.csv" > "$dir_results/$cdate-map_route_freiburg_schauinsland.html"
 ./tools/convert_csv2gpx.py "$dir_results/freiburg_schauinsland.csv" > "$dir_results/freiburg_schauinsland.gpx"
 #
@@ -32,13 +31,11 @@ time bzip2 -c -d "$dir_xml_bz2/$name.osm.bz2" | ./osm2sqlite - $db addr rtree-wa
 # create HTML file with a map of the routing graph
 ./tools/html_map_table_graph.py $db 7.81 47.97 7.83 47.98 > "$dir_results/$cdate-map_table_graph_freiburg.html"
 #
-# Check data
+# Check addr:street name
 #
-# check addr name (additional rtree index 'rtree_highway' is needed)
-sqlite3 $db < ./queries/add_rtree_highway.sql
-./check_data/check_data_addr_highway.py $db 791% > "$dir_results/$cdate-error_addr_highway.html"
+./src_py/check_addr_street_name.py $db 791% > "$dir_results/$cdate-error_addr_street_name.html"
 #
 # Draw map
 #
-sqlite3 $db < ./mapdrawing/map_def.sql 
-./mapdrawing/map.py $db 7.807 47.982 16 1300 900 > "$dir_results/$cdate-map_zoom16.svg"
+sqlite3 $db < ./src_py/map_def.sql 
+./src_py/map.py $db 7.807 47.982 16 1300 900 > "$dir_results/$cdate-map_zoom16.svg"
