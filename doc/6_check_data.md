@@ -1,9 +1,5 @@
 # 6. Check OSM data
 
-The script
-```
-./check_data/check_data_addr_highway.py
-```
-checks if the address street name is
+The script `./src_py/check_addr_street_name.py` checks if the addr:street name is
 identical with the street name.
 
