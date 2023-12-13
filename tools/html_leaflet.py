@@ -131,6 +131,9 @@ th {
 td {
  border: 1px solid #aaaaaa;
 }
+a {
+ color: #68B0FD;
+}
 </style>
 </head>
 <body>
