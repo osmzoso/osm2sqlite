@@ -18,13 +18,13 @@ The .osm.bz2 format is deprecated. In future, only .osm.pbf files will be provid
 Convert .osm.pbf to osm.bz2 with "osmium":  
 `osmium cat freiburg-regbez-latest.osm.pbf -o freiburg-regbez-latest.osm.bz2`
 
-Install osmium on Fedora Linus:  
+Install osmium on Fedora Linux:  
 `sudo dnf install osmium-tool.x86_64`  
 
 Convert .osm.pbf to osm with "osmium", output to stdout:   
 `osmium cat bremen-latest.osm.pbf -f osm -o - | less -S`  
 `osmium cat bremen-latest.osm.pbf --output-format=osm --output=- | less -S`  
 
-Example to read a .osm.pbf file with "osmium":  
-`osmium cat freiburg.osm.pbf" --output-format=osm --output=- | osm2sqlite - freiburg.db`
+Example to read .osm.pbf file with "osmium":  
+`osmium cat freiburg.osm.pbf --output-format=osm --output=- | osm2sqlite - freiburg.db`
 
