@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Print map Next Generation
+# Print map
 #
 # https://www.w3schools.com/graphics/svg_intro.asp
 # https://de.wikipedia.org/wiki/Scalable_Vector_Graphics
@@ -9,9 +9,11 @@ import sys
 import proj
 import sqlite3
 
-def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y):
+
+def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
     """
-    TODO
+    Print a simple map to stdout.
+    A table 'map_def' is required.
     """
     # map size
     pixel_world_map, meters_pixel = proj.size_world_map(zoomlevel)
@@ -24,7 +26,7 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y):
     db.execute('CREATE TEMP TABLE map_draw_plan (type,type_id,layer,style,width,fill,stroke,dash)')
     db.execute('CREATE TEMP TABLE map_ways_unknown (way_id)')
     #
-    print(f'<svg height="{bbox_y}" width="{bbox_x}">')
+    print(f'<svg height="{bbox_y}" width="{bbox_x}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">')
     print('<!-- ************ map info ************')
     print(f'lon       : {lon}\n' +
           f'lat       : {lat}\n' +
@@ -43,7 +45,7 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y):
     print('bbox_max_y - bbox_min_y = bbox_y = size_y : ', bbox_max_y - bbox_min_y)
     print('************ map info ************ -->')
     #
-    print('<rect width="100%" height="100%" fill="#e0dfdf" />')
+    print('<rect width="100%" height="100%" fill="#f2efe9" />')
     #
     db.execute('''
     SELECT way_id
@@ -66,10 +68,9 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y):
         ''', (zoomlevel, way_id))
         for (way_id, key, value, layer, style, width, fill, stroke, dash) in db.fetchall():
             ###print(f'  {key} # {value}')
-            if layer != None:
-                ###print('==draw_plan==>', way_id, key, value, layer, style, width, fill, stroke, dash)
-                way_draw_plan.append({'style':style, 'way_id':way_id, 'key':key, 'value':value,
-                  'layer':layer, 'width':width, 'fill':fill, 'stroke':stroke, 'dash':dash, 'name':''})
+            if layer is not None:
+                way_draw_plan.append({'style': style, 'way_id': way_id, 'key': key, 'value': value,
+                  'layer': layer, 'width': width, 'fill': fill, 'stroke': stroke, 'dash': dash, 'name': ''})
             if key == 'name':
                 ###print('==merken==>', way_id, key, value)
                 name = value
@@ -85,41 +86,47 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y):
             # Daten modifizieren
             for d in way_draw_plan:
                 ###print('orig:', d)
-                d.update({'name':name})
+                d.update({'name': name})
                 if bridge:
                     layer = d['layer']
                     layer += 2
-                    d.update({'layer':layer})
+                    d.update({'layer': layer})
             # Daten in Tabelle "map_draw_plan" einfügen
             for d in way_draw_plan:
                 ###print('mod:',d)
                 db.execute('INSERT INTO map_draw_plan VALUES (?,?,?,?,?,?,?,?)',
-                  ('way',d['way_id'],d['layer'],d['style'],d['width'],d['fill'],d['stroke'],d['dash']))
+                  ('way', d['way_id'], d['layer'], d['style'], d['width'], d['fill'], d['stroke'], d['dash']))
         else:
             db.execute('INSERT INTO map_ways_unknown VALUES (?)', (way_id,))
     #
-    # Alle Relationen ermitteln die ways ohne draw_plan haben
+    # Alle noch unbekannten ways untersuchen ob sie Teil einer Relation sind
     #
     db.execute('''
-    SELECT rm.relation_id
-    FROM relation_members AS rm
-    WHERE rm.ref IN (SELECT way_id FROM map_ways_unknown)
+    SELECT wu.way_id,rm.relation_id
+    FROM map_ways_unknown AS wu
+    LEFT JOIN relation_members AS rm ON wu.way_id=rm.ref AND rm.type='way'
     ''')
-    for (relation_id,) in db.fetchall():
-        ###print('relation_id', relation_id)
-        db.execute('''
-        SELECT rt.relation_id,rt.key,rt.value,
-         md.layer,md.style,md.width,md.fill,md.stroke,md.dash
-        FROM relation_tags AS rt
-        LEFT JOIN map_def AS md ON rt.key=md.key AND rt.value LIKE md.value AND md.zoomlevel=?
-        WHERE rt.relation_id=?
-        ''', (zoomlevel, relation_id))
-        for (relation_id, key, value, layer, style, width, fill, stroke, dash) in db.fetchall():
-            ###print(f'  {key} # {value}')
-            if layer != None:
-                ###print('==draw_plan==>', relation_id, key, value, layer, style, width, fill, stroke, dash)
-                db.execute('INSERT INTO map_draw_plan VALUES (?,?,?,?,?,?,?,?)',
-                  ('relation',relation_id,layer,style,width,fill,stroke,dash))
+    for (way_id, relation_id) in db.fetchall():
+        if relation_id is not None:
+            db.execute('''
+            SELECT rt.relation_id,rt.key,rt.value,
+             md.layer,md.style,md.width,md.fill,md.stroke,md.dash
+            FROM relation_tags AS rt
+            LEFT JOIN map_def AS md ON rt.key=md.key AND rt.value LIKE md.value AND md.zoomlevel=?
+            WHERE rt.relation_id=?
+            ''', (zoomlevel, relation_id))
+            for (relation_id, key, value, layer, style, width, fill, stroke, dash) in db.fetchall():
+                if layer is not None:
+                    db.execute('INSERT INTO map_draw_plan VALUES (?,?,?,?,?,?,?,?)',
+                      ('relation', relation_id, layer, style, width, fill, stroke, dash))
+                    db.execute('DELETE FROM map_ways_unknown WHERE way_id=?', (way_id,))
+    #
+    # Unbekannte Wege ggf. als rote Linien anzeigen
+    #
+    if show_unknown:
+        db.execute('SELECT way_id FROM map_ways_unknown')
+        for (way_id,) in db.fetchall():
+            db.execute("INSERT INTO map_draw_plan VALUES ('way',?,99,'line',2,'None','#ff0000','')", (way_id,))
     #
     # Draw Plan abarbeiten
     #
@@ -128,10 +135,10 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y):
     FROM map_draw_plan
     ORDER BY layer
     ''')
-    for (type,type_id,layer,style,width,fill,stroke,dash) in db.fetchall():
-        print('<!-- DRAW PLAN',type,type_id,layer,style,width,fill,stroke,dash,'-->')
-        # TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
-        print('<path id="" d="', end='')
+    for (type, type_id, layer, style, width, fill, stroke, dash) in db.fetchall():
+        # print('<!-- DRAW_PLAN :',type,type_id,layer,style,width,fill,stroke,dash,'-->')
+        path_id = type + str(type_id)
+        print(f'<path id="{path_id}" d="', end='')
         if type == 'way':
             db.execute('''
             SELECT n.lon,n.lat
@@ -150,7 +157,7 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y):
             FROM relation_members AS rm
             LEFT JOIN way_nodes AS wn ON rm.ref=wn.way_id
             LEFT JOIN nodes AS n ON wn.node_id=n.node_id
-            WHERE rm.relation_id=? AND rm.type='way'
+            WHERE rm.relation_id=? AND rm.type='way' AND rm.role='outer'
             ORDER BY rm.member_order,wn.node_order
             ''', (type_id,))
         else:
@@ -172,25 +179,8 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y):
             print(f'" style="fill:none;stroke:{stroke};stroke-width:{width};stroke-linecap:round;stroke-dasharray:{dash}" />')
         elif style == 'area':
             print(f'Z" style="fill:{fill};stroke:{stroke};stroke-width:{width}" />')
-    #
-    # Debug: Unbekannte Wege als rote Linien anzeigen
-    #
-    # TODO
     print('</svg>')
 
-#
-# Grenze Friedhof St. Georgen
-# Ways 914496150 und 1040222686 sind Teil von Relation 13923337
-#
-# Gebäude mit Innenhöfen
-# Beispiel Staudinger Gesamtschule:
-# Relation: 4176098
-#   -> 5 Mitglieder:
-#      Weg 311811960 als inner
-#      Weg 311811961 als inner
-#      Weg 311811963 als inner
-#      Weg 311811962 als inner
-#      Weg 24756034 als outer
 
 if __name__ == "__main__":
     if len(sys.argv) != 7:
@@ -207,4 +197,4 @@ Usage:
     zoomlevel = int(sys.argv[4])
     bbox_x = int(sys.argv[5])
     bbox_y = int(sys.argv[6])
-    draw_map(lon, lat, zoomlevel, bbox_x, bbox_y)
+    draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, True)
