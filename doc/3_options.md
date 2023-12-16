@@ -1,23 +1,13 @@
 # 3. Options
 
-## Overview
-
-The `rtree-ways` option creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
-index **rtree_way** for finding ways quickly.  
-
-The `addr` option creates tables **addr_street** and **addr_housenumber** with addresses.  
-
-The `graph` option creates an additional table **graph** with the complete graph
-of all highways. This data is required for routing purposes.  
-
-The `no-index` option suppresses the creation of the indexes (not recommended).
-
+There are several options for creating additional data in the database.
 
 ## Option "rtree-ways"
 
-Add R*Tree index **"rtree_way"**.  
-The index is generated with the following commands:
+This option creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
+index **rtree_way** for finding ways quickly.  
 
+Internally, this index is created as follows:  
 ``` sql
 CREATE VIRTUAL TABLE rtree_way USING rtree(way_id, min_lat, max_lat, min_lon, max_lon);
 
@@ -70,7 +60,7 @@ WHERE way_id=79235038
 
 ## Option "addr"
 
-Add adress tables.
+This option creates tables **addr_street** and **addr_housenumber** with addresses.  
 
 Table **addr_street**:
 
@@ -110,14 +100,17 @@ The view **addr_view** join the two tables.
 
 ## Option "graph"
 
-Add table **graph**:
+This option creates an additional table **graph** with the complete graph
+of all highways. This data is required for routing purposes.  
+
+Table **graph**:
 
 ```
 column          | type                | description
 ----------------|---------------------|-------------------------------------
 edge_id         | INTEGER PRIMARY KEY | edge ID
-start\_node\_id | INTEGER             | edge start node ID
-end\_node\_id   | INTEGER             | edge end node ID
+start_node_id   | INTEGER             | edge start node ID
+end_node_id     | INTEGER             | edge end node ID
 dist            | INTEGER             | distance in meters
 way_id          | INTEGER             | way ID
 ```

@@ -44,10 +44,3 @@ RTREE_HIGHWAY_PARENT.............................. 4            0.012%
 SQLITE_SCHEMA..................................... 1            0.003% 
 ```
 
-
-## SpatiaLite
-
-Test lib SpatiaLite
-
-    sudo dnf install libspatialite.x86_64
-
