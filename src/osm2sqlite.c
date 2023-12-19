@@ -203,8 +203,8 @@ void add_tables()
 
              " CREATE TABLE relation_members ("
              "  relation_id  INTEGER,              /* relation ID */"
-             "  type         TEXT,                 /* type ('node','way','relation') */"
-             "  ref          INTEGER,              /* node, way or relation ID */"
+             "  ref          TEXT,                 /* reference ('node','way','relation') */"
+             "  ref_id       INTEGER,              /* node, way or relation ID */"
              "  role         TEXT,                 /* describes a particular feature */"
              "  member_order INTEGER               /* member order */"
              " );"
@@ -242,7 +242,7 @@ void create_prep_stmt()
     if( rc!=SQLITE_OK ) abort_db_error(rc);
     rc = sqlite3_prepare_v2(
              db,
-             "INSERT INTO relation_members (relation_id,type,ref,role,member_order) VALUES (?1,?2,?3,?4,?5)",
+             "INSERT INTO relation_members (relation_id,ref,ref_id,role,member_order) VALUES (?1,?2,?3,?4,?5)",
              -1, &stmt_insert_relation_members, NULL);
     if( rc!=SQLITE_OK ) abort_db_error(rc);
     rc = sqlite3_prepare_v2(
@@ -273,7 +273,7 @@ void add_std_index()
              " CREATE INDEX way_nodes__way_id             ON way_nodes (way_id, node_order);"
              " CREATE INDEX way_nodes__node_id            ON way_nodes (node_id);"
              " CREATE INDEX relation_members__relation_id ON relation_members (relation_id, member_order);"
-             " CREATE INDEX relation_members__ref         ON relation_members (ref);"
+             " CREATE INDEX relation_members__ref_id      ON relation_members (ref_id);"
              " CREATE INDEX relation_tags__relation_id    ON relation_tags (relation_id);"
              " CREATE INDEX relation_tags__key            ON relation_tags (key);",
              NULL, NULL, NULL);
