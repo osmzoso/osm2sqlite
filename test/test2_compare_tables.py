@@ -53,7 +53,7 @@ compare_table('nodes', 'node_id,CAST(lon AS TEXT),CAST(lat AS TEXT)')
 compare_table('node_tags', 'node_id,key,value')
 compare_table('way_nodes', 'way_id,node_id,node_order')
 compare_table('way_tags', 'way_id,key,value')
-compare_table('relation_members', 'relation_id,type,ref,role,member_order')
+compare_table('relation_members', 'relation_id,ref,ref_id,role,member_order')
 compare_table('relation_tags', 'relation_id,key,value')
 compare_table('addr_street', 'street_id,postcode,city,street,'
               'CAST(min_lon AS TEXT),CAST(min_lat AS TEXT),'
