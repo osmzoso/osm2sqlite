@@ -34,12 +34,12 @@ value        | TEXT                | tag value
 
 Table "relation_members":
 relation_id  | INTEGER             | relation ID
-type         | TEXT                | type ('node','way','relation')
-ref          | INTEGER             | node, way or relation ID
+ref          | TEXT                | reference ('node','way','relation')
+ref_id       | INTEGER             | node, way or relation ID
 role         | TEXT                | describes a particular feature
 member_order | INTEGER             | member order
 - INDEX relation_members__relation_id ON relation_members (relation_id, member_order)
-- INDEX relation_members__ref         ON relation_members (ref)
+- INDEX relation_members__ref_id      ON relation_members (ref_id)
 
 Table "relation_tags":
 relation_id  | INTEGER             | relation ID
