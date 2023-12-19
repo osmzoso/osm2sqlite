@@ -23,7 +23,7 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
     bbox_min_lon, bbox_min_lat = proj.pixel_to_wgs84(bbox_min_x, bbox_min_y, pixel_world_map)
     bbox_max_lon, bbox_max_lat = proj.pixel_to_wgs84(bbox_max_x, bbox_max_y, pixel_world_map)
     #
-    db.execute('CREATE TEMP TABLE map_draw_plan (type,type_id,layer,style,width,fill,stroke,dash)')
+    db.execute('CREATE TEMP TABLE map_draw_plan (ref,ref_id,layer,style,width,fill,stroke,dash)')
     db.execute('CREATE TEMP TABLE map_ways_unknown (way_id)')
     #
     print(f'<svg height="{bbox_y}" width="{bbox_x}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">')
@@ -104,7 +104,7 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
     db.execute('''
     SELECT wu.way_id,rm.relation_id
     FROM map_ways_unknown AS wu
-    LEFT JOIN relation_members AS rm ON wu.way_id=rm.ref AND rm.type='way'
+    LEFT JOIN relation_members AS rm ON wu.way_id=rm.ref_id AND rm.ref='way'
     ''')
     for (way_id, relation_id) in db.fetchall():
         if relation_id is not None:
@@ -131,35 +131,35 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
     # Draw Plan abarbeiten
     #
     db.execute('''
-    SELECT type,type_id,layer,style,width,fill,stroke,dash
+    SELECT ref,ref_id,layer,style,width,fill,stroke,dash
     FROM map_draw_plan
     ORDER BY layer
     ''')
-    for (type, type_id, layer, style, width, fill, stroke, dash) in db.fetchall():
-        # print('<!-- DRAW_PLAN :',type,type_id,layer,style,width,fill,stroke,dash,'-->')
-        path_id = type + str(type_id)
+    for (ref, ref_id, layer, style, width, fill, stroke, dash) in db.fetchall():
+        # print('<!-- DRAW_PLAN :',ref,ref_id,layer,style,width,fill,stroke,dash,'-->')
+        path_id = ref + str(ref_id)
         print(f'<path id="{path_id}" d="', end='')
-        if type == 'way':
+        if ref == 'way':
             db.execute('''
             SELECT n.lon,n.lat
             FROM way_nodes AS wn
             LEFT JOIN nodes AS n ON wn.node_id=n.node_id
             WHERE wn.way_id=?
             ORDER BY wn.node_order
-            ''', (type_id,))
-        elif type == 'relation':
+            ''', (ref_id,))
+        elif ref == 'relation':
             db.execute('''
             SELECT
              DISTINCT
-             --rm.relation_id,rm.type,rm.ref,rm.role,rm.member_order,
+             --rm.relation_id,rm.ref,rm.ref_id,rm.role,rm.member_order,
              --wn.node_id,wn.node_order,
              n.lon,n.lat
             FROM relation_members AS rm
-            LEFT JOIN way_nodes AS wn ON rm.ref=wn.way_id
+            LEFT JOIN way_nodes AS wn ON rm.ref_id=wn.way_id
             LEFT JOIN nodes AS n ON wn.node_id=n.node_id
-            WHERE rm.relation_id=? AND rm.type='way' AND rm.role='outer'
+            WHERE rm.relation_id=? AND rm.ref='way' AND rm.role='outer'
             ORDER BY rm.member_order,wn.node_order
-            ''', (type_id,))
+            ''', (ref_id,))
         else:
             print('Error draw plan - abort')
             sys.exit(1)

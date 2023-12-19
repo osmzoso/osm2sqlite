@@ -74,7 +74,7 @@ class OsmHandler(xml.sax.ContentHandler):
             self.relation_id = attrib['id']
         elif element == 'member':
             self.relation_member_order += 1
-            db.execute('INSERT INTO relation_members (relation_id,type,ref,role,member_order) VALUES (?,?,?,?,?)',
+            db.execute('INSERT INTO relation_members (relation_id,ref,ref_id,role,member_order) VALUES (?,?,?,?,?)',
                        (self.relation_id, attrib['type'], attrib['ref'], attrib['role'], self.relation_member_order))
 
     # call when an element ends
@@ -124,8 +124,8 @@ def add_tables():
     db.execute('''
     CREATE TABLE relation_members (
      relation_id  INTEGER,              /* relation ID */
-     type         TEXT,                 /* type ('node','way','relation') */
-     ref          INTEGER,              /* node, way or relation ID */
+     ref          TEXT,                 /* reference ('node','way','relation') */
+     ref_id       INTEGER,              /* node, way or relation ID */
      role         TEXT,                 /* describes a particular feature */
      member_order INTEGER               /* member order */
     )
@@ -147,7 +147,7 @@ def add_std_index():
     db.execute('CREATE INDEX way_nodes__way_id             ON way_nodes (way_id, node_order)')
     db.execute('CREATE INDEX way_nodes__node_id            ON way_nodes (node_id)')
     db.execute('CREATE INDEX relation_members__relation_id ON relation_members (relation_id, member_order)')
-    db.execute('CREATE INDEX relation_members__ref         ON relation_members (ref)')
+    db.execute('CREATE INDEX relation_members__ref_id      ON relation_members (ref_id)')
     db.execute('CREATE INDEX relation_tags__relation_id    ON relation_tags (relation_id)')
     db.execute('CREATE INDEX relation_tags__key            ON relation_tags (key)')
     db_connect.commit()
