@@ -3,7 +3,8 @@
 # This file shows an example workflow
 #
 db="$HOME/osm/database/freiburg-regbez-latest.db"
-osm="$HOME/osm/xml/freiburg-regbez-latest.osm.bz2"
+#osm_bz2="$HOME/osm/xml/freiburg-regbez-latest.osm.bz2"
+osm_pbf="$HOME/osm/xml/freiburg-regbez-latest.osm.pbf"
 # String for file name Date
 cdate=$(date '+%Y%m%d')
 #
@@ -11,7 +12,8 @@ cdate=$(date '+%Y%m%d')
 #  (table 'graph' is required)
 #
 rm $db
-time bzip2 -c -d $osm | ./src/osm2sqlite - $db addr rtree-ways graph
+#time bzip2 -c -d $osm_bz2 | ./src/osm2sqlite - $db addr rtree-ways graph
+time osmium cat $osm_pbf --output-format=osm --output=- | ./src/osm2sqlite - $db addr rtree-ways graph
 sqlite3 $db < ./src_py/map_def.sql
 #
 # Routing
@@ -34,4 +36,4 @@ sqlite3 $db < ./src_py/map_def.sql
 # Draw map
 #
 ./src_py/map.py $db 7.807 47.982 16 1300 900 > "$HOME/osm/results/$cdate-map_zoom16.svg"
-./src_py/map.py $db 7.572 48.033 16 1300 900 > "$HOME/osm/results/$cdate-map_zoom16_breisach.svg"
+
