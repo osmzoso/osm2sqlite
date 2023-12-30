@@ -1,27 +1,34 @@
 # 4. Map Drawing
 
-See **./src_py/map.py**
+See **./src_py/map.py** **proj.py** **map_def.sql**
 
 For map drawing R*Tree index **"rtree_way"** and a table **map_def** with
 map definitions (colors etc.) is required in the database.  
 
 Example to generate a map with zoomlevel 16 and size 900 x 600px:  
-```
-sqlite3 ../freiburg.db < map_def.sql
-./map.py ../freiburg.db 7.800 47.979 16 900 600 > map_zoom16.svg
-```
+`sqlite3 ../freiburg.db < map_def.sql`  
+`./map.py ../freiburg.db 7.800 47.979 16 900 600 > map_zoom16.svg`  
+
+Converting SVG to PNG with "inkscape":  
+`inkscape map_zoom16.svg -o map_zoom16.png`
 
 ## Map projection
 
-See **./src_py/proj.py**
-
 In order to draw a map, the coordinates of a spherical surface must
 be mapped onto a plane surface.  
-The Mercator projection is often used for this.  
-To convert WGS84 coordinates, the simplified Web Mercator projection is usually used.
+The [Mercator projection](https://en.wikipedia.org/wiki/Mercator_projection) is usually used for this.  
 
-WGS84 (lon, lat) vs. Web Mercator (x, y):  
+In principle, the Mercator projection cannot be used to display
+coordinates near the poles.  
 
+In OSM the coordinates are in [WGS84](https://en.wikipedia.org/wiki/World_Geodetic_System#WGS_84) format.  
+This format is also described under the name [EPSG:4326](https://epsg.io/4326).  
+
+Most often the simplified [Web Mercator projection](https://en.wikipedia.org/wiki/Web_Mercator_projection) is used.        
+This format is also described under the name [EPSG:3857](https://epsg.io/3857).  
+Polar areas with abs(latitude) bigger then 85.05112888 (85°3'4.064") are clipped off.
+
+Comparison of WGS84 (lon, lat) with Web Mercator (x, y):  
 ```
                                  ^
                lat:  85.05112888 | y:  20037508.34
@@ -33,15 +40,7 @@ lon: -180°                       |                 lon: +180°
                lat: -85.05112888 | y: -20037508.34
 ```
 
-WGS84 (EPSG:4326), used in OpenStreetMap  
-(see https://en.wikipedia.org/wiki/World_Geodetic_System#WGS_84)
-    
-Web Mercator (EPSG:3857)  
-(see https://en.wikipedia.org/wiki/Web_Mercator_projection)
-
-In principle, the Mercator projection cannot be used to display
-coordinates near the poles.  
-Polar areas with abs(latitude) bigger then 85.05112888 (85°3'4.064") are clipped off.
+As you can see, the WGS84 coordinates are transformed into a square world map.
 
 The conversion of Web Mercator coordinates into pixel coordinates is relatively simple.
 
@@ -85,6 +84,4 @@ Layer 8: Superordinate roads (Bundesstr. Autobahn)
 Layer 9: Bridges, Trees, POI  
 Layer 10: Powerline  
 Layer 99: Unknown Ways (red)  
-
-TODO  Don't print points outside the boundingbox  
 
