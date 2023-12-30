@@ -12,7 +12,7 @@ import sqlite3
 
 def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
     """
-    Print a simple map to stdout.
+    Outputs a map in SVG format to stdout.
     A table 'map_def' is required.
     """
     # map size
@@ -23,10 +23,36 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
     bbox_min_lon, bbox_min_lat = proj.pixel_to_wgs84(bbox_min_x, bbox_min_y, pixel_world_map)
     bbox_max_lon, bbox_max_lat = proj.pixel_to_wgs84(bbox_max_x, bbox_max_y, pixel_world_map)
     #
-    db.execute('CREATE TEMP TABLE map_draw_plan (ref,ref_id,layer,style,width,fill,stroke,dash)')
+    db.execute('''CREATE TEMP TABLE map_draw_plan (
+     draw_plan_id,
+     ref,
+     ref_id,
+     key,
+     value,
+     layer,
+     style,
+     width,
+     fill,
+     stroke,
+     dash
+     )''')
     db.execute('CREATE TEMP TABLE map_ways_unknown (way_id)')
     #
     print(f'<svg height="{bbox_y}" width="{bbox_x}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">')
+    # TODO eventuell text-anchor="middle" ?
+    print('''
+    <style type="text/css">
+    <![CDATA[
+      text {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 10;
+        text-anchor: center;
+        dominant-baseline: central;
+        /* alignment-baseline: middle; */
+      }
+    ]]>
+    </style>
+    ''')
     print('<!-- ************ map info ************')
     print(f'lon       : {lon}\n' +
           f'lat       : {lat}\n' +
@@ -47,6 +73,7 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
     #
     print('<rect width="100%" height="100%" fill="#f2efe9" />')
     #
+    draw_plan_id = 0
     db.execute('''
     SELECT way_id
     FROM rtree_way
@@ -54,48 +81,44 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
      AND  max_lat>=? AND min_lat<=?
     ''', (bbox_min_lon, bbox_max_lon, bbox_min_lat, bbox_max_lat))
     for (way_id,) in db.fetchall():
-        ###print('way_id', way_id)
-        way_draw_plan = []
+        draw_plan_id += 1
+        insert_draw_plan = False
+        #
         name = ''
+        highway = False
         addr_housenumber = ''
         bridge = False
+        # check whether definitions exist for this key value zoomlevel
         db.execute('''
-        SELECT wt.way_id,wt.key,wt.value,
+        SELECT wt.key,wt.value,
          md.layer,md.style,md.width,md.fill,md.stroke,md.dash
         FROM way_tags AS wt
         LEFT JOIN map_def AS md ON wt.key=md.key AND wt.value LIKE md.value AND md.zoomlevel=?
         WHERE wt.way_id=?
         ''', (zoomlevel, way_id))
-        for (way_id, key, value, layer, style, width, fill, stroke, dash) in db.fetchall():
-            ###print(f'  {key} # {value}')
+        for (key, value, layer, style, width, fill, stroke, dash) in db.fetchall():
             if layer is not None:
-                way_draw_plan.append({'style': style, 'way_id': way_id, 'key': key, 'value': value,
-                  'layer': layer, 'width': width, 'fill': fill, 'stroke': stroke, 'dash': dash, 'name': ''})
+                db.execute('INSERT INTO map_draw_plan VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                           (draw_plan_id, 'way', way_id, key, value, layer, style, width, fill, stroke, dash))
+                insert_draw_plan = True
+            # Modifieres ggf. merken
             if key == 'name':
-                ###print('==merken==>', way_id, key, value)
                 name = value
+            elif key == 'highway' and value != 'platform':
+                highway = True
             elif key == 'addr:housenumber':   # TODO erst ab zoomlevel 17
-                ###print('==merken==>', way_id, key, value)
                 addr_housenumber = value
             elif key == 'bridge':
                 bridge = True
             elif key == 'tracktype':
                 pass
                 # TODO https://wiki.openstreetmap.org/wiki/DE:Key:tracktype
-        if len(way_draw_plan) > 0:
-            # Daten modifizieren
-            for d in way_draw_plan:
-                ###print('orig:', d)
-                d.update({'name': name})
-                if bridge:
-                    layer = d['layer']
-                    layer += 2
-                    d.update({'layer': layer})
-            # Daten in Tabelle "map_draw_plan" einfügen
-            for d in way_draw_plan:
-                ###print('mod:',d)
-                db.execute('INSERT INTO map_draw_plan VALUES (?,?,?,?,?,?,?,?)',
-                  ('way', d['way_id'], d['layer'], d['style'], d['width'], d['fill'], d['stroke'], d['dash']))
+        # Daten modifizieren
+        if insert_draw_plan:
+            if bridge and zoomlevel >= 16:
+                db.execute('UPDATE map_draw_plan SET layer=layer+4 WHERE draw_plan_id=?', (draw_plan_id,))
+            if not highway:
+                db.execute("DELETE FROM map_draw_plan WHERE draw_plan_id=? AND style='text'", (draw_plan_id,))
         else:
             db.execute('INSERT INTO map_ways_unknown VALUES (?)', (way_id,))
     #
@@ -107,6 +130,7 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
     LEFT JOIN relation_members AS rm ON wu.way_id=rm.ref_id AND rm.ref='way'
     ''')
     for (way_id, relation_id) in db.fetchall():
+        draw_plan_id += 1
         if relation_id is not None:
             db.execute('''
             SELECT rt.relation_id,rt.key,rt.value,
@@ -117,8 +141,8 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
             ''', (zoomlevel, relation_id))
             for (relation_id, key, value, layer, style, width, fill, stroke, dash) in db.fetchall():
                 if layer is not None:
-                    db.execute('INSERT INTO map_draw_plan VALUES (?,?,?,?,?,?,?,?)',
-                      ('relation', relation_id, layer, style, width, fill, stroke, dash))
+                    db.execute('INSERT INTO map_draw_plan VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                               (draw_plan_id, 'relation', relation_id, key, value, layer, style, width, fill, stroke, dash))
                     db.execute('DELETE FROM map_ways_unknown WHERE way_id=?', (way_id,))
     #
     # Unbekannte Wege ggf. als rote Linien anzeigen
@@ -126,19 +150,27 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
     if show_unknown:
         db.execute('SELECT way_id FROM map_ways_unknown')
         for (way_id,) in db.fetchall():
-            db.execute("INSERT INTO map_draw_plan VALUES ('way',?,99,'line',2,'None','#ff0000','')", (way_id,))
+            db.execute("INSERT INTO map_draw_plan VALUES (1,'way',?,'xxx','xxx',99,'line',2,'None','#ff0000','')", (way_id,))
     #
     # Draw Plan abarbeiten
     #
     db.execute('''
-    SELECT ref,ref_id,layer,style,width,fill,stroke,dash
+    -- wichtig: '&' durch '&amp;' ersetzen
+    SELECT ref,ref_id,key,replace(value,'&','&amp;'),layer,style,width,fill,stroke,dash
     FROM map_draw_plan
     ORDER BY layer
     ''')
-    for (ref, ref_id, layer, style, width, fill, stroke, dash) in db.fetchall():
-        # print('<!-- DRAW_PLAN :',ref,ref_id,layer,style,width,fill,stroke,dash,'-->')
+    for (ref, ref_id, key, value, layer, style, width, fill, stroke, dash) in db.fetchall():
+        # print('<!-- DRAW_PLAN :',ref,ref_id,key,value,layer,style,width,fill,stroke,dash,'-->')
         path_id = ref + str(ref_id)
-        print(f'<path id="{path_id}" d="', end='')
+        #
+        if style == 'text':
+            print(f'<text style="fill:{fill};" font-size="{width}">', end='')
+            print('<textPath href="#' + path_id + '" startOffset="30%">' + value + '</textPath>', end='')
+            print('</text>')
+            continue
+        #
+        svg_path = []
         if ref == 'way':
             db.execute('''
             SELECT n.lon,n.lat
@@ -163,31 +195,37 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
         else:
             print('Error draw plan - abort')
             sys.exit(1)
-        #
-        command = 'M'
         for (lon, lat) in db.fetchall():
             x, y = proj.wgs84_to_pixel(lon, lat, pixel_world_map)
             x -= bbox_min_x
             y -= bbox_min_y
             y = bbox_y - y
-            # <path id="999" d="M150 400 L220 360 L400 400 L500 280 " style="fill:none;stroke:#aaaaaa;stroke-width:15" />
-            print(f'{command}{x} {y} ', end='')
-            if command == 'M':
-                command = 'L'
-        if style == 'line':
-            #print(f'" style="fill:none;stroke:{stroke};stroke-width:{width};stroke-linecap:round" />')
-            print(f'" style="fill:none;stroke:{stroke};stroke-width:{width};stroke-linecap:round;stroke-dasharray:{dash}" />')
-        elif style == 'area':
-            print(f'Z" style="fill:{fill};stroke:{stroke};stroke-width:{width}" />')
+            svg_path.append((x, y))
+        #
+        if len(svg_path) > 0:
+            if svg_path[len(svg_path)-1][0] < svg_path[0][0]:
+                svg_path.reverse()
+            #
+            print(f'<path id="{path_id}" d="', end='')
+            command = 'M'
+            for x, y in svg_path:
+                print(f'{command}{x} {y} ', end='')
+                if command == 'M':
+                    command = 'L'
+            #
+            if style == 'line':
+                print(f'" style="fill:none;stroke:{stroke};stroke-width:{width};stroke-linecap:round;stroke-dasharray:{dash}" />')
+            elif style == 'area':
+                print(f'Z" style="fill:{fill};stroke:{stroke};stroke-width:{width}" />')
     print('</svg>')
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 7:
+    if len(sys.argv) == 1:
         print(f'''
 Creates a simple map in SVG format on stdout.
 Usage:
-{sys.argv[0]} DATABASE LON LAT ZOOMLEVEL SIZE_X SIZE_Y
+{sys.argv[0]} DATABASE LON LAT ZOOMLEVEL SIZE_X SIZE_Y [debug]
         ''')
         sys.exit(1)
     db_connect = sqlite3.connect(sys.argv[1])  # database connection
@@ -197,4 +235,8 @@ Usage:
     zoomlevel = int(sys.argv[4])
     bbox_x = int(sys.argv[5])
     bbox_y = int(sys.argv[6])
-    draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, True)
+    show_unknown = False
+    if len(sys.argv) == 8:
+        if sys.argv[7] == 'debug':
+            show_unknown = True
+    draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown)
