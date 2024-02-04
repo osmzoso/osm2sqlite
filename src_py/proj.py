@@ -10,6 +10,7 @@ Contains functions for converting coordinates to draw a map
 #
 import math
 
+
 def wgs84_to_webmercator(lon, lat):
     """
     Return Web Mercator (EPSG:3857) of WGS84 (EPSG:4326)
@@ -26,20 +27,20 @@ def webmercator_to_wgs84(x, y):
     """
     r = 6378137.0
     lon = math.degrees(x / r)
-    lat = math.degrees(2 * math.atan(math.exp (y / r)) - math.pi / 2.0)
+    lat = math.degrees(2 * math.atan(math.exp(y / r)) - math.pi / 2.0)
     return lon, lat
 
 
-def degree_minutes_to_decimal(degrees, minutes, seconds):
+def dms_to_decimal(degrees, minutes, seconds):
     """
-    Return decimal degrees of degrees minutes seconds
+    Converts degrees minutes seconds to degrees decimal
     """
     return (((seconds / 60) + minutes) / 60) + degrees
 
 
-def degree_decimal_to_minutes(degrees_decimal):
+def decimal_to_dms(degrees_decimal):
     """
-    Return degrees, minutes, seconds of degrees decimal
+    Converts degrees decimal to degrees minutes seconds
     """
     degrees = int(degrees_decimal)
     x = (degrees_decimal - degrees) * 60
@@ -57,10 +58,8 @@ def size_world_map(zoomlevel):
     tile_size = 256     # tile 256px x 256px
     number_tiles = 4**zoomlevel
     pixel_world_map = int(tile_size * math.sqrt(number_tiles))
-    ##degrees_pixel_x = 360 / pixel_world_map
-    ##degrees_pixel_y = 180 / pixel_world_map
-    const_webmercator = 20037508.342789244
-    meters_pixel = const_webmercator * 2 / pixel_world_map
+    WEBMERCATOR = 20037508.342789244
+    meters_pixel = WEBMERCATOR * 2 / pixel_world_map
     return pixel_world_map, meters_pixel
 
 
@@ -70,24 +69,24 @@ def webmercator_to_pixel(x, y, pixel_world_map):
     Returns x_px, y_px
     """
     pixel_world_map -= 1
-    const_webmercator = 20037508.342789244
-    x += const_webmercator  # move origin to avoid negativ coordiantes
-    y += const_webmercator
-    x_px = int(round((x * pixel_world_map) / (const_webmercator * 2), 0))
-    y_px = int(round((y * pixel_world_map) / (const_webmercator * 2), 0))
+    WEBMERCATOR = 20037508.342789244
+    x += WEBMERCATOR  # move origin to avoid negativ coordinates
+    y += WEBMERCATOR
+    x_px = int(round((x * pixel_world_map) / (WEBMERCATOR * 2), 0))
+    y_px = int(round((y * pixel_world_map) / (WEBMERCATOR * 2), 0))
     return x_px, y_px
 
 
 def pixel_to_webmercator(x_px, y_px, pixel_world_map):
     """
-    Transform pixel coordinates to  Web Mercator
+    Transform pixel coordinates to Web Mercator
     Returns x, y
     """
-    const_webmercator = 20037508.342789244
+    WEBMERCATOR = 20037508.342789244
     x_px -= pixel_world_map / 2
     y_px -= pixel_world_map / 2
-    x = (x_px / pixel_world_map) * (const_webmercator * 2)
-    y = (y_px / pixel_world_map) * (const_webmercator * 2)
+    x = (x_px / pixel_world_map) * (WEBMERCATOR * 2)
+    y = (y_px / pixel_world_map) * (WEBMERCATOR * 2)
     return x, y
 
 
@@ -125,21 +124,19 @@ def pixel_boundingbox(lon, lat, pixel_world_map, size_x_px, size_y_px):
     return min_x_px, min_y_px, max_x_px, max_y_px
 
 
-
 if __name__ == "__main__":
     print('\n*********************************************************')
     print('Check Limit Web Mercator:\n')
-    print('85°3\'4.064\"  ->', degree_minutes_to_decimal(85, 3, 4.064))
-    print('85.05112878  ->', degree_decimal_to_minutes(85.05112878))
+    print('85°3\'4.0636\"  ->', dms_to_decimal(85, 3, 4.0636))
+    print('85.05112878  ->', decimal_to_dms(85.05112878))
     print(wgs84_to_webmercator(180, 85.05112878))
     print(wgs84_to_webmercator(-180, -85.05112878))
-    print(webmercator_to_wgs84(20037508.34, 20037508.34))
-    print(webmercator_to_wgs84(-20037508.34, -20037508.34))
+    print(webmercator_to_wgs84(20037508.343, 20037508.343))
+    print(webmercator_to_wgs84(-20037508.343, -20037508.343))
 
     print('\n*********************************************************')
     print('zoomlevel   size_world_map_in_pixel     meter_per_pixel')
     for zoomlevel in range(20):
         pixel_world_map, meters_pixel = size_world_map(zoomlevel)
-        #print(f'{zoomlevel:9} {pixel_world_map:17} {meters_pixel:27.16f}')
-        print('{:5}     {:>12} x {:<12} {:^20.2f}'.format(zoomlevel, pixel_world_map, pixel_world_map, meters_pixel))
-
+        print('{:5}     {:>12} x {:<12} {:^20.2f}'
+              .format(zoomlevel, pixel_world_map, pixel_world_map, meters_pixel))

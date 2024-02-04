@@ -95,46 +95,46 @@ class OsmHandler(xml.sax.ContentHandler):
 def add_tables():
     db.execute('''
     CREATE TABLE nodes (
-     node_id      INTEGER PRIMARY KEY,  /* node ID */
-     lon          REAL,                 /* longitude */
-     lat          REAL                  /* latitude */
+     node_id      INTEGER PRIMARY KEY,  -- node ID
+     lon          REAL,                 -- longitude
+     lat          REAL                  -- latitude
     )
     ''')
     db.execute('''
     CREATE TABLE node_tags (
-     node_id      INTEGER,              /* node ID */
-     key          TEXT,                 /* tag key */
-     value        TEXT                  /* tag value */
+     node_id      INTEGER,              -- node ID
+     key          TEXT,                 -- tag key
+     value        TEXT                  -- tag value
     )
     ''')
     db.execute('''
     CREATE TABLE way_nodes (
-     way_id       INTEGER,              /* way ID */
-     node_id      INTEGER,              /* node ID */
-     node_order   INTEGER               /* node order */
+     way_id       INTEGER,              -- way ID
+     node_id      INTEGER,              -- node ID
+     node_order   INTEGER               -- node order
     )
     ''')
     db.execute('''
     CREATE TABLE way_tags (
-     way_id       INTEGER,              /* way ID */
-     key          TEXT,                 /* tag key */
-     value        TEXT                  /* tag value */
+     way_id       INTEGER,              -- way ID
+     key          TEXT,                 -- tag key
+     value        TEXT                  -- tag value
     )
     ''')
     db.execute('''
     CREATE TABLE relation_members (
-     relation_id  INTEGER,              /* relation ID */
-     ref          TEXT,                 /* reference ('node','way','relation') */
-     ref_id       INTEGER,              /* node, way or relation ID */
-     role         TEXT,                 /* describes a particular feature */
-     member_order INTEGER               /* member order */
+     relation_id  INTEGER,              -- relation ID
+     ref          TEXT,                 -- reference ('node','way','relation')
+     ref_id       INTEGER,              -- node, way or relation ID
+     role         TEXT,                 -- describes a particular feature
+     member_order INTEGER               -- member order
     )
     ''')
     db.execute('''
     CREATE TABLE relation_tags (
-     relation_id  INTEGER,              /* relation ID */
-     key          TEXT,                 /* tag key */
-     value        TEXT                  /* tag value */
+     relation_id  INTEGER,              -- relation ID
+     key          TEXT,                 -- tag key
+     value        TEXT                  -- tag value
     )
     ''')
 
@@ -363,11 +363,11 @@ def add_graph():
     db.execute('BEGIN TRANSACTION')
     db.execute('''
     CREATE TABLE graph (
-     edge_id       INTEGER PRIMARY KEY,  /* edge ID */
-     start_node_id INTEGER,              /* edge start node ID */
-     end_node_id   INTEGER,              /* edge end node ID */
-     dist          INTEGER,              /* distance in meters */
-     way_id        INTEGER               /* way ID */
+     edge_id       INTEGER PRIMARY KEY,  -- edge ID
+     start_node_id INTEGER,              -- edge start node ID
+     end_node_id   INTEGER,              -- edge end node ID
+     dist          INTEGER,              -- distance in meters
+     way_id        INTEGER               -- way ID
     )
     ''')
     # Create a table with all nodes that are crossing points
