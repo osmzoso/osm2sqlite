@@ -21,40 +21,36 @@ GROUP BY way_nodes.way_id;
 Here are some examples for using this index:
 
 ``` sql
---
--- Boundingbox
---
--- min_lon (x1):  7.3280550
--- min_lat (y1): 49.3540703
--- max_lon (x2):  7.3316550
--- max_lat (y2): 49.3576703
---
-```
+/*
+** Boundingbox
+**
+** min_lon (x1):  7.851
+** min_lat (y1): 47.995
+** max_lon (x2):  7.854
+** max_lat (y2): 47.996
+**
+*/
 
-Find all elements of the index (ways) that are contained within the boundingbox:
-
-``` sql
+/*
+** Find all elements of the index (ways) that are contained within the boundingbox:
+*/
 SELECT way_id
 FROM rtree_way
-WHERE min_lon>= 7.3280550 AND max_lon<= 7.3316550
- AND  min_lat>=49.3540703 AND max_lat<=49.3576703
-```
-
-Find all elements of the index (ways) that overlap the boundingbox:
-
-``` sql
+WHERE min_lon>= 7.851 AND max_lon<= 7.854
+ AND  min_lat>=47.995 AND max_lat<=47.996
+/*
+** Find all elements of the index (ways) that overlap the boundingbox:
+*/
 SELECT way_id
 FROM rtree_way
-WHERE max_lon>= 7.3280550 AND min_lon<= 7.3316550
- AND  max_lat>=49.3540703 AND min_lat<=49.3576703
-```
-
-Limits of an element of the index:
-
-``` sql
+WHERE max_lon>= 7.851 AND min_lon<= 7.854
+ AND  max_lat>=47.995 AND min_lat<=47.996
+/*
+** Limits of an element of the index:
+*/
 SELECT min_lon,max_lon,min_lat,max_lat
 FROM rtree_way
-WHERE way_id=79235038
+WHERE way_id=4872512
 ```
 
 
@@ -127,6 +123,7 @@ Query table "graph" to create a smaller subgraph:
 ** min_lat (y1): 47.97
 ** max_lon (x2):  7.83
 ** max_lat (y2): 47.98
+**
 */
 CREATE TEMP TABLE subgraph AS
 SELECT edge_id,start_node_id,end_node_id,dist,way_id
@@ -135,11 +132,9 @@ WHERE way_id IN (
  SELECT way_id
  FROM rtree_way
  WHERE max_lon>= 7.81 AND min_lon<= 7.83
-  AND  max_lat>=47.97 AND min_lat<=47.98
+   AND max_lat>=47.97 AND min_lat<=47.98
 )
-```
 
-``` sql
 /*
 ** 2. Create temp. table with list of nodes in subgraph
 **    - Conversion list from node id to a number from 1 to N
@@ -160,15 +155,13 @@ SELECT s.node_id,n.lon,n.lat FROM
 ) AS s
 LEFT JOIN nodes AS n ON s.node_id=n.node_id
 ;
-```
-
-``` sql
--- Number of nodes in the subgraph
+/*
+** Number of nodes in the subgraph
+*/
 SELECT max(no) FROM subgraph_nodes
-```
-
-``` sql
--- Edges with number of nodes from 1 to N
+/*
+** Edges with number of nodes from 1 to N
+*/
 SELECT s.edge_id,sns.no,sne.no,s.dist,s.way_id
 FROM subgraph AS s
 LEFT JOIN subgraph_nodes AS sns ON s.start_node_id=sns.node_id

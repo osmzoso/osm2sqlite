@@ -26,18 +26,18 @@ This format is also described under the name [EPSG:4326](https://epsg.io/4326).
 
 Most often the simplified [Web Mercator projection](https://en.wikipedia.org/wiki/Web_Mercator_projection) is used.        
 This format is also described under the name [EPSG:3857](https://epsg.io/3857).  
-Polar areas with abs(latitude) bigger then 85.05112888 (85°3'4.064") are clipped off.
+Polar areas with abs(latitude) bigger then 85.05112878 (85°3'4.0636") are clipped off.
 
 Comparison of WGS84 (lon, lat) with Web Mercator (x, y):  
 ```
                                  ^
-               lat:  85.05112888 | y:  20037508.34
+               lat:  85.05112878 | y:  20037508.343
                                  |
-x: -20037508.34                  |                 x: 20037508.34
----------------------------------0------------------------------->
+x: -20037508.343                 |                 x: 20037508.343
+---------------------------------0--------------------------------->
 lon: -180°                       |                 lon: +180°
                                  |
-               lat: -85.05112888 | y: -20037508.34
+               lat: -85.05112878 | y: -20037508.343
 ```
 
 As you can see, the WGS84 coordinates are transformed into a square world map.
@@ -69,7 +69,7 @@ zoomlevel   size_world_map_in_pixel     meter_per_pixel
    19        134217728 x 134217728            0.30        
 ```
 
-# Drawing the map
+## Drawing the map
 
 The map will be drawn in layers. Layer 1 is drawn first:
 

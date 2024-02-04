@@ -1,9 +1,13 @@
 # 5. Routing
 
+## Table "graph"
+
 The table **graph** is required for the calculation of shortest paths.
 
 Visualization of the table 'graph':  
 ![table_graph.jpg](table_graph.jpg)
+
+## Calculate shortest path
 
 The command
 ```
