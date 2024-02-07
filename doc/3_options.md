@@ -2,7 +2,7 @@
 
 There are several options for creating additional data in the database.
 
-## Option "rtree-ways"
+## Option "rtree"
 
 This option creates an additional [R*Tree](https://www.sqlite.org/rtree.html)
 index **rtree_way** for finding ways quickly.  
@@ -169,7 +169,7 @@ LEFT JOIN subgraph_nodes AS sne ON s.end_node_id=sne.node_id
 ```
 
 
-## Option "no-index"
+## Option "noindex"
 
 This option suppresses the creation of the indexes (not recommended).
 

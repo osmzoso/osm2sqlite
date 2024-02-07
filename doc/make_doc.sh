@@ -29,8 +29,9 @@ pandoc \
 #
 pandoc \
  --standalone \
+ --embed-resources \
+ --metadata title="osm2sqlite" \
  --toc \
- --metadata title=osm2sqlite \
  1_osm2sqlite.md \
  2_tables.md \
  3_options.md \
