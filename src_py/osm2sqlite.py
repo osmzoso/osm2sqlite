@@ -1,31 +1,35 @@
 #!/usr/bin/env python
-#
-# osm2sqlite - Reads OpenStreetMap XML data into a SQLite database
-#
-# Copyright (C) 2021-2023 Herbert Gläser
-#
+"""
+osm2sqlite - Reads OpenStreetMap XML data into a SQLite database
+
+Copyright (C) 2021-2024 Herbert Gläser
+"""
 import sys
 import xml.sax
 import sqlite3
 import math
 
-help = f'''osm2sqlite.py 0.9.1
-
-Reads OpenStreetMap XML data into a SQLite database.
-
-Usage:
-{sys.argv[0]} FILE_OSM_XML FILE_SQLITE_DB [OPTION]...
-
-Options:
-  rtree-ways     Add R*Tree index for ways
-  addr           Add address tables
-  graph          Add graph table
-  no-index       Do not create indexes (not recommended)
-
-When FILE_OSM_XML is -, read standard input.'''
-
 db_connect = None  # SQLite Database connection
 db = None          # SQLite Database cursor
+
+
+def show_help():
+    """Show built-in help"""
+    print('osm2sqlite.py 0.9.2\n'
+          '\n'
+          'Reads OpenStreetMap XML data into a SQLite database.\n'
+          '\n'
+          'Usage:\n'
+          f'{sys.argv[0]} SQLITE_DATABASE OSM_XML_FILE [OPTION]...\n'
+          '\n'
+          'Options:\n'
+          '  rtree         Add R*Tree indexes\n'
+          '  addr          Add address tables\n'
+          '  graph         Add graph table\n'
+          '  noindex       Do not create indexes (not recommended)\n'
+          '\n'
+          'When OSM_XML_FILE is -, read standard input.')
+    print('\n(SQLite '+sqlite3.sqlite_version+' is used)\n')
 
 
 class OsmHandler(xml.sax.ContentHandler):
@@ -139,7 +143,7 @@ def add_tables():
     ''')
 
 
-def add_std_index():
+def add_index():
     db.execute('CREATE INDEX node_tags__node_id            ON node_tags (node_id)')
     db.execute('CREATE INDEX node_tags__key                ON node_tags (key)')
     db.execute('CREATE INDEX way_tags__way_id              ON way_tags (way_id)')
@@ -153,7 +157,7 @@ def add_std_index():
     db_connect.commit()
 
 
-def add_rtree_ways():
+def add_rtree():
     db.execute('CREATE VIRTUAL TABLE rtree_way USING rtree(way_id, min_lat, max_lat, min_lon, max_lon)')
     db.execute('''
     INSERT INTO rtree_way (way_id, min_lat, max_lat, min_lon, max_lon)
@@ -161,6 +165,14 @@ def add_rtree_ways():
     FROM way_nodes
     LEFT JOIN nodes ON way_nodes.node_id=nodes.node_id
     GROUP BY way_nodes.way_id
+    ''')
+    db.execute('CREATE VIRTUAL TABLE rtree_node USING rtree(node_id, min_lat, max_lat, min_lon, max_lon)')
+    db.execute('''
+    INSERT INTO rtree_node (node_id, min_lat, max_lat, min_lon, max_lon)
+    SELECT DISTINCT nodes.node_id,nodes.lat,nodes.lat,nodes.lon,nodes.lon
+    FROM nodes
+    LEFT JOIN node_tags ON nodes.node_id=node_tags.node_id
+    WHERE node_tags.node_id IS NOT NULL
     ''')
     db_connect.commit()
 
@@ -441,20 +453,19 @@ def add_graph():
 def main():
     global db_connect, db
     if len(sys.argv) < 3:
-        print(help)
-        print('\n(SQLite '+sqlite3.sqlite_version+' is used)\n')
+        show_help()
         sys.exit(1)
     # check options
-    std_index = True
-    rtree_ways = False
+    index = True
+    rtree = False
     addr = False
     graph = False
     if len(sys.argv) > 3:
         for i in range(3, len(sys.argv)):
-            if sys.argv[i] == 'no-index':
-                std_index = False
-            elif sys.argv[i] == 'rtree-ways':
-                rtree_ways = True
+            if sys.argv[i] == 'noindex':
+                index = False
+            elif sys.argv[i] == 'rtree':
+                rtree = True
             elif sys.argv[i] == 'addr':
                 addr = True
             elif sys.argv[i] == 'graph':
@@ -463,7 +474,7 @@ def main():
                 print("abort - option '"+sys.argv[i]+"' unknown")
                 sys.exit(1)
     # connect to the database
-    db_connect = sqlite3.connect(sys.argv[2])
+    db_connect = sqlite3.connect(sys.argv[1])
     db = db_connect.cursor()   # new database cursor
     # tuning database
     db.execute('PRAGMA journal_mode = OFF')
@@ -478,22 +489,23 @@ def main():
     handler = OsmHandler()
     parser.setContentHandler(handler)
     # parse osm xml data
-    if sys.argv[1] == '-':
+    if sys.argv[2] == '-':
         parser.parse(sys.stdin)
     else:
-        parser.parse(sys.argv[1])
+        parser.parse(sys.argv[2])
     # write data to database
     db_connect.commit()
     # create index
-    if std_index:
-        add_std_index()
-    if rtree_ways:
-        add_rtree_ways()
+    if index:
+        add_index()
+    if rtree:
+        add_rtree()
     if addr:
         add_addr()
     if graph:
         add_graph()
     db_connect.commit()
+
 
 if __name__ == "__main__":
     main()

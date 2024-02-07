@@ -1,31 +1,11 @@
 #!/usr/bin/env python
-#
-# Routing
-#
+"""
+Calculate shortest ways
+"""
 import sys
 import sqlite3
 import math
 import queue
-
-if len(sys.argv) != 6:
-    print(f'''
-    Calculate shortest way.
-    Usage:
-    {sys.argv[0]} DATABASE LON_START LAT_START LON_DEST LAT_DEST
-    ''')
-    sys.exit(1)
-
-database = sys.argv[1]
-
-# Coordinates start and destination
-lon_start = float(sys.argv[2])
-lat_start = float(sys.argv[3])
-lon_dest = float(sys.argv[4])
-lat_dest = float(sys.argv[5])
-
-# database connection
-db_connect = sqlite3.connect(database)
-db = db_connect.cursor()   # new database cursor
 
 
 class Graph:
@@ -218,76 +198,98 @@ def part_way_coordinates(way_id, node_start, node_end):
     return coordinates
 
 
-#
-print('# start:', lon_start, lat_start)
-print('# dest:', lon_dest,  lat_dest)
-#
-# 1. Fill graph
-#
-lon1, lat1, lon2, lat2 = boundingbox_subgraph(lon_start, lat_start, lon_dest, lat_dest, 1.3)
-print('# subgraph_boundingbox:', lon1, lat1, lon2, lat2)
-number_of_nodes = create_subgraph_tables(lon1, lat1, lon2, lat2)
-#
-graph = Graph(number_of_nodes)
-#
-db.execute('''
-SELECT s.edge_id,sns.no,sne.no,s.dist,s.way_id
-FROM subgraph AS s
-LEFT JOIN subgraph_nodes AS sns ON s.start_node_id=sns.node_id
-LEFT JOIN subgraph_nodes AS sne ON s.end_node_id=sne.node_id
-''')
-for (edge_id, node_start, node_end, dist, way_id) in db.fetchall():
-    graph.add_edge(node_start, node_end, edge_id, dist)
-print('# subgraph_number_of_nodes:', graph.number_of_nodes)
-print('# subgraph_number_of_edges:', graph.number_of_edges)
-#
-# 2. Find the nodes in the graph that are closest to the coordinates of the start point and end point
-#
-dist_node_start = sys.maxsize
-graph_node_start = -1
-dist_node_end = sys.maxsize
-graph_node_end = -1
-db.execute('SELECT no,lon,lat FROM subgraph_nodes')
-for (no, lon, lat) in db.fetchall():
-    dist = math.sqrt((lon_start-lon)**2 + (lat_start-lat)**2)
-    if dist < dist_node_start:
-        graph_node_start = no
-        dist_node_start = dist
-    dist = math.sqrt((lon_dest-lon)**2 + (lat_dest-lat)**2)
-    if dist < dist_node_end:
-        graph_node_end = no
-        dist_node_end = dist
-#
-# 3. Routing
-#
-node_sequence, edge_sequence, distance = graph.shortest_way(graph_node_start, graph_node_end)
-#
-# 4. Output the coordinates of the path
-#
-print('# distance:', distance, 'm')
-# a) simple method, only start and end coordinates of the edge
-# for graph_node in node_sequence:
-#    db.execute('SELECT node_id,lon,lat FROM subgraph_nodes WHERE no=?', (graph_node,))
-#    (node_id, lon, lat) = db.fetchone()
-#    print(lon, lat)
-# b) more sophisticated, all coordinates of the edge
-path_coordinates = []
-# get first Node
-db.execute('SELECT node_id,lon,lat FROM subgraph_nodes WHERE no=?', (node_sequence[0],))
-(first_node_id, lon, lat) = db.fetchone()
-path_coordinates.append((lon, lat))
-#
-for edge_id in edge_sequence:
-    db.execute('SELECT start_node_id,end_node_id,way_id FROM graph WHERE edge_id=?', (edge_id,))
-    (start_node_id, end_node_id, way_id) = db.fetchone()
-    if first_node_id == start_node_id:
-        coordinates = part_way_coordinates(way_id, start_node_id, end_node_id)
-        first_node_id = end_node_id
-    else:
-        coordinates = part_way_coordinates(way_id, end_node_id, start_node_id)
-        first_node_id = start_node_id
-    coordinates.pop(0)  # remove the first coordinates
-    path_coordinates.extend(coordinates)
-for (lon, lat) in path_coordinates:
-    ele = 0
-    print(str(lon) + ',' + str(lat) + ',' + str(ele))
+def shortest_way(lon_start, lat_start, lon_dest, lat_dest):
+    "Calculate shortest way"
+    #
+    print('# start:', lon_start, lat_start)
+    print('# dest:', lon_dest,  lat_dest)
+    #
+    # 1. Fill graph
+    #
+    lon1, lat1, lon2, lat2 = boundingbox_subgraph(lon_start, lat_start, lon_dest, lat_dest, 1.3)
+    print('# subgraph_boundingbox:', lon1, lat1, lon2, lat2)
+    number_of_nodes = create_subgraph_tables(lon1, lat1, lon2, lat2)
+    #
+    graph = Graph(number_of_nodes)
+    #
+    db.execute('''
+    SELECT s.edge_id,sns.no,sne.no,s.dist,s.way_id
+    FROM subgraph AS s
+    LEFT JOIN subgraph_nodes AS sns ON s.start_node_id=sns.node_id
+    LEFT JOIN subgraph_nodes AS sne ON s.end_node_id=sne.node_id
+    ''')
+    for (edge_id, node_start, node_end, dist, way_id) in db.fetchall():
+        graph.add_edge(node_start, node_end, edge_id, dist)
+    print('# subgraph_number_of_nodes:', graph.number_of_nodes)
+    print('# subgraph_number_of_edges:', graph.number_of_edges)
+    #
+    # 2. Find the nodes in the graph that are closest to the coordinates of the start point and end point
+    #
+    dist_node_start = sys.maxsize
+    graph_node_start = -1
+    dist_node_end = sys.maxsize
+    graph_node_end = -1
+    db.execute('SELECT no,lon,lat FROM subgraph_nodes')
+    for (no, lon, lat) in db.fetchall():
+        dist = math.sqrt((lon_start-lon)**2 + (lat_start-lat)**2)
+        if dist < dist_node_start:
+            graph_node_start = no
+            dist_node_start = dist
+        dist = math.sqrt((lon_dest-lon)**2 + (lat_dest-lat)**2)
+        if dist < dist_node_end:
+            graph_node_end = no
+            dist_node_end = dist
+    #
+    # 3. Routing
+    #
+    node_sequence, edge_sequence, distance = graph.shortest_way(graph_node_start, graph_node_end)
+    #
+    # 4. Output the coordinates of the path
+    #
+    print('# distance:', distance, 'm')
+    # a) simple method, only start and end coordinates of the edge
+    # for graph_node in node_sequence:
+    #    db.execute('SELECT node_id,lon,lat FROM subgraph_nodes WHERE no=?', (graph_node,))
+    #    (node_id, lon, lat) = db.fetchone()
+    #    print(lon, lat)
+    # b) more sophisticated, all coordinates of the edge
+    path_coordinates = []
+    # get first Node
+    db.execute('SELECT node_id,lon,lat FROM subgraph_nodes WHERE no=?', (node_sequence[0],))
+    (first_node_id, lon, lat) = db.fetchone()
+    path_coordinates.append((lon, lat))
+    #
+    for edge_id in edge_sequence:
+        db.execute('SELECT start_node_id,end_node_id,way_id FROM graph WHERE edge_id=?', (edge_id,))
+        (start_node_id, end_node_id, way_id) = db.fetchone()
+        if first_node_id == start_node_id:
+            coordinates = part_way_coordinates(way_id, start_node_id, end_node_id)
+            first_node_id = end_node_id
+        else:
+            coordinates = part_way_coordinates(way_id, end_node_id, start_node_id)
+            first_node_id = start_node_id
+        coordinates.pop(0)  # remove the first coordinates
+        path_coordinates.extend(coordinates)
+    for (lon, lat) in path_coordinates:
+        ele = 0
+        print(str(lon) + ',' + str(lat) + ',' + str(ele))
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 6:
+        print(f'''
+        Calculate shortest way.
+        Usage:
+        {sys.argv[0]} DATABASE LON_START LAT_START LON_DEST LAT_DEST
+        ''')
+        sys.exit(1)
+    database = sys.argv[1]
+    # Coordinates start and destination
+    lon_start = float(sys.argv[2])
+    lat_start = float(sys.argv[3])
+    lon_dest = float(sys.argv[4])
+    lat_dest = float(sys.argv[5])
+    # database connection
+    db_connect = sqlite3.connect(database)
+    db = db_connect.cursor()   # new database cursor
+    shortest_way(lon_start, lat_start, lon_dest, lat_dest)

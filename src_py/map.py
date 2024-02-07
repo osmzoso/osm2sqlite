@@ -222,11 +222,9 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        print(f'''
-Creates a simple map in SVG format on stdout.
-Usage:
-{sys.argv[0]} DATABASE LON LAT ZOOMLEVEL SIZE_X SIZE_Y [debug]
-        ''')
+        print('Creates a simple map in SVG format on stdout.\n'
+              'Usage:\n'
+              f'{sys.argv[0]} DATABASE LON LAT ZOOMLEVEL SIZE_X SIZE_Y [debug]')
         sys.exit(1)
     db_connect = sqlite3.connect(sys.argv[1])  # database connection
     db = db_connect.cursor()                   # new database cursor
