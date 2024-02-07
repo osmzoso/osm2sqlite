@@ -8,15 +8,14 @@ osm_pbf="$HOME/osm/xml/freiburg-regbez-latest.osm.pbf"
 # String for file name Date
 cdate=$(date '+%Y%m%d')
 #
-# Read data and create a new database
-#  (table 'graph' is required)
+# Read the data into a database
 #
 rm $db
-#time bzip2 -c -d $osm_bz2 | ./src/osm2sqlite - $db addr rtree-ways graph
-time osmium cat $osm_pbf --output-format=osm --output=- | ./src/osm2sqlite - $db addr rtree-ways graph
+#time bzip2 -c -d $osm_bz2 | ./src/osm2sqlite $db - addr rtree graph
+time osmium cat $osm_pbf --output-format=osm --output=- | ./src/osm2sqlite $db - addr rtree graph
 sqlite3 $db < ./src_py/map_def.sql
 #
-# Routing
+# Routing (table 'graph' is required)
 #
 ./src_py/route.py $db 7.808 47.983 7.889 47.897 > "$HOME/osm/results/freiburg_schauinsland.csv"
 ./tools/html_map_csv.py "$HOME/osm/results/freiburg_schauinsland.csv" > "$HOME/osm/results/$cdate-map_route_freiburg_schauinsland.html"

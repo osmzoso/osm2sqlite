@@ -4,18 +4,18 @@ A simple command line tool for reading OpenStreetMap XML data into a SQLite data
 
 ```
 Usage:
-osm2sqlite FILE_OSM_XML FILE_SQLITE_DB [OPTION]...
+osm2sqlite SQLITE_DATABASE OSM_XML_FILE [OPTION]...
 
 Options:
-  rtree-ways     Add R*Tree index for ways
-  addr           Add address tables
-  graph          Add graph table
-  no-index       Do not create indexes (not recommended)
+  rtree         Add R*Tree indexes
+  addr          Add address tables
+  graph         Add graph table
+  noindex       Do not create indexes (not recommended)
 
-When FILE_OSM_XML is -, read standard input.
+When OSM_XML_FILE is -, read standard input.
 ```
 
-The command `osm2sqlite input.osm output.db` reads the
+The command `osm2sqlite output.db input.osm` reads the
 [OSM XML](https://wiki.openstreetmap.org/wiki/OSM_XML) file **input.osm** and
 creates in the database **output.db** the [tables and indexes](doc/2_tables.md).  
 
@@ -46,9 +46,8 @@ Directory [/test](test/) contains testcases.
 
 ---
 
-Compiling the C version on Linux for Windows, see file **cross_compile_win.sh**.
+Compiling the C version on Linux for Windows, see file **cross_compile_windows.sh**.
 
 ---
 
 The bash script `example_db.sh` invokes the scripts to show the function.
-
