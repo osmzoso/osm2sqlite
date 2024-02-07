@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-#
-# Check table graph
-#
+"""
+Test3: Check table graph
+"""
 import sys
 import sqlite3
 
@@ -15,6 +15,10 @@ if len(sys.argv) != 2:
 
 
 def check_table_graph():
+    """
+    Compares the start and end of a way with
+    the start and end of the edge sequence (rough test only)
+    """
     errors = 0
     db.execute("SELECT DISTINCT way_id FROM way_tags WHERE key='highway'")
     for (way_id,) in db.fetchall():
@@ -32,11 +36,11 @@ def check_table_graph():
         # get first and last node from edge sequence
         edge_first_node = -1
         edge_last_node = -1
-        db.execute('''SELECT edge_id,start_node_id,end_node_id,dist
+        db.execute('''SELECT start_node_id,end_node_id
                       FROM graph
                       WHERE way_id=?
                       ORDER BY edge_id''', (way_id,))
-        for (edge_id, start_node_id, end_node_id, dist) in db.fetchall():
+        for (start_node_id, end_node_id) in db.fetchall():
             if edge_first_node == -1:
                 edge_first_node = start_node_id
             edge_last_node = end_node_id
@@ -52,7 +56,7 @@ print("----------------------------------------------")
 print('Test3: Check table "graph"')
 print("----------------------------------------------")
 # database connection
-print(f'check table "graph" ', end='', flush=True)
+print('check table "graph" ', end='', flush=True)
 db_connect = sqlite3.connect(sys.argv[1])
 db = db_connect.cursor()   # new database cursor
 errors = check_table_graph()

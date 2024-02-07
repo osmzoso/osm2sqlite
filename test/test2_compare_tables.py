@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-#
-# Test2: Compare tables
-#
+"""
+Test2: Compare tables
+"""
 import sys
 import sqlite3
 
@@ -15,6 +15,7 @@ if len(sys.argv) != 1:
 
 
 def compare_table(table, columns):
+    """Compares the specified columns of a table"""
     print(f'compare table "{table}" ', end='', flush=True)
     diff_c2py = db.execute(f'''
     SELECT count(*) FROM
