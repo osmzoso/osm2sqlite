@@ -14,15 +14,19 @@ if len(sys.argv) != 2:
 
 filename = sys.argv[1]
 
+indent = ' ' * 4
+
 # C-Version
 file_query = open(filename, "r")
 for line in file_query:
     line_strip = line.rstrip()  # remove all \n \r space at the end
-    # comment at the beginning of the line?
-    if re.search(r'^/\*|\*\*|\*/', line_strip):
-        print('  ' + line_strip + '\n', end='')
+    print(indent + '" ' + line_strip, end='')
+    if (re.search(r'\($', line_strip) or
+        re.search(r'\);$', line_strip) or
+        re.search(r'--', line_strip)):
+        print('\\n"')
     else:
-        print('  " ' + line_strip + '"' + '\n', end='')
+        print('"')
 file_query.close()
 
 # Python-Version
