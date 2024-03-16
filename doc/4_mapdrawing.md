@@ -7,7 +7,7 @@ map definitions (colors etc.) is required in the database.
 
 Example to generate a map with zoomlevel 16 and size 900 x 600px:  
 `sqlite3 ../freiburg.db < map_def.sql`  
-`./map.py ../freiburg.db 7.800 47.979 16 900 600 > map_zoom16.svg`  
+`./map.py ../freiburg.db 7.800 47.979 16 900 600 map_zoom16.svg`  
 
 Converting SVG to PNG with "inkscape":  
 `inkscape map_zoom16.svg -o map_zoom16.png`
@@ -44,7 +44,9 @@ As you can see, the WGS84 coordinates are transformed into a square world map.
 
 The conversion of Web Mercator coordinates into pixel coordinates is relatively simple.
 
-Several pixel sizes of a square world map have been defined for this purpose:  
+## Zoomlevel
+
+Defined pixel sizes (zoomlevel) of a square world map:  
 ```
 zoomlevel   size_world_map_in_pixel     meter_per_pixel
     0              256 x 256               156543.03      
