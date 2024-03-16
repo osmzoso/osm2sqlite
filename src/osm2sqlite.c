@@ -41,8 +41,8 @@ int element_way_active      = 0;  /* SAX marker within element <way>      */
 int element_relation_active = 0;  /* SAX marker within element <relation> */
 int node_order   = 0;
 int member_order = 0;
-uint64_t attrib_id  = 0;
-uint64_t attrib_ref = 0;
+int64_t attrib_id  = 0;
+int64_t attrib_ref = 0;
 double attrib_lat = 0;
 double attrib_lon = 0;
 char   attrib_k[2000];    /* There is a 255 character limit for         */
@@ -490,10 +490,10 @@ void add_graph() {
   /* */
   double prev_lon = 0;
   double prev_lat = 0;
-  long long int prev_way_id = -1;
-  long long int prev_node_id = -1;
+  int64_t prev_way_id = -1;
+  int64_t prev_node_id = -1;
   int edge_active = 0;
-  long long int start_node_id = -1;
+  int64_t start_node_id = -1;
   double dist = 0;
 
   sqlite3_stmt *stmt_insert_graph;
@@ -519,9 +519,9 @@ void add_graph() {
          -1, &stmt, NULL);
   if( rc!=SQLITE_OK ) abort_db_error(rc);
 
-  long long int way_id;
-  long long int node_id;
-  long long int node_id_crossing;
+  int64_t way_id;
+  int64_t node_id;
+  int64_t node_id_crossing;
   double lon;
   double lat;
   rc = sqlite3_step(stmt);
@@ -603,21 +603,21 @@ int main(int argc, char **argv) {
   }
 
   /* check options */
-  int index = 1;
-  int rtree = 0;
-  int addr = 0;
-  int graph = 0;
+  int opt_index = 1;
+  int opt_rtree = 0;
+  int opt_addr = 0;
+  int opt_graph = 0;
   int i;
   if( argc>3 ) {
     for(i=3; i < argc; i++) {
       if( strcmp("noindex", argv[i])==0 ) {
-        index = 0;
+        opt_index = 0;
       } else if( strcmp("rtree", argv[i])==0 ) {
-        rtree = 1;
+        opt_rtree = 1;
       } else if( strcmp("addr", argv[i])==0 ) {
-        addr = 1;
+        opt_addr = 1;
       } else if( strcmp("graph", argv[i])==0 ) {
-        graph = 1;
+        opt_graph = 1;
       } else {
         fprintf(stderr, "abort - option '%s' unknown\n", argv[i]);
         return EXIT_FAILURE;
@@ -649,11 +649,11 @@ int main(int argc, char **argv) {
   create_prep_stmt();
   xmlParseDocument(ctxt);                   /* read and parse the XML document */
   if( !ctxt->wellFormed ) fprintf(stderr, "XML document isn't well formed\n");
-  if( index ) add_index();
-  if( rtree ) add_rtree();
+  if( opt_index ) add_index();
+  if( opt_rtree ) add_rtree();
   sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
-  if( addr ) add_addr();
-  if( graph ) add_graph();
+  if( opt_addr ) add_addr();
+  if( opt_graph ) add_graph();
   destroy_prep_stmt();
   sqlite3_close(db);
 
