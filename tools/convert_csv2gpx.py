@@ -62,7 +62,7 @@ def write_gpx_file_v2():
 
 
 def main():
-    "main entry point"
+    """entry point"""
     if len(sys.argv) != 2:
         print('Converts a csv file into a gpx file.\n'
               'Output is stdout.\n'
