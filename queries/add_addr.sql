@@ -1,11 +1,30 @@
-/*
-** Create address tables with coordinates
-*/
 BEGIN TRANSACTION;
-
-DROP TABLE IF EXISTS addr_street;
-DROP TABLE IF EXISTS addr_housenumber;
-DROP VIEW IF EXISTS addr_view;
+/*
+** Create address tables
+*/
+CREATE TABLE addr_street (
+ street_id   INTEGER PRIMARY KEY, -- street ID
+ postcode    TEXT,                -- postcode
+ city        TEXT,                -- city name
+ street      TEXT,                -- street name
+ min_lon     REAL,                -- boundingbox street min longitude
+ min_lat     REAL,                -- boundingbox street min latitude
+ max_lon     REAL,                -- boundingbox street max longitude
+ max_lat     REAL                 -- boundingbox street max latitude
+);
+CREATE TABLE addr_housenumber (
+ housenumber_id INTEGER PRIMARY KEY, -- housenumber ID
+ street_id      INTEGER,             -- street ID
+ housenumber    TEXT,                -- housenumber
+ lon            REAL,                -- longitude
+ lat            REAL,                -- latitude
+ way_id         INTEGER,             -- way ID
+ node_id        INTEGER              -- node ID
+);
+CREATE VIEW addr_view AS
+SELECT s.street_id,s.postcode,s.city,s.street,h.housenumber,h.lon,h.lat,h.way_id,h.node_id
+FROM addr_street AS s
+LEFT JOIN addr_housenumber AS h ON s.street_id=h.street_id;
 /*
 ** 1. Determine address data from way tags
 */
@@ -92,41 +111,18 @@ UNION ALL
  LEFT JOIN nodes AS c ON n.node_id=c.node_id
 ORDER BY postcode,city,street,housenumber;
 /*
-** 5. Create tables 'addr_street' and 'addr_housenumber' and view 'addr_view' (normalize tables)
+** 5. Fill tables 'addr_street' and 'addr_housenumber'
 */
-CREATE TABLE addr_street (
- street_id   INTEGER PRIMARY KEY,
- postcode    TEXT,
- city        TEXT,
- street      TEXT,
- min_lon     REAL,
- min_lat     REAL,
- max_lon     REAL,
- max_lat     REAL
-);
 INSERT INTO addr_street (postcode,city,street,min_lon,min_lat,max_lon,max_lat)
  SELECT postcode,city,street,min(lon),min(lat),max(lon),max(lat)
  FROM tmp_addr
  GROUP BY postcode,city,street;
 CREATE INDEX addr_street__postcode_city_street ON addr_street (postcode,city,street);
-CREATE TABLE addr_housenumber (
- housenumber_id INTEGER PRIMARY KEY,
- street_id      INTEGER,
- housenumber    TEXT,
- lon            REAL,
- lat            REAL,
- way_id         INTEGER,
- node_id        INTEGER
-);
 INSERT INTO addr_housenumber (street_id,housenumber,lon,lat,way_id,node_id)
  SELECT s.street_id,a.housenumber,a.lon,a.lat,a.way_id,a.node_id
  FROM tmp_addr AS a
  LEFT JOIN addr_street AS s ON a.postcode=s.postcode AND a.city=s.city AND a.street=s.street;
 CREATE INDEX addr_housenumber__street_id ON addr_housenumber (street_id);
-CREATE VIEW addr_view AS
-SELECT s.street_id,s.postcode,s.city,s.street,h.housenumber,h.lon,h.lat,h.way_id,h.node_id
-FROM addr_street AS s
-LEFT JOIN addr_housenumber AS h ON s.street_id=h.street_id;
 /*
 ** 6. Delete temporary tables
 */
@@ -134,6 +130,4 @@ DROP TABLE tmp_addr_way;
 DROP TABLE tmp_addr_way_coordinates;
 DROP TABLE tmp_addr_node;
 DROP TABLE tmp_addr;
-
 COMMIT TRANSACTION;
-
