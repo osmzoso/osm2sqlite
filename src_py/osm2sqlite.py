@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-osm2sqlite - Reads OpenStreetMap XML data into a SQLite database
+Reads OpenStreetMap XML data into a SQLite database
 
 Copyright (C) 2021-2024 Herbert Gläser
 """
@@ -97,6 +97,7 @@ class OsmHandler(xml.sax.ContentHandler):
 
 
 def add_tables():
+    """Create the tables in the database"""
     db.execute('''
     CREATE TABLE nodes (
      node_id      INTEGER PRIMARY KEY,  -- node ID
@@ -144,6 +145,7 @@ def add_tables():
 
 
 def add_index():
+    """Create the indexes in the database"""
     db.execute('CREATE INDEX node_tags__node_id            ON node_tags (node_id)')
     db.execute('CREATE INDEX node_tags__key                ON node_tags (key)')
     db.execute('CREATE INDEX way_tags__way_id              ON way_tags (way_id)')
@@ -158,6 +160,7 @@ def add_index():
 
 
 def add_rtree():
+    """Create the R*Tree indexes in the database"""
     db.execute('CREATE VIRTUAL TABLE rtree_way USING rtree(way_id, min_lat, max_lat, min_lon, max_lon)')
     db.execute('''
     INSERT INTO rtree_way (way_id, min_lat, max_lat, min_lon, max_lon)
@@ -178,6 +181,7 @@ def add_rtree():
 
 
 def add_addr():
+    """Create the address tables in the database"""
     db.execute('BEGIN TRANSACTION')
     #
     # Create address tables 
@@ -367,6 +371,7 @@ def distance(lon1, lat1, lon2, lat2):
 
 
 def add_graph():
+    """Create the graph table in the database"""
     db.execute('BEGIN TRANSACTION')
     db.execute('''
     CREATE TABLE graph (
@@ -446,25 +451,26 @@ def add_graph():
 
 
 def main():
+    """entry point"""
     global db_connect, db
     if len(sys.argv) < 3:
         show_help()
         sys.exit(1)
     # check options
-    index = True
-    rtree = False
-    addr = False
-    graph = False
+    opt_index = True
+    opt_rtree = False
+    opt_addr = False
+    opt_graph = False
     if len(sys.argv) > 3:
         for i in range(3, len(sys.argv)):
             if sys.argv[i] == 'noindex':
-                index = False
+                opt_index = False
             elif sys.argv[i] == 'rtree':
-                rtree = True
+                opt_rtree = True
             elif sys.argv[i] == 'addr':
-                addr = True
+                opt_addr = True
             elif sys.argv[i] == 'graph':
-                graph = True
+                opt_graph = True
             else:
                 print("abort - option '"+sys.argv[i]+"' unknown")
                 sys.exit(1)
@@ -491,13 +497,13 @@ def main():
     # write data to database
     db_connect.commit()
     # create index
-    if index:
+    if opt_index:
         add_index()
-    if rtree:
+    if opt_rtree:
         add_rtree()
-    if addr:
+    if opt_addr:
         add_addr()
-    if graph:
+    if opt_graph:
         add_graph()
     db_connect.commit()
 

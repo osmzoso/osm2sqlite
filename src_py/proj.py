@@ -1,20 +1,14 @@
 #!/usr/bin/env python
 """
 Contains functions for converting coordinates to draw a map
+Spherical coordinates : WGS84 (EPSG:4326)
+Planar coordinates    : Web Mercator (EPSG:3857)
 """
-#
-# Formulas:
-# https://wiki.openstreetmap.org/wiki/Mercator
-# https://gis.stackexchange.com/questions/120636/math-formula-for-transforming-from-epsg4326-to-epsg3857
-# http://www.maptiler.org/google-maps-coordinates-tile-bounds-projection/
-#
 import math
 
 
 def wgs84_to_webmercator(lon, lat):
-    """
-    Return Web Mercator (EPSG:3857) of WGS84 (EPSG:4326)
-    """
+    "Converts spherical coordinates into planar coordinates"
     r = 6378137.0
     x = r * math.radians(lon)
     y = r * math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
@@ -22,9 +16,7 @@ def wgs84_to_webmercator(lon, lat):
 
 
 def webmercator_to_wgs84(x, y):
-    """
-    Return WGS84 (EPSG:4326) of Web Mercator (EPSG:3857)
-    """
+    "Converts planar coordinates into spherical coordinates"
     r = 6378137.0
     lon = math.degrees(x / r)
     lat = math.degrees(2 * math.atan(math.exp(y / r)) - math.pi / 2.0)
@@ -32,16 +24,12 @@ def webmercator_to_wgs84(x, y):
 
 
 def dms_to_decimal(degrees, minutes, seconds):
-    """
-    Converts degrees minutes seconds to degrees decimal
-    """
+    "Converts degrees minutes seconds to degrees decimal"
     return (((seconds / 60) + minutes) / 60) + degrees
 
 
 def decimal_to_dms(degrees_decimal):
-    """
-    Converts degrees decimal to degrees minutes seconds
-    """
+    "Converts degrees decimal to degrees minutes seconds"
     degrees = int(degrees_decimal)
     x = (degrees_decimal - degrees) * 60
     minutes = int(x)

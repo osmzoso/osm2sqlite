@@ -198,16 +198,17 @@ def part_way_coordinates(way_id, node_start, node_end):
     return coordinates
 
 
-def shortest_way(lon_start, lat_start, lon_dest, lat_dest):
+def shortest_way(lon_start, lat_start, lon_dest, lat_dest, csvfile):
     "Calculate shortest way"
+    f = open(csvfile, 'w', encoding="utf-8")
     #
-    print('# start:', lon_start, lat_start)
-    print('# dest:', lon_dest,  lat_dest)
+    f.write(f'# start : {lon_start} {lat_start}\n')
+    f.write(f'# dest  : {lon_dest} {lat_dest}\n')
     #
     # 1. Fill graph
     #
     lon1, lat1, lon2, lat2 = boundingbox_subgraph(lon_start, lat_start, lon_dest, lat_dest, 1.3)
-    print('# subgraph_boundingbox:', lon1, lat1, lon2, lat2)
+    f.write(f'# subgraph_boundingbox: {lon1} {lat1} {lon2} {lat2}\n')
     number_of_nodes = create_subgraph_tables(lon1, lat1, lon2, lat2)
     #
     graph = Graph(number_of_nodes)
@@ -220,8 +221,8 @@ def shortest_way(lon_start, lat_start, lon_dest, lat_dest):
     ''')
     for (edge_id, node_start, node_end, dist, way_id) in db.fetchall():
         graph.add_edge(node_start, node_end, edge_id, dist)
-    print('# subgraph_number_of_nodes:', graph.number_of_nodes)
-    print('# subgraph_number_of_edges:', graph.number_of_edges)
+    f.write(f'# subgraph_number_of_nodes: {graph.number_of_nodes}\n')
+    f.write(f'# subgraph_number_of_edges: {graph.number_of_edges}\n')
     #
     # 2. Find the nodes in the graph that are closest to the coordinates of the start point and end point
     #
@@ -246,19 +247,17 @@ def shortest_way(lon_start, lat_start, lon_dest, lat_dest):
     #
     # 4. Output the coordinates of the path
     #
-    print('# distance:', distance, 'm')
+    f.write(f'# distance : {distance} m\n')
     # a) simple method, only start and end coordinates of the edge
     # for graph_node in node_sequence:
     #    db.execute('SELECT node_id,lon,lat FROM subgraph_nodes WHERE no=?', (graph_node,))
     #    (node_id, lon, lat) = db.fetchone()
-    #    print(lon, lat)
+    #    f.write(lon, lat)
     # b) more sophisticated, all coordinates of the edge
     path_coordinates = []
-    # get first Node
     db.execute('SELECT node_id,lon,lat FROM subgraph_nodes WHERE no=?', (node_sequence[0],))
     (first_node_id, lon, lat) = db.fetchone()
     path_coordinates.append((lon, lat))
-    #
     for edge_id in edge_sequence:
         db.execute('SELECT start_node_id,end_node_id,way_id FROM graph WHERE edge_id=?', (edge_id,))
         (start_node_id, end_node_id, way_id) = db.fetchone()
@@ -272,24 +271,23 @@ def shortest_way(lon_start, lat_start, lon_dest, lat_dest):
         path_coordinates.extend(coordinates)
     for (lon, lat) in path_coordinates:
         ele = 0
-        print(str(lon) + ',' + str(lat) + ',' + str(ele))
+        f.write(str(lon) + ',' + str(lat) + ',' + str(ele) + '\n')
+    f.close()
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 6:
+    if len(sys.argv) != 7:
         print(f'''
         Calculate shortest way.
         Usage:
-        {sys.argv[0]} DATABASE LON_START LAT_START LON_DEST LAT_DEST
+        {sys.argv[0]} DATABASE LON_START LAT_START LON_DEST LAT_DEST CSVFILE
         ''')
         sys.exit(1)
-    database = sys.argv[1]
-    # Coordinates start and destination
+    db_connect = sqlite3.connect(sys.argv[1])  # database connection
+    db = db_connect.cursor()                   # new database cursor
     lon_start = float(sys.argv[2])
     lat_start = float(sys.argv[3])
     lon_dest = float(sys.argv[4])
     lat_dest = float(sys.argv[5])
-    # database connection
-    db_connect = sqlite3.connect(database)
-    db = db_connect.cursor()   # new database cursor
-    shortest_way(lon_start, lat_start, lon_dest, lat_dest)
+    csvfile = sys.argv[6]
+    shortest_way(lon_start, lat_start, lon_dest, lat_dest, csvfile)

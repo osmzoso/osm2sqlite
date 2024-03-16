@@ -10,11 +10,12 @@ import proj
 import sqlite3
 
 
-def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
+def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, svgfile, show_unknown=True):
     """
     Outputs a map in SVG format to stdout.
     A table 'map_def' is required.
     """
+    f = open(svgfile, 'w', encoding="utf-8")
     # map size
     pixel_world_map, meters_pixel = proj.size_world_map(zoomlevel)
     # pixel boundingbox
@@ -38,9 +39,9 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
      )''')
     db.execute('CREATE TEMP TABLE map_ways_unknown (way_id)')
     #
-    print(f'<svg height="{bbox_y}" width="{bbox_x}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">')
+    f.write(f'<svg height="{bbox_y}" width="{bbox_x}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">')
     # TODO eventuell text-anchor="middle" ?
-    print('''
+    f.write('''
     <style type="text/css">
     <![CDATA[
       text {
@@ -52,26 +53,26 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
       }
     ]]>
     </style>
-    ''')
-    print('<!-- ************ map info ************')
-    print(f'lon       : {lon}\n' +
+    \n''')
+    f.write('<!-- ************ map info ************\n')
+    f.write(f'lon       : {lon}\n' +
           f'lat       : {lat}\n' +
           f'zoomlevel : {zoomlevel}\n' +
           f'size_x    : {bbox_x} (= bbox_x)\n' +
           f'size_y    : {bbox_y} (= bbox_y)\n')
-    print(f'pixel_world_map : {pixel_world_map}px x {pixel_world_map}px\n')
-    print('pixel boundingbox:\n' +
+    f.write(f'pixel_world_map : {pixel_world_map} x {pixel_world_map} pixel\n')
+    f.write('pixel boundingbox:\n' +
           f'bbox_min_x, bbox_min_y : {bbox_min_x}, {bbox_min_y}\n' +
           f'bbox_max_x, bbox_max_y : {bbox_max_x}, {bbox_max_y}\n')
-    print('wgs84 boundingbox:\n' +
+    f.write('wgs84 boundingbox:\n' +
           f'bbox_min_lon, bbox_min_lat : {bbox_min_lon}, {bbox_min_lat}\n' +
           f'bbox_max_lon, bbox_max_lat : {bbox_max_lon}, {bbox_max_lat}\n')
-    print('check:')
-    print('bbox_max_x - bbox_min_x = bbox_x = size_x : ', bbox_max_x - bbox_min_x)
-    print('bbox_max_y - bbox_min_y = bbox_y = size_y : ', bbox_max_y - bbox_min_y)
-    print('************ map info ************ -->')
+    f.write('check:\n' +
+          f'bbox_max_x - bbox_min_x = bbox_x = size_x : {bbox_max_x - bbox_min_x}\n' +
+          f'bbox_max_y - bbox_min_y = bbox_y = size_y : {bbox_max_y - bbox_min_y}\n')
+    f.write('************ map info ************ -->\n')
     #
-    print('<rect width="100%" height="100%" fill="#f2efe9" />')
+    f.write('<rect width="100%" height="100%" fill="#f2efe9" />\n')
     #
     draw_plan_id = 0
     db.execute('''
@@ -161,13 +162,13 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
     ORDER BY layer
     ''')
     for (ref, ref_id, key, value, layer, style, width, fill, stroke, dash) in db.fetchall():
-        # print('<!-- DRAW_PLAN :',ref,ref_id,key,value,layer,style,width,fill,stroke,dash,'-->')
+        # f.write('<!-- DRAW_PLAN :',ref,ref_id,key,value,layer,style,width,fill,stroke,dash,'-->')
         path_id = ref + str(ref_id)
         #
         if style == 'text':
-            print(f'<text style="fill:{fill};" font-size="{width}">', end='')
-            print('<textPath href="#' + path_id + '" startOffset="30%">' + value + '</textPath>', end='')
-            print('</text>')
+            f.write(f'<text style="fill:{fill};" font-size="{width}">\n')
+            f.write('<textPath href="#' + path_id + '" startOffset="30%">' + value + '</textPath>\n')
+            f.write('</text>\n')
             continue
         #
         svg_path = []
@@ -206,25 +207,26 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown=True):
             if svg_path[len(svg_path)-1][0] < svg_path[0][0]:
                 svg_path.reverse()
             #
-            print(f'<path id="{path_id}" d="', end='')
+            f.write(f'<path id="{path_id}" d="')
             command = 'M'
             for x, y in svg_path:
-                print(f'{command}{x} {y} ', end='')
+                f.write(f'{command}{x} {y} ')
                 if command == 'M':
                     command = 'L'
             #
             if style == 'line':
-                print(f'" style="fill:none;stroke:{stroke};stroke-width:{width};stroke-linecap:round;stroke-dasharray:{dash}" />')
+                f.write(f'" style="fill:none;stroke:{stroke};stroke-width:{width};stroke-linecap:round;stroke-dasharray:{dash}" />\n')
             elif style == 'area':
-                print(f'Z" style="fill:{fill};stroke:{stroke};stroke-width:{width}" />')
-    print('</svg>')
+                f.write(f'Z" style="fill:{fill};stroke:{stroke};stroke-width:{width}" />\n')
+    f.write('</svg>')
+    f.close()
 
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        print('Creates a simple map in SVG format on stdout.\n'
+        print('Creates a simple map in SVG format.\n'
               'Usage:\n'
-              f'{sys.argv[0]} DATABASE LON LAT ZOOMLEVEL SIZE_X SIZE_Y [debug]')
+              f'{sys.argv[0]} DATABASE LON LAT ZOOMLEVEL SIZE_X SIZE_Y SVG_FILE [debug]')
         sys.exit(1)
     db_connect = sqlite3.connect(sys.argv[1])  # database connection
     db = db_connect.cursor()                   # new database cursor
@@ -233,8 +235,9 @@ if __name__ == "__main__":
     zoomlevel = int(sys.argv[4])
     bbox_x = int(sys.argv[5])
     bbox_y = int(sys.argv[6])
+    svgfile = sys.argv[7]
     show_unknown = False
-    if len(sys.argv) == 8:
-        if sys.argv[7] == 'debug':
+    if len(sys.argv) == 9:
+        if sys.argv[8] == 'debug':
             show_unknown = True
-    draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, show_unknown)
+    draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, svgfile, show_unknown)
