@@ -16,7 +16,7 @@
 
 void show_help() {
   printf(
-  "osm2sqlite 0.9.2\n"
+  "osm2sqlite 0.9.3\n"
   "\n"
   "Reads OpenStreetMap XML data into a SQLite database.\n"
   "\n"
