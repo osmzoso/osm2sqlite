@@ -20,6 +20,7 @@ cdate=$(date '+%Y%m%d')
 rm $db
 osmium cat $osm_pbf --output-format=osm --output=- | ./src/osm2sqlite $db - addr rtree graph
 sqlite3 $db < ./src_py/map_def.sql
+./src_py/add_graph_properties.py $db
 #
 # Map Drawing
 #
@@ -28,15 +29,13 @@ sqlite3 $db < ./src_py/map_def.sql
 # Routing (table 'graph' is required)
 #
 ./src_py/route.py $db 7.808 47.983 7.889 47.897 $result/freiburg_schauinsland.csv
-./tools/html_map_csv.py $result/freiburg_schauinsland.csv > $result/$cdate-map_route_freiburg_schauinsland.html
-./tools/convert_csv2gpx.py $result/freiburg_schauinsland.csv > $result/freiburg_schauinsland.gpx
+./tools/map_csv.py $result/freiburg_schauinsland.csv $result/$cdate-map_route_freiburg_schauinsland.html
+./tools/convert_csv2gpx.py $result/freiburg_schauinsland.csv $result/freiburg_schauinsland.gpx
 #
-# Tilemaps with Leaflet.js
+# Create HTML file with a map of the addresses
 #
-# create HTML file with a map of the addresses
-./tools/html_map_addr.py $db 7.791 47.975 7.809 47.983 > $result/$cdate-map_adressen_freiburg_st_georgen.html
+./tools/map_addr.py $db 7.791 47.975 7.809 47.983 $result/$cdate-map_adressen_freiburg_st_georgen.html
 #
 # Check addr:street name
 #
 ./src_py/check_addr_street_name.py $db 791% > $result/$cdate-error_addr_street_name.html
-
