@@ -15,7 +15,7 @@ db = None          # SQLite Database cursor
 
 def show_help():
     """Show built-in help"""
-    print('osm2sqlite.py 0.9.2\n'
+    print('osm2sqlite.py 0.9.3\n'
           '\n'
           'Reads OpenStreetMap XML data into a SQLite database.\n'
           '\n'
@@ -37,6 +37,7 @@ class OsmHandler(xml.sax.ContentHandler):
     Read OpenStreetMap XML Data
     """
     def __init__(self):
+        super().__init__()
         # element <node>
         self.element_node_active = False
         self.node_id = -1
@@ -98,49 +99,39 @@ class OsmHandler(xml.sax.ContentHandler):
 
 def add_tables():
     """Create the tables in the database"""
-    db.execute('''
+    db.executescript('''
     CREATE TABLE nodes (
      node_id      INTEGER PRIMARY KEY,  -- node ID
      lon          REAL,                 -- longitude
      lat          REAL                  -- latitude
-    )
-    ''')
-    db.execute('''
+    );
     CREATE TABLE node_tags (
      node_id      INTEGER,              -- node ID
      key          TEXT,                 -- tag key
      value        TEXT                  -- tag value
-    )
-    ''')
-    db.execute('''
+    );
     CREATE TABLE way_nodes (
      way_id       INTEGER,              -- way ID
      node_id      INTEGER,              -- node ID
      node_order   INTEGER               -- node order
-    )
-    ''')
-    db.execute('''
+    );
     CREATE TABLE way_tags (
      way_id       INTEGER,              -- way ID
      key          TEXT,                 -- tag key
      value        TEXT                  -- tag value
-    )
-    ''')
-    db.execute('''
+    );
     CREATE TABLE relation_members (
      relation_id  INTEGER,              -- relation ID
      ref          TEXT,                 -- reference ('node','way','relation')
      ref_id       INTEGER,              -- node, way or relation ID
      role         TEXT,                 -- describes a particular feature
      member_order INTEGER               -- member order
-    )
-    ''')
-    db.execute('''
+    );
     CREATE TABLE relation_tags (
      relation_id  INTEGER,              -- relation ID
      key          TEXT,                 -- tag key
      value        TEXT                  -- tag value
-    )
+    );
     ''')
 
 
@@ -184,7 +175,7 @@ def add_addr():
     """Create the address tables in the database"""
     db.execute('BEGIN TRANSACTION')
     #
-    # Create address tables 
+    # Create address tables
     #
     db.execute('''
     CREATE TABLE addr_street (
