@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-#
+"""
+Reads file with SQL commands and outputs it formatted for C source code
+"""
 import sys
 import re
 
@@ -17,8 +19,8 @@ filename = sys.argv[1]
 indent = ' ' * 4
 
 # C-Version
-file_query = open(filename, "r")
-for line in file_query:
+f = open(filename, 'r', encoding='utf-8')
+for line in f:
     line_strip = line.rstrip()  # remove all \n \r space at the end
     print(indent + '" ' + line_strip, end='')
     if (re.search(r'\($', line_strip) or
@@ -27,7 +29,7 @@ for line in file_query:
         print('\\n"')
     else:
         print('"')
-file_query.close()
+f.close()
 
 # Python-Version
 # print('    ' + line_strip + '\n', end='')

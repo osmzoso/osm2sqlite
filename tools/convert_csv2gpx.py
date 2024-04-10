@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 """
-Functions to convert CSV to GPX
+Convert CSV to GPX
 """
 import sys
-import xml.etree.ElementTree as ET
 
 
-def read_coordinates_csv(filename):
-    """Read coordinates from csv file"""
+def csv2gpx(csv_filename, gpx_filename):
+    """Convert CSV file to GPX file"""
     path_coordinates = []
-    with open(filename, mode='r', encoding='utf-8') as fobj:
-        for line in fobj:
+    with open(csv_filename, 'r', encoding='utf-8') as csv_file:
+        for line in csv_file:
             columns = line.split(',')
             try:
                 lon = float(columns[0])
@@ -19,59 +18,37 @@ def read_coordinates_csv(filename):
             except ValueError:
                 continue
             path_coordinates.append((lon, lat, ele))
-    return path_coordinates
-
-
-def write_gpx_file(path_coordinates):
-    """Write gpx file"""
-    print('<?xml version="1.0" encoding="UTF-8" standalone="no" ?>')
-    print('<gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1"'
-          f' creator="osm2sqlite {sys.argv[0]}">')
-    print('  <metadata></metadata>')
-    print('  <trk>')
-    print('    <name>Track 1</name>')
-    print('    <extensions>')
-    print('    </extensions>')
-    print('    <trkseg>')
-    for (lon, lat, ele) in path_coordinates:
-        print('      <trkpt lat="' + str(lat) + '" lon="' + str(lon) + '">')
-        print('        <ele>' + str(ele) + '</ele>')
-        print('      </trkpt>')
-    print('    </trkseg>')
-    print('  </trk>')
-    print('</gpx>')
-
-
-def write_gpx_file_v2():
-    """Test Create gpx file with ElementTree"""
-    # Create the root element of the GPX file
-    gpx = ET.Element("gpx", version="1.1", creator="Your Python Script")
-    # Create a waypoint element
-    wpt = ET.SubElement(gpx, "wpt", lat="37.7749", lon="-122.4194")  # San Francisco coordinates
-    # Add elements for the waypoint
-    name = ET.SubElement(wpt, "name")
-    name.text = "San Francisco"
-    ele = ET.SubElement(wpt, "ele")
-    ele.text = "5"  # Elevation in meters
-    # Convert the Element object to a formatted string
-    gpx_str = ET.tostring(gpx)
-    print(gpx_str)
-    # Write the GPX string to a file
-    with open('example.gpx', 'w', encoding='utf-8') as gpx_file:
-        gpx_file.write(gpx_str)
+    with open(gpx_filename, 'w', encoding='utf-8') as gpx_file:
+        gpx_file.write(
+          '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>\n'
+          '<gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1"'
+                 f' creator="{sys.argv[0]}">\n'
+          '  <metadata></metadata>\n'
+          '  <trk>\n'
+          '    <name>Track 1</name>\n'
+          '    <extensions>\n'
+          '    </extensions>\n'
+          '    <trkseg>\n')
+        for (lon, lat, ele) in path_coordinates:
+            gpx_file.write(
+             f'      <trkpt lat="{lat}" lon="{lon}">\n'
+             f'        <ele>{ele}</ele>\n'
+              '      </trkpt>\n')
+        gpx_file.write(
+          '    </trkseg>\n'
+          '  </trk>\n'
+          '</gpx>')
 
 
 def main():
     """entry point"""
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         print('Converts a csv file into a gpx file.\n'
-              'Output is stdout.\n'
               'Usage:\n'
-              f'{sys.argv[0]} CSV_FILE')
+              f'{sys.argv[0]} CSV_FILE GPX_FILE')
         sys.exit(1)
-    filename = sys.argv[1]
-    path_coordinates = read_coordinates_csv(filename)
-    write_gpx_file(path_coordinates)
+    csv2gpx(sys.argv[1], sys.argv[2])
+
 
 if __name__ == "__main__":
     main()
