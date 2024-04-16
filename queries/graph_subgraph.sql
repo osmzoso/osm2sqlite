@@ -30,15 +30,14 @@
 **    - temp. look-up table "subgraph_nodes" to get node numbers from 1 to N
 */
 CREATE TEMP TABLE subgraph AS
-SELECT g.edge_id,g.start_node_id,g.end_node_id,g.dist,p.properties
-FROM graph AS g
-LEFT JOIN graph_properties AS p ON g.way_id=p.way_id
-WHERE g.way_id IN (
+SELECT edge_id,start_node_id,end_node_id,dist,permit
+FROM graph
+WHERE way_id IN (
  SELECT way_id
  FROM rtree_way
  WHERE max_lon>=$min_lon AND min_lon<=$max_lon
    AND max_lat>=$min_lat AND min_lat<=$max_lat)
- AND p.properties & $permitted=$permitted;
+ AND permit & $permitted=$permitted;
 
 CREATE TEMP TABLE subgraph_nodes (
  no      INTEGER PRIMARY KEY,
@@ -66,7 +65,7 @@ SELECT max(no) FROM subgraph_nodes;
 /*
 ** List of edges with node numbers from 1 to N
 */
-SELECT g.edge_id,ns.no,ne.no,g.dist,g.properties --,format('%02x',g.properties)
+SELECT g.edge_id,ns.no,ne.no,g.dist,g.permit --,format('%02x',g.permit)
 FROM subgraph AS g
 LEFT JOIN subgraph_nodes AS ns ON g.start_node_id=ns.node_id
 LEFT JOIN subgraph_nodes AS ne ON g.end_node_id=ne.node_id;
