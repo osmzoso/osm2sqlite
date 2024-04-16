@@ -461,7 +461,8 @@ void add_graph() {
          "  start_node_id INTEGER,              -- edge start node ID\n"
          "  end_node_id   INTEGER,              -- edge end node ID\n"
          "  dist          INTEGER,              -- distance in meters\n"
-         "  way_id        INTEGER               -- way ID\n"
+         "  way_id        INTEGER,              -- way ID\n"
+         "  permit        INTEGER               -- bitfield access\n"
          " )\n",
          NULL, NULL, NULL);
   if( rc!=SQLITE_OK ) abort_db_error(rc);
