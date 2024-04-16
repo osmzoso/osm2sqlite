@@ -61,4 +61,4 @@ compare_table('addr_street', 'street_id,postcode,city,street,'
               'CAST(max_lon AS TEXT),CAST(max_lat AS TEXT)')
 compare_table('addr_housenumber', 'housenumber_id,street_id,housenumber,'
               'CAST(lon AS TEXT),CAST(lat AS TEXT),way_id,node_id')
-compare_table('graph', 'edge_id,start_node_id,end_node_id,dist,way_id')
+compare_table('graph', 'edge_id,start_node_id,end_node_id,dist,way_id,permit')
