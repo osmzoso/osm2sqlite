@@ -370,7 +370,8 @@ def add_graph():
      start_node_id INTEGER,              -- edge start node ID
      end_node_id   INTEGER,              -- edge end node ID
      dist          INTEGER,              -- distance in meters
-     way_id        INTEGER               -- way ID
+     way_id        INTEGER,              -- way ID
+     permit        INTEGER               -- bitfield access
     )
     ''')
     # Create a table with all nodes that are crossing points
