@@ -20,7 +20,7 @@ cdate=$(date '+%Y%m%d')
 rm $db
 osmium cat $osm_pbf --output-format=osm --output=- | ./src/osm2sqlite $db - addr rtree graph
 sqlite3 $db < ./src_py/map_def.sql
-./src_py/add_graph_properties.py $db
+./src_py/fill_graph_permit.py $db
 #
 # Map Drawing
 #
