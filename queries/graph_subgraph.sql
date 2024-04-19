@@ -2,26 +2,16 @@
 ** Create a smaller subgraph from the table "graph"
 **   - R*Tree 'rtree_way' is required
 **   - overlaps boundingbox slightly
-**
-**        car_oneway       # 2^5  32
-**        bike_oneway      # 2^4  16
-**        car              # 2^3   8
-**        bike_road        # 2^2   4
-**        bike_gravel      # 2^1   2
-**        foot             # 2^0   1
 */
 .mode table
 .timer on
 
-/*
-** Boundingbox:
-**    min_lon (x1):  7.81, min_lat (y1): 47.97
-**    max_lon (x2):  7.83, max_lat (y2): 47.98
-*/
+/* Boundingbox: min_lon(x1), min_lat(y1), max_lon(x2), max_lat(y2) */
 .parameter set $min_lon  7.81
 .parameter set $min_lat 47.97
 .parameter set $max_lon  7.83
 .parameter set $max_lat 47.98
+/* Mask bit field permit */
 .parameter set $permitted 8
 
 /*
@@ -37,7 +27,7 @@ WHERE way_id IN (
  FROM rtree_way
  WHERE max_lon>=$min_lon AND min_lon<=$max_lon
    AND max_lat>=$min_lat AND min_lat<=$max_lat)
- AND permit & $permitted=$permitted;
+ AND permit & $permitted != 0;
 
 CREATE TEMP TABLE subgraph_nodes (
  no      INTEGER PRIMARY KEY,
