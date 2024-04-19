@@ -80,9 +80,8 @@ The view **addr_view** join the two tables.
 This option creates an additional table **graph** with the complete graph
 of all highways. This data is required for routing purposes.  
 
-Table **graph**:
-
 ```
+Table "graph":
 column          | type                | description
 ----------------|---------------------|-------------------------------------
 edge_id         | INTEGER PRIMARY KEY | edge ID
@@ -90,33 +89,25 @@ start_node_id   | INTEGER             | edge start node ID
 end_node_id     | INTEGER             | edge end node ID
 dist            | INTEGER             | distance in meters
 way_id          | INTEGER             | way ID
+permit          | INTEGER             | bit field access
 ```
 
 Visualization of the table 'graph':  
 ![table_graph.jpg](table_graph.jpg)
 
-``` sql
-/*
-** Create a smaller subgraph from the graph table
-**   - R*Tree 'rtree_way' is required
-**   - overlaps boundingbox slightly
-**   - result in temporary table "subgraph"
-**
-** Boundingbox:
-**    min_lon (x1):  7.81, min_lat (y1): 47.97
-**    max_lon (x2):  7.83, max_lat (y2): 47.98
-**
-*/
-CREATE TEMP TABLE subgraph AS
-SELECT edge_id,start_node_id,end_node_id,dist,way_id
-FROM graph
-WHERE way_id IN (
- SELECT way_id
- FROM rtree_way
- WHERE max_lon>= 7.81 AND min_lon<= 7.83
-   AND max_lat>=47.97 AND min_lat<=47.98
-);
-```
+The bit field **permit** determines who may use this edge:  
+Bit 0 : 2^0  1  foot  
+Bit 1 : 2^1  2  bike_gravel  
+Bit 2 : 2^2  4  bike_road  
+Bit 3 : 2^3  8  car  
+Bit 4 : 2^4 16  bike_oneway  
+Bit 5 : 2^5 32  car_oneway  
+
+This field is currently not yet filled, but there is a script that
+fills this field, see **./src_py/fill_graph_permit.py**.
+
+Queries on how to determine a smaller subgraph from this table
+can be found in **./queries/graph_subgraph.sql**.
 
 
 ## Option "noindex"

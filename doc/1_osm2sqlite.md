@@ -1,13 +1,13 @@
+# 1. osm2sqlite
+
 A simple command line tool for reading OpenStreetMap XML data into a SQLite database.
 
-# 1. Read OSM XML data
-
-Read file **test.osm** into database **test.db**:  
+Read simple XML file **test.osm** into database **test.db**:  
 `osm2sqlite test.db test.osm`  
 
-The database can be easily queried with the [SQLite CLI tool](https://www.sqlite.org/cli.html).
-
 OSM data can be obtained from a provider such as [Geofabrik](https://download.geofabrik.de).
+
+## Read .osm.bz2 file
 
 The OSM XML data is provided as bzip2 compressed data.
 
@@ -17,8 +17,10 @@ Read .osm.bz2 file:
 `7z e -so ../germany.osm.bz2 | osm2sqlite germany.db -`  
 `bzip2 -c -d ../germany.osm.bz2 | osm2sqlite germany.db -`  
 
-> The .osm.bz2 format is [deprecated](https://download.geofabrik.de/bz2.html).  
-> In future, only .osm.pbf files will be provided from Geofabrik.
+## The .osm.bz2 format is deprecated
+
+The .osm.bz2 format is [deprecated](https://download.geofabrik.de/bz2.html).  
+In future, only .osm.pbf files will be provided from Geofabrik.
 
 The tool **osmium** can convert .osm.pbf files to .osm.
 

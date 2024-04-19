@@ -16,9 +16,7 @@ pandoc \
  3_options.md \
  4_mapdrawing.md \
  5_routing.md \
- 6_check_data.md \
- 7_tools.md \
- 8_test.md \
+ 6_tools.md \
  9_appendix.md \
  --pdf-engine=xelatex \
  --toc \
@@ -32,14 +30,13 @@ pandoc \
  --embed-resources \
  --metadata title="osm2sqlite" \
  --toc \
+ --css=custom.css \
  1_osm2sqlite.md \
  2_tables.md \
  3_options.md \
  4_mapdrawing.md \
  5_routing.md \
- 6_check_data.md \
- 7_tools.md \
- 8_test.md \
+ 6_tools.md \
  9_appendix.md \
  -o osm2sqlite.html
 
@@ -54,9 +51,7 @@ pandoc \
  3_options.md \
  4_mapdrawing.md \
  5_routing.md \
- 6_check_data.md \
- 7_tools.md \
- 8_test.md \
+ 6_tools.md \
  9_appendix.md \
  -o osm2sqlite.1
 gzip osm2sqlite.1

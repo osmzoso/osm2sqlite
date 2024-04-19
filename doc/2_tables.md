@@ -49,3 +49,4 @@ value        | TEXT                | tag value
 - INDEX relation_tags__key            ON relation_tags (key)
 ```
 
+The database can be easily queried with the [SQLite CLI tool](https://www.sqlite.org/cli.html).
