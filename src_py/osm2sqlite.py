@@ -51,47 +51,47 @@ class OsmHandler(xml.sax.ContentHandler):
         self.relation_member_order = 0
 
     # call when an element starts
-    def startElement(self, element, attrib):
-        if element == 'node':
+    def startElement(self, name, attrs):
+        if name == 'node':
             self.element_node_active = True
-            self.node_id = attrib['id']
+            self.node_id = attrs['id']
             db.execute('INSERT INTO nodes (node_id,lon,lat) VALUES (?,?,?)',
-                       (self.node_id, attrib['lon'], attrib['lat']))
-        elif element == 'tag':
+                       (self.node_id, attrs['lon'], attrs['lat']))
+        elif name == 'tag':
             if self.element_node_active:
                 db.execute('INSERT INTO node_tags (node_id,key,value) VALUES (?,?,?)',
-                           (self.node_id, attrib['k'], attrib['v']))
+                           (self.node_id, attrs['k'], attrs['v']))
             elif self.element_way_active:
                 db.execute('INSERT INTO way_tags (way_id,key,value) VALUES (?,?,?)',
-                           (self.way_id, attrib['k'], attrib['v']))
+                           (self.way_id, attrs['k'], attrs['v']))
             elif self.element_relation_active:
                 db.execute('INSERT INTO relation_tags (relation_id,key,value) VALUES (?,?,?)',
-                           (self.relation_id, attrib['k'], attrib['v']))
-        elif element == 'way':
+                           (self.relation_id, attrs['k'], attrs['v']))
+        elif name == 'way':
             self.element_way_active = True
-            self.way_id = attrib['id']
-        elif element == 'nd':
+            self.way_id = attrs['id']
+        elif name == 'nd':
             self.way_node_order += 1
             db.execute('INSERT INTO way_nodes (way_id,node_id,node_order) VALUES (?,?,?)',
-                       (self.way_id, attrib['ref'], self.way_node_order))
-        elif element == 'relation':
+                       (self.way_id, attrs['ref'], self.way_node_order))
+        elif name == 'relation':
             self.element_relation_active = True
-            self.relation_id = attrib['id']
-        elif element == 'member':
+            self.relation_id = attrs['id']
+        elif name == 'member':
             self.relation_member_order += 1
             db.execute('INSERT INTO relation_members (relation_id,ref,ref_id,role,member_order) VALUES (?,?,?,?,?)',
-                       (self.relation_id, attrib['type'], attrib['ref'], attrib['role'], self.relation_member_order))
+                       (self.relation_id, attrs['type'], attrs['ref'], attrs['role'], self.relation_member_order))
 
     # call when an element ends
-    def endElement(self, element):
-        if element == 'node':
+    def endElement(self, name):
+        if name == 'node':
             self.element_node_active = False
             self.node_id = -1
-        elif element == 'way':
+        elif name == 'way':
             self.element_way_active = False
             self.way_id = -1
             self.way_node_order = 0
-        elif element == 'relation':
+        elif name == 'relation':
             self.element_relation_active = False
             self.relation_id = -1
             self.relation_member_order = 0
@@ -137,47 +137,45 @@ def add_tables():
 
 def add_index():
     """Create the indexes in the database"""
-    db.execute('CREATE INDEX node_tags__node_id            ON node_tags (node_id)')
-    db.execute('CREATE INDEX node_tags__key                ON node_tags (key)')
-    db.execute('CREATE INDEX way_tags__way_id              ON way_tags (way_id)')
-    db.execute('CREATE INDEX way_tags__key                 ON way_tags (key)')
-    db.execute('CREATE INDEX way_nodes__way_id             ON way_nodes (way_id, node_order)')
-    db.execute('CREATE INDEX way_nodes__node_id            ON way_nodes (node_id)')
-    db.execute('CREATE INDEX relation_members__relation_id ON relation_members (relation_id, member_order)')
-    db.execute('CREATE INDEX relation_members__ref_id      ON relation_members (ref_id)')
-    db.execute('CREATE INDEX relation_tags__relation_id    ON relation_tags (relation_id)')
-    db.execute('CREATE INDEX relation_tags__key            ON relation_tags (key)')
-    db_connect.commit()
+    db.executescript('''
+    CREATE INDEX node_tags__node_id            ON node_tags (node_id);
+    CREATE INDEX node_tags__key                ON node_tags (key);
+    CREATE INDEX way_tags__way_id              ON way_tags (way_id);
+    CREATE INDEX way_tags__key                 ON way_tags (key);
+    CREATE INDEX way_nodes__way_id             ON way_nodes (way_id, node_order);
+    CREATE INDEX way_nodes__node_id            ON way_nodes (node_id);
+    CREATE INDEX relation_members__relation_id ON relation_members (relation_id, member_order);
+    CREATE INDEX relation_members__ref_id      ON relation_members (ref_id);
+    CREATE INDEX relation_tags__relation_id    ON relation_tags (relation_id);
+    CREATE INDEX relation_tags__key            ON relation_tags (key);
+    ''')
 
 
 def add_rtree():
     """Create the R*Tree indexes in the database"""
-    db.execute('CREATE VIRTUAL TABLE rtree_way USING rtree(way_id, min_lat, max_lat, min_lon, max_lon)')
-    db.execute('''
+    db.executescript('''
+    CREATE VIRTUAL TABLE rtree_way USING rtree(way_id, min_lat, max_lat, min_lon, max_lon);
     INSERT INTO rtree_way (way_id, min_lat, max_lat, min_lon, max_lon)
     SELECT way_nodes.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)
     FROM way_nodes
     LEFT JOIN nodes ON way_nodes.node_id=nodes.node_id
-    GROUP BY way_nodes.way_id
-    ''')
-    db.execute('CREATE VIRTUAL TABLE rtree_node USING rtree(node_id, min_lat, max_lat, min_lon, max_lon)')
-    db.execute('''
+    GROUP BY way_nodes.way_id;
+    CREATE VIRTUAL TABLE rtree_node USING rtree(node_id, min_lat, max_lat, min_lon, max_lon);
     INSERT INTO rtree_node (node_id, min_lat, max_lat, min_lon, max_lon)
     SELECT DISTINCT nodes.node_id,nodes.lat,nodes.lat,nodes.lon,nodes.lon
     FROM nodes
     LEFT JOIN node_tags ON nodes.node_id=node_tags.node_id
-    WHERE node_tags.node_id IS NOT NULL
+    WHERE node_tags.node_id IS NOT NULL;
     ''')
-    db_connect.commit()
 
 
 def add_addr():
     """Create the address tables in the database"""
-    db.execute('BEGIN TRANSACTION')
-    #
-    # Create address tables
-    #
-    db.execute('''
+    db.executescript('''
+    BEGIN TRANSACTION;
+    /*
+    ** Create address tables
+    */
     CREATE TABLE addr_street (
      street_id   INTEGER PRIMARY KEY, -- street ID
      postcode    TEXT,                -- postcode
@@ -187,9 +185,7 @@ def add_addr():
      min_lat     REAL,                -- boundingbox street min latitude
      max_lon     REAL,                -- boundingbox street max longitude
      max_lat     REAL                 -- boundingbox street max latitude
-    )
-    ''')
-    db.execute('''
+    );
     CREATE TABLE addr_housenumber (
      housenumber_id INTEGER PRIMARY KEY, -- housenumber ID
      street_id      INTEGER,             -- street ID
@@ -198,102 +194,76 @@ def add_addr():
      lat            REAL,                -- latitude
      way_id         INTEGER,             -- way ID
      node_id        INTEGER              -- node ID
-    )
-    ''')
-    db.execute('''
+    );
     CREATE VIEW addr_view AS
     SELECT s.street_id,s.postcode,s.city,s.street,h.housenumber,h.lon,h.lat,h.way_id,h.node_id
     FROM addr_street AS s
-    LEFT JOIN addr_housenumber AS h ON s.street_id=h.street_id
-    ''')
-    #
-    # 1. Determine address data from way tags
-    #
-    db.execute('''
+    LEFT JOIN addr_housenumber AS h ON s.street_id=h.street_id;
+    /*
+    ** 1. Determine address data from way tags
+    */
     CREATE TEMP TABLE tmp_addr_way (
      way_id      INTEGER PRIMARY KEY,
      postcode    TEXT,
      city        TEXT,
      street      TEXT,
      housenumber TEXT
-    )
-    ''')
-    db.execute('''
+    );
     INSERT INTO tmp_addr_way
      SELECT way_id,value AS postcode,'','',''
      FROM way_tags WHERE key='addr:postcode'
-     ON CONFLICT(way_id) DO UPDATE SET postcode=excluded.postcode
-    ''')
-    db.execute('''
+     ON CONFLICT(way_id) DO UPDATE SET postcode=excluded.postcode;
     INSERT INTO tmp_addr_way
      SELECT way_id,'',value AS city,'',''
      FROM way_tags WHERE key='addr:city'
-     ON CONFLICT(way_id) DO UPDATE SET city=excluded.city
-    ''')
-    db.execute('''
+     ON CONFLICT(way_id) DO UPDATE SET city=excluded.city;
     INSERT INTO tmp_addr_way
      SELECT way_id,'','',value AS street,''
      FROM way_tags WHERE key='addr:street'
-     ON CONFLICT(way_id) DO UPDATE SET street=excluded.street
-    ''')
-    db.execute('''
+     ON CONFLICT(way_id) DO UPDATE SET street=excluded.street;
     INSERT INTO tmp_addr_way
      SELECT way_id,'','','',value AS housenumber
      FROM way_tags WHERE key='addr:housenumber'
-     ON CONFLICT(way_id) DO UPDATE SET housenumber=excluded.housenumber
-    ''')
-    #
-    # 2. Calculate coordinates of address data from way tags
-    #
-    db.execute('''
+     ON CONFLICT(way_id) DO UPDATE SET housenumber=excluded.housenumber;
+    /*
+    ** 2. Calculate coordinates of address data from way tags
+    */
     CREATE TEMP TABLE tmp_addr_way_coordinates AS
     SELECT way.way_id AS way_id,round(avg(n.lon),7) AS lon,round(avg(n.lat),7) AS lat
     FROM tmp_addr_way AS way
     LEFT JOIN way_nodes AS wn ON way.way_id=wn.way_id
     LEFT JOIN nodes     AS n  ON wn.node_id=n.node_id
-    GROUP BY way.way_id
-    ''')
-    db.execute('CREATE INDEX tmp_addr_way_coordinates_way_id ON tmp_addr_way_coordinates (way_id)')
-    #
-    # 3. Determine address data from node tags
-    #
-    db.execute('''
+    GROUP BY way.way_id;
+    CREATE INDEX tmp_addr_way_coordinates_way_id ON tmp_addr_way_coordinates (way_id);
+    /*
+    ** 3. Determine address data from node tags
+    */
     CREATE TEMP TABLE tmp_addr_node (
      node_id     INTEGER PRIMARY KEY,
      postcode    TEXT,
      city        TEXT,
      street      TEXT,
      housenumber TEXT
-    )
-    ''')
-    db.execute('''
+    );
     INSERT INTO tmp_addr_node
      SELECT node_id,value AS postcode,'','',''
      FROM node_tags WHERE key='addr:postcode'
-     ON CONFLICT(node_id) DO UPDATE SET postcode=excluded.postcode
-    ''')
-    db.execute('''
+     ON CONFLICT(node_id) DO UPDATE SET postcode=excluded.postcode;
     INSERT INTO tmp_addr_node
      SELECT node_id,'',value AS city,'',''
      FROM node_tags WHERE key='addr:city'
-     ON CONFLICT(node_id) DO UPDATE SET city=excluded.city
-    ''')
-    db.execute('''
+     ON CONFLICT(node_id) DO UPDATE SET city=excluded.city;
     INSERT INTO tmp_addr_node
      SELECT node_id,'','',value AS street,''
      FROM node_tags WHERE key='addr:street'
-     ON CONFLICT(node_id) DO UPDATE SET street=excluded.street
-    ''')
-    db.execute('''
+     ON CONFLICT(node_id) DO UPDATE SET street=excluded.street;
     INSERT INTO tmp_addr_node
      SELECT node_id,'','','',value AS housenumber
      FROM node_tags WHERE key='addr:housenumber'
-     ON CONFLICT(node_id) DO UPDATE SET housenumber=excluded.housenumber
-    ''')
-    #
-    # 4. Create temporary overall table with all addresses
-    #
-    db.execute('''
+     ON CONFLICT(node_id) DO UPDATE SET housenumber=excluded.housenumber;
+    /*
+    ** 4. Create temporary overall table with all addresses
+    */
     CREATE TEMP TABLE tmp_addr (
      addr_id     INTEGER PRIMARY KEY,
      way_id      INTEGER,
@@ -304,9 +274,7 @@ def add_addr():
      housenumber TEXT,
      lon         REAL,
      lat         REAL
-    )
-    ''')
-    db.execute('''
+    );
     INSERT INTO tmp_addr (way_id,node_id,postcode,city,street,housenumber,lon,lat)
      SELECT w.way_id,-1 AS node_id,w.postcode,w.city,w.street,w.housenumber,c.lon,c.lat
      FROM tmp_addr_way AS w
@@ -315,33 +283,29 @@ def add_addr():
      SELECT -1 AS way_id,n.node_id,n.postcode,n.city,n.street,n.housenumber,c.lon,c.lat
      FROM tmp_addr_node AS n
      LEFT JOIN nodes AS c ON n.node_id=c.node_id
-    ORDER BY postcode,city,street,housenumber
-    ''')
-    #
-    # 5. Fill tables 'addr_street' and 'addr_housenumber'
-    #
-    db.execute('''
+    ORDER BY postcode,city,street,housenumber;
+    /*
+    ** 5. Fill tables 'addr_street' and 'addr_housenumber'
+    */
     INSERT INTO addr_street (postcode,city,street,min_lon,min_lat,max_lon,max_lat)
      SELECT postcode,city,street,min(lon),min(lat),max(lon),max(lat)
      FROM tmp_addr
-     GROUP BY postcode,city,street
-    ''')
-    db.execute('CREATE INDEX addr_street__postcode_city_street ON addr_street (postcode,city,street)')
-    db.execute('''
+     GROUP BY postcode,city,street;
+    CREATE INDEX addr_street__postcode_city_street ON addr_street (postcode,city,street);
     INSERT INTO addr_housenumber (street_id,housenumber,lon,lat,way_id,node_id)
      SELECT s.street_id,a.housenumber,a.lon,a.lat,a.way_id,a.node_id
      FROM tmp_addr AS a
-     LEFT JOIN addr_street AS s ON a.postcode=s.postcode AND a.city=s.city AND a.street=s.street
+     LEFT JOIN addr_street AS s ON a.postcode=s.postcode AND a.city=s.city AND a.street=s.street;
+    CREATE INDEX addr_housenumber__street_id ON addr_housenumber (street_id);
+    /*
+    ** 6. Delete temporary tables
+    */
+    DROP TABLE tmp_addr_way;
+    DROP TABLE tmp_addr_way_coordinates;
+    DROP TABLE tmp_addr_node;
+    DROP TABLE tmp_addr;
+    COMMIT TRANSACTION;
     ''')
-    db.execute('CREATE INDEX addr_housenumber__street_id ON addr_housenumber (street_id)')
-    #
-    # 6. Delete temporary tables
-    #
-    db.execute('DROP TABLE tmp_addr_way')
-    db.execute('DROP TABLE tmp_addr_way_coordinates')
-    db.execute('DROP TABLE tmp_addr_node')
-    db.execute('DROP TABLE tmp_addr')
-    db.execute('COMMIT TRANSACTION')
 
 
 def distance(lon1, lat1, lon2, lat2):
@@ -371,7 +335,7 @@ def add_graph():
      end_node_id   INTEGER,              -- edge end node ID
      dist          INTEGER,              -- distance in meters
      way_id        INTEGER,              -- way ID
-     permit        INTEGER               -- bitfield access
+     permit        INTEGER               -- bit field access
     )
     ''')
     # Create a table with all nodes that are crossing points

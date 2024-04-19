@@ -1,152 +1,141 @@
 #!/usr/bin/env python
 """
-Klassifizierung:
-
-car
-bike_road
-bike_gravel
-foot
-
-car_oneway
-bike_oneway
-
-------------------------------------------------------------
-Wichtige Keys für die Klassifizierung:
-
-highway
-bicycle
-surface
-tracktype
-cycleway:left
-cycleway:right
-sidewalk
-oneway
+Classification of edges
 
 Hildastraße way 27648305:
 oneway            yes
 oneway:bicycle    no
-
 """
 import sys
 import sqlite3
 
-DEBUG = False
+
+def set_bit(value, bit):
+    """Set bit in integer"""
+    return value | (1 << bit)
 
 
-def graph_permit(db):
+def clear_bit(value, bit):
+    """Clear bit in integer"""
+    return value & ~(1 << bit)
+
+
+def fill_graph_permit(cur):
     """Fill the field 'permit' in table 'graph'"""
-    db.execute('SELECT DISTINCT way_id FROM graph')
-    for (way_id,) in db.fetchall():
-        if DEBUG:
-            print(70 * '*')
-            print(way_id)
-        # Flags zur Klassifizierung
-        # https://stackoverflow.com/questions/12173774/how-to-modify-bits-in-an-integer
-        # https://stackoverflow.com/questions/40568759/sqlite-query-integer-field-based-on-a-bit
-        car_oneway = False      # 2^5  32
-        bike_oneway = False     # 2^4  16
-        car = False             # 2^3   8
-        bike_road = False       # 2^2   4
-        bike_gravel = False     # 2^1   2
-        foot = False            # 2^0   1
+    tags_car = {
+      'highway=motorway',
+      'highway=motorway_link',
+      'highway=trunk',
+      'highway=trunk_link'
+    }
+    tags_car_bike = {
+      'highway=primary',
+      'highway=primary_link',
+      'highway=secondary',
+      'highway=secondary_link',
+      'highway=tertiary',
+      'highway=tertiary_link',
+      'highway=unclassified',
+      'highway=residential'
+    }
+    tags_bike_foot = {
+      'highway=residential',
+      'highway=living_street',
+      'highway=service',
+      'highway=cycleway',
+      'highway=track',
+      'highway=unclassified',
+      'bicycle=yes',
+      'bicycle=designated'
+    }
+    tags_foot = {
+      'highway=pedestrian',
+      'highway=track',
+      'highway=footway',
+      'highway=steps',
+      'highway=path',
+      'highway=construction',
+      'foot=yes',
+      'foot=designated',
+      'sidewalk=both',
+      'sidewalk:both=yes',
+      'sidewalk=right',
+      'sidewalk:right=yes',
+      'sidewalk=left',
+      'sidewalk:left=yes',
+      'sidewalk=yes'
+    }
+    cur.execute('SELECT DISTINCT way_id FROM graph')
+    for (way_id,) in cur.fetchall():
+        permit = 0b00000000
         #
-        tags = []
-        db.execute('SELECT key,value FROM way_tags WHERE way_id=?', (way_id,))
-        for (key, value) in db.fetchall():
-            tags.append(key + '=' + value)
-            if DEBUG:
-                print('  ', key, value)
-        # print(tags)
+        tags = set()
+        cur.execute('SELECT key,value FROM way_tags WHERE way_id=?', (way_id,))
+        for (key, value) in cur.fetchall():
+            tags.add(key + '=' + value)
         #
-        if 'highway=motorway' in tags or \
-           'highway=motorway_link' in tags or \
-           'highway=trunk' in tags or \
-           'highway=trunk_link' in tags:
-            car = True
-        if 'highway=primary' in tags or \
-           'highway=primary_link' in tags or \
-           'highway=secondary' in tags or \
-           'highway=secondary_link' in tags or \
-           'highway=tertiary' in tags or \
-           'highway=tertiary_link' in tags or \
-           'highway=unclassified' in tags or \
-           'highway=residential' in tags:
-            car = True
-            bike_road = True
-            bike_gravel = True
-        if 'highway=residential' in tags or \
-           'highway=living_street' in tags or \
-           'highway=service' in tags or \
-           'highway=cycleway' in tags or \
-           'highway=track' in tags or \
-           'highway=unclassified' in tags or \
-           'bicycle=yes' in tags:
-            bike_road = True
-            bike_gravel = True
-            foot = True
-        if 'highway=pedestrian' in tags or \
-           'highway=track' in tags or \
-           'highway=footway' in tags or \
-           'highway=steps' in tags or \
-           'highway=path' in tags or \
-           'sidewalk=both' in tags or \
-           'sidewalk:both=yes' in tags or \
-           'sidewalk=right' in tags or \
-           'sidewalk:right=yes' in tags or \
-           'sidewalk=left' in tags or \
-           'sidewalk:left=yes' in tags or \
-           'sidewalk=yes' in tags:
-            foot = True
+        # Bit 0: foot
+        # Bit 1: bike_gravel
+        # Bit 2: bike_road
+        # Bit 3: car
+        # Bit 4: bike_oneway
+        # Bit 5: car_oneway
         #
-        if 'surface=asphalt' not in tags:
-            bike_road = False
-        if 'sidewalk=separate' in tags:
-            foot = False
-        #
+        # 1. Set basic flags
+        if tags_car.intersection(tags):
+            permit = set_bit(permit, 3)
+        if tags_car_bike.intersection(tags):
+            permit = set_bit(permit, 3)
+            permit = set_bit(permit, 2)
+            permit = set_bit(permit, 1)
+        if tags_bike_foot.intersection(tags):
+            permit = set_bit(permit, 2)
+            permit = set_bit(permit, 1)
+            permit = set_bit(permit, 0)
+        if tags_foot.intersection(tags):
+            permit = set_bit(permit, 0)
+        # 2. Corrections
+        if 'surface=asphalt' not in tags and \
+           'surface=paving_stones' not in tags:
+            permit = clear_bit(permit, 2)
+        if 'sidewalk=separate' in tags or \
+           'foot=use_sidepath' in tags or \
+           'access=no' in tags:
+            permit = clear_bit(permit, 0)
+        if 'cycleway=separate' in tags or \
+           'cycleway:both=separate' in tags or \
+           'cycleway:right=separate' in tags or \
+           'cycleway:left=separate' in tags or \
+           'bicycle=use_sidepath' in tags or \
+           'access=no' in tags:
+            permit = clear_bit(permit, 2)
+            permit = clear_bit(permit, 1)
+        # 3. One way
         if 'oneway=yes' in tags:
-            car_oneway = True
-            bike_oneway = True
+            permit = set_bit(permit, 5)
+            permit = set_bit(permit, 4)
         if 'oneway:bicycle=no' in tags:
-            bike_oneway = False
+            permit = clear_bit(permit, 4)
         #
-        #
-        #
-        properties = 2**0 * foot + \
-                     2**1 * bike_gravel + \
-                     2**2 * bike_road + \
-                     2**3 * car + \
-                     2**4 * bike_oneway + \
-                     2**5 * car_oneway
-        """
-        Query the field 'permit':
-        foot        :    SELECT * FROM graph WHERE permit & 1 = 1;
-        bike_gravel :    SELECT * FROM graph WHERE permit & 2 = 2;
-        bike_road   :    SELECT * FROM graph WHERE permit & 4 = 4;
-        car         :    SELECT * FROM graph WHERE permit & 4 = 4;
-        """
-        #
-        if DEBUG:
-            print(f'{"car":3} | {"bike_road":9} | {"bike_gravel":11} | {"foot":4} | {"car_oneway":10} | {"bike_oneway":11}')
-            print(f'{car:3} | {bike_road:9} | {bike_gravel:11} | {foot:4} | {car_oneway:10} | {bike_oneway:11}')
-        #
-        db.execute('UPDATE graph SET permit=? WHERE way_id=?', (properties, way_id))
+        cur.execute('UPDATE graph SET permit=? WHERE way_id=?',
+                    (permit, way_id))
 
 
 def main():
     """entry point"""
     if len(sys.argv) != 2:
-        print('Erstellt eine Tabelle mit Eigenschaften der Kante für das Routing\n\n'
+        print('Fill field "permit" in table "graph".\n\n'
               'Usage:\n'
               f'{sys.argv[0]} DATABASE')
         sys.exit(1)
     # connect to the database
-    db_connect = sqlite3.connect(sys.argv[1])
-    db = db_connect.cursor()   # new database cursor
+    con = sqlite3.connect(sys.argv[1])
+    cur = con.cursor()   # new database cursor
     #
-    graph_permit(db)
+    fill_graph_permit(cur)
     # write data to database
-    db_connect.commit()
-    db_connect.close()
+    con.commit()
+    con.close()
 
 
 if __name__ == "__main__":
