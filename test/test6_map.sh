@@ -3,7 +3,7 @@
 # Test map.py
 #
 db=$HOME/osm/database/freiburg-regbez-latest.db
-result=$HOME/osm/results
+result=$HOME/osm/test
 
 sqlite3 $db < ../src_py/map_def.sql 
 
@@ -16,9 +16,6 @@ time ../src_py/map.py $db $lon $lat 19 900 600 $result/map_zoom19.svg
 
 # convert to png format with inkscape
 inkscape $result/map_zoom16.svg -o $result/map_zoom16.png
-
-# create HTML file with a map of the routing graph
-../tools/map_graph.py $db 7.81 47.97 7.83 47.98 $result/map_table_graph.html
 
 # Profiler
 python -m cProfile ../src_py/map.py $db $lon $lat 16 900 600 $result/map_profile.svg > $result/map_profile.txt
