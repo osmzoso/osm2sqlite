@@ -335,7 +335,7 @@ def add_graph():
      end_node_id   INTEGER,              -- edge end node ID
      dist          INTEGER,              -- distance in meters
      way_id        INTEGER,              -- way ID
-     permit        INTEGER               -- bit field access
+     permit        INTEGER DEFAULT 15    -- bit field access
     )
     ''')
     # Create a table with all nodes that are crossing points

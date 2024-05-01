@@ -1,16 +1,16 @@
 #!/usr/bin/env python
-#
-# Print map
-#
-# https://www.w3schools.com/graphics/svg_intro.asp
-# https://de.wikipedia.org/wiki/Scalable_Vector_Graphics
-#
+"""
+Draw simple map
+
+https://www.w3schools.com/graphics/svg_intro.asp
+https://de.wikipedia.org/wiki/Scalable_Vector_Graphics
+"""
 import sys
-import proj
 import sqlite3
+import proj
 
 
-def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, svgfile, show_unknown=True):
+def draw_map(cur, lon, lat, zoomlevel, bbox_x, bbox_y, svgfile, show_unknown=True):
     """
     Outputs a map in SVG format to stdout.
     A table 'map_def' is required.
@@ -24,7 +24,7 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, svgfile, show_unknown=True):
     bbox_min_lon, bbox_min_lat = proj.pixel_to_wgs84(bbox_min_x, bbox_min_y, pixel_world_map)
     bbox_max_lon, bbox_max_lat = proj.pixel_to_wgs84(bbox_max_x, bbox_max_y, pixel_world_map)
     #
-    db.execute('''CREATE TEMP TABLE map_draw_plan (
+    cur.execute('''CREATE TEMP TABLE map_draw_plan (
      draw_plan_id,
      ref,
      ref_id,
@@ -37,7 +37,7 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, svgfile, show_unknown=True):
      stroke,
      dash
      )''')
-    db.execute('CREATE TEMP TABLE map_ways_unknown (way_id)')
+    cur.execute('CREATE TEMP TABLE map_ways_unknown (way_id)')
     #
     f.write(f'<svg height="{bbox_y}" width="{bbox_x}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">')
     # TODO eventuell text-anchor="middle" ?
@@ -75,13 +75,13 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, svgfile, show_unknown=True):
     f.write('<rect width="100%" height="100%" fill="#f2efe9" />\n')
     #
     draw_plan_id = 0
-    db.execute('''
+    cur.execute('''
     SELECT way_id
     FROM rtree_way
     WHERE max_lon>=? AND min_lon<=?
      AND  max_lat>=? AND min_lat<=?
     ''', (bbox_min_lon, bbox_max_lon, bbox_min_lat, bbox_max_lat))
-    for (way_id,) in db.fetchall():
+    for (way_id,) in cur.fetchall():
         draw_plan_id += 1
         insert_draw_plan = False
         #
@@ -90,16 +90,16 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, svgfile, show_unknown=True):
         addr_housenumber = ''
         bridge = False
         # check whether definitions exist for this key value zoomlevel
-        db.execute('''
+        cur.execute('''
         SELECT wt.key,wt.value,
          md.layer,md.style,md.width,md.fill,md.stroke,md.dash
         FROM way_tags AS wt
         LEFT JOIN map_def AS md ON wt.key=md.key AND wt.value LIKE md.value AND md.zoomlevel=?
         WHERE wt.way_id=?
         ''', (zoomlevel, way_id))
-        for (key, value, layer, style, width, fill, stroke, dash) in db.fetchall():
+        for (key, value, layer, style, width, fill, stroke, dash) in cur.fetchall():
             if layer is not None:
-                db.execute('INSERT INTO map_draw_plan VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                cur.execute('INSERT INTO map_draw_plan VALUES (?,?,?,?,?,?,?,?,?,?,?)',
                            (draw_plan_id, 'way', way_id, key, value, layer, style, width, fill, stroke, dash))
                 insert_draw_plan = True
             # Modifieres ggf. merken
@@ -117,51 +117,51 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, svgfile, show_unknown=True):
         # Daten modifizieren
         if insert_draw_plan:
             if bridge and zoomlevel >= 16:
-                db.execute('UPDATE map_draw_plan SET layer=layer+4 WHERE draw_plan_id=?', (draw_plan_id,))
+                cur.execute('UPDATE map_draw_plan SET layer=layer+4 WHERE draw_plan_id=?', (draw_plan_id,))
             if not highway:
-                db.execute("DELETE FROM map_draw_plan WHERE draw_plan_id=? AND style='text'", (draw_plan_id,))
+                cur.execute("DELETE FROM map_draw_plan WHERE draw_plan_id=? AND style='text'", (draw_plan_id,))
         else:
-            db.execute('INSERT INTO map_ways_unknown VALUES (?)', (way_id,))
+            cur.execute('INSERT INTO map_ways_unknown VALUES (?)', (way_id,))
     #
     # Alle noch unbekannten ways untersuchen ob sie Teil einer Relation sind
     #
-    db.execute('''
+    cur.execute('''
     SELECT wu.way_id,rm.relation_id
     FROM map_ways_unknown AS wu
     LEFT JOIN relation_members AS rm ON wu.way_id=rm.ref_id AND rm.ref='way'
     ''')
-    for (way_id, relation_id) in db.fetchall():
+    for (way_id, relation_id) in cur.fetchall():
         draw_plan_id += 1
         if relation_id is not None:
-            db.execute('''
+            cur.execute('''
             SELECT rt.relation_id,rt.key,rt.value,
              md.layer,md.style,md.width,md.fill,md.stroke,md.dash
             FROM relation_tags AS rt
             LEFT JOIN map_def AS md ON rt.key=md.key AND rt.value LIKE md.value AND md.zoomlevel=?
             WHERE rt.relation_id=?
             ''', (zoomlevel, relation_id))
-            for (relation_id, key, value, layer, style, width, fill, stroke, dash) in db.fetchall():
+            for (relation_id, key, value, layer, style, width, fill, stroke, dash) in cur.fetchall():
                 if layer is not None:
-                    db.execute('INSERT INTO map_draw_plan VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                    cur.execute('INSERT INTO map_draw_plan VALUES (?,?,?,?,?,?,?,?,?,?,?)',
                                (draw_plan_id, 'relation', relation_id, key, value, layer, style, width, fill, stroke, dash))
-                    db.execute('DELETE FROM map_ways_unknown WHERE way_id=?', (way_id,))
+                    cur.execute('DELETE FROM map_ways_unknown WHERE way_id=?', (way_id,))
     #
     # Unbekannte Wege ggf. als rote Linien anzeigen
     #
     if show_unknown:
-        db.execute('SELECT way_id FROM map_ways_unknown')
-        for (way_id,) in db.fetchall():
-            db.execute("INSERT INTO map_draw_plan VALUES (1,'way',?,'xxx','xxx',99,'line',2,'None','#ff0000','')", (way_id,))
+        cur.execute('SELECT way_id FROM map_ways_unknown')
+        for (way_id,) in cur.fetchall():
+            cur.execute("INSERT INTO map_draw_plan VALUES (1,'way',?,'xxx','xxx',99,'line',2,'None','#ff0000','')", (way_id,))
     #
     # Draw Plan abarbeiten
     #
-    db.execute('''
+    cur.execute('''
     -- wichtig: '&' durch '&amp;' ersetzen
     SELECT ref,ref_id,key,replace(value,'&','&amp;'),layer,style,width,fill,stroke,dash
     FROM map_draw_plan
     ORDER BY layer
     ''')
-    for (ref, ref_id, key, value, layer, style, width, fill, stroke, dash) in db.fetchall():
+    for (ref, ref_id, key, value, layer, style, width, fill, stroke, dash) in cur.fetchall():
         # f.write('<!-- DRAW_PLAN :',ref,ref_id,key,value,layer,style,width,fill,stroke,dash,'-->')
         path_id = ref + str(ref_id)
         #
@@ -173,7 +173,7 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, svgfile, show_unknown=True):
         #
         svg_path = []
         if ref == 'way':
-            db.execute('''
+            cur.execute('''
             SELECT n.lon,n.lat
             FROM way_nodes AS wn
             LEFT JOIN nodes AS n ON wn.node_id=n.node_id
@@ -181,7 +181,7 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, svgfile, show_unknown=True):
             ORDER BY wn.node_order
             ''', (ref_id,))
         elif ref == 'relation':
-            db.execute('''
+            cur.execute('''
             SELECT
              DISTINCT
              --rm.relation_id,rm.ref,rm.ref_id,rm.role,rm.member_order,
@@ -196,7 +196,7 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, svgfile, show_unknown=True):
         else:
             print('Error draw plan - abort')
             sys.exit(1)
-        for (lon, lat) in db.fetchall():
+        for (lon, lat) in cur.fetchall():
             x, y = proj.wgs84_to_pixel(lon, lat, pixel_world_map)
             x -= bbox_min_x
             y -= bbox_min_y
@@ -222,14 +222,15 @@ def draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, svgfile, show_unknown=True):
     f.close()
 
 
-if __name__ == "__main__":
+def main():
+    """entry point"""
     if len(sys.argv) == 1:
         print('Creates a simple map in SVG format.\n'
               'Usage:\n'
               f'{sys.argv[0]} DATABASE LON LAT ZOOMLEVEL SIZE_X SIZE_Y SVG_FILE [debug]')
         sys.exit(1)
-    db_connect = sqlite3.connect(sys.argv[1])  # database connection
-    db = db_connect.cursor()                   # new database cursor
+    con = sqlite3.connect(sys.argv[1])  # database connection
+    cur = con.cursor()                  # new database cursor
     lon = float(sys.argv[2])
     lat = float(sys.argv[3])
     zoomlevel = int(sys.argv[4])
@@ -240,4 +241,8 @@ if __name__ == "__main__":
     if len(sys.argv) == 9:
         if sys.argv[8] == 'debug':
             show_unknown = True
-    draw_map(lon, lat, zoomlevel, bbox_x, bbox_y, svgfile, show_unknown)
+    draw_map(cur, lon, lat, zoomlevel, bbox_x, bbox_y, svgfile, show_unknown)
+
+
+if __name__ == "__main__":
+    main()
