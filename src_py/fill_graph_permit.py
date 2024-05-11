@@ -96,6 +96,7 @@ def fill_graph_permit(cur):
             permit = set_bit(permit, 0)
         # 2. Corrections
         if 'surface=asphalt' not in tags and \
+           'surface=sett' not in tags and \
            'surface=paving_stones' not in tags:
             permit = clear_bit(permit, 2)
         if 'sidewalk=separate' in tags or \

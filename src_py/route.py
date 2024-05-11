@@ -111,22 +111,29 @@ class Graph:
         return node_sequence, edge_sequence
 
 
-def create_subgraph_tables(cur, lon1, lat1, lon2, lat2):
-    """Creates temp. tables that contain a subgraph
-    described by a boundingbox.
+def create_subgraph_tables(cur, lon1, lat1, lon2, lat2, permit):
+    """
+    Creates subgraph for a given boundingbox.
+    The result is stored in the temp. table 'subgraph'.
     """
     cur.execute('DROP TABLE IF EXISTS subgraph')
     cur.execute('''
     CREATE TEMP TABLE subgraph AS
-    SELECT edge_id,start_node_id,end_node_id,dist,way_id
+    SELECT edge_id,start_node_id,end_node_id,dist,way_id,
+           CASE
+             WHEN (?=2 AND permit&16=16) OR
+                  (?=4 AND permit&16=16) OR
+                  (?=8 AND permit&32=32) THEN 1
+             ELSE 0
+           END AS directed
     FROM graph
-    WHERE way_id IN (
-     SELECT way_id
-     FROM rtree_way
-     WHERE max_lon>=? AND min_lon<=?
-      AND  max_lat>=? AND min_lat<=?
-    )
-    ''', (lon1, lon2, lat1, lat2))
+    WHERE permit & ? != 0 AND
+          way_id IN (
+                     SELECT way_id FROM rtree_way
+                     WHERE max_lon>=? AND min_lon<=?
+                       AND max_lat>=? AND min_lat<=?
+                    )
+    ''', (permit, permit, permit, permit, lon1, lon2, lat1, lat2))
     cur.execute('DROP TABLE IF EXISTS subgraph_nodes')
     cur.execute('''
     CREATE TEMP TABLE subgraph_nodes (
@@ -153,7 +160,9 @@ def create_subgraph_tables(cur, lon1, lat1, lon2, lat2):
 
 
 def boundingbox_subgraph(lon1, lat1, lon2, lat2, enlarge=1.2):
-    """Calculate a boundingbox for the subgraph that is big enough to get a shortest way.
+    """
+    Calculate a boundingbox for the subgraph that is big enough
+    to get a shortest way.
     In addition, a factor for enlargement must be specified.
     """
     if lon2 < lon1:
@@ -199,7 +208,7 @@ def part_way_coordinates(cur, way_id, node_start, node_end):
     return coordinates
 
 
-def shortest_way(cur, lon_start, lat_start, lon_dest, lat_dest, csvfile):
+def shortest_way(cur, lon_start, lat_start, lon_dest, lat_dest, permit, csvfile):
     "Calculate shortest way"
     f = open(csvfile, 'w', encoding="utf-8")
     #
@@ -210,18 +219,18 @@ def shortest_way(cur, lon_start, lat_start, lon_dest, lat_dest, csvfile):
     #
     lon1, lat1, lon2, lat2 = boundingbox_subgraph(lon_start, lat_start, lon_dest, lat_dest, 1.3)
     f.write(f'# subgraph_boundingbox: {lon1} {lat1} {lon2} {lat2}\n')
-    number_of_nodes = create_subgraph_tables(cur, lon1, lat1, lon2, lat2)
+    number_of_nodes = create_subgraph_tables(cur, lon1, lat1, lon2, lat2, permit)
     #
     graph = Graph(number_of_nodes)
     #
     cur.execute('''
-    SELECT s.edge_id,sns.no,sne.no,s.dist,s.way_id
+    SELECT s.edge_id,sns.no,sne.no,s.dist,s.directed 
     FROM subgraph AS s
     LEFT JOIN subgraph_nodes AS sns ON s.start_node_id=sns.node_id
     LEFT JOIN subgraph_nodes AS sne ON s.end_node_id=sne.node_id
     ''')
-    for (edge_id, node_start, node_end, dist, way_id) in cur.fetchall():
-        graph.add_edge(node_start, node_end, edge_id, dist)
+    for (edge_id, node_start, node_end, dist, directed) in cur.fetchall():
+        graph.add_edge(node_start, node_end, edge_id, dist, directed)
     f.write(f'# subgraph_number_of_nodes: {graph.number_of_nodes}\n')
     f.write(f'# subgraph_number_of_edges: {graph.number_of_edges}\n')
     #
@@ -278,12 +287,10 @@ def shortest_way(cur, lon_start, lat_start, lon_dest, lat_dest, csvfile):
 
 def main():
     """entry point"""
-    if len(sys.argv) != 7:
-        print(f'''
-        Calculate shortest way.
-        Usage:
-        {sys.argv[0]} DATABASE LON_START LAT_START LON_DEST LAT_DEST CSVFILE
-        ''')
+    if len(sys.argv) != 8:
+        print('Calculate shortest way.\n\n'
+              'Usage:\n'
+              f'{sys.argv[0]} DATABASE LON_START LAT_START LON_DEST LAT_DEST PERMIT CSVFILE')
         sys.exit(1)
     con = sqlite3.connect(sys.argv[1])  # database connection
     cur = con.cursor()                  # new database cursor
@@ -291,8 +298,9 @@ def main():
     lat_start = float(sys.argv[3])
     lon_dest = float(sys.argv[4])
     lat_dest = float(sys.argv[5])
-    csvfile = sys.argv[6]
-    shortest_way(cur, lon_start, lat_start, lon_dest, lat_dest, csvfile)
+    permit = int(sys.argv[6])
+    csvfile = sys.argv[7]
+    shortest_way(cur, lon_start, lat_start, lon_dest, lat_dest, permit, csvfile)
 
 
 if __name__ == "__main__":
