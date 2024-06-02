@@ -9,8 +9,8 @@ import xml.sax
 import sqlite3
 import math
 
-db_connect = None  # SQLite Database connection
-db = None          # SQLite Database cursor
+con = None  # SQLite Database connection
+cur = None  # SQLite Database cursor
 
 
 def show_help():
@@ -55,31 +55,31 @@ class OsmHandler(xml.sax.ContentHandler):
         if name == 'node':
             self.element_node_active = True
             self.node_id = attrs['id']
-            db.execute('INSERT INTO nodes (node_id,lon,lat) VALUES (?,?,?)',
+            cur.execute('INSERT INTO nodes (node_id,lon,lat) VALUES (?,?,?)',
                        (self.node_id, attrs['lon'], attrs['lat']))
         elif name == 'tag':
             if self.element_node_active:
-                db.execute('INSERT INTO node_tags (node_id,key,value) VALUES (?,?,?)',
+                cur.execute('INSERT INTO node_tags (node_id,key,value) VALUES (?,?,?)',
                            (self.node_id, attrs['k'], attrs['v']))
             elif self.element_way_active:
-                db.execute('INSERT INTO way_tags (way_id,key,value) VALUES (?,?,?)',
+                cur.execute('INSERT INTO way_tags (way_id,key,value) VALUES (?,?,?)',
                            (self.way_id, attrs['k'], attrs['v']))
             elif self.element_relation_active:
-                db.execute('INSERT INTO relation_tags (relation_id,key,value) VALUES (?,?,?)',
+                cur.execute('INSERT INTO relation_tags (relation_id,key,value) VALUES (?,?,?)',
                            (self.relation_id, attrs['k'], attrs['v']))
         elif name == 'way':
             self.element_way_active = True
             self.way_id = attrs['id']
         elif name == 'nd':
             self.way_node_order += 1
-            db.execute('INSERT INTO way_nodes (way_id,node_id,node_order) VALUES (?,?,?)',
+            cur.execute('INSERT INTO way_nodes (way_id,node_id,node_order) VALUES (?,?,?)',
                        (self.way_id, attrs['ref'], self.way_node_order))
         elif name == 'relation':
             self.element_relation_active = True
             self.relation_id = attrs['id']
         elif name == 'member':
             self.relation_member_order += 1
-            db.execute('INSERT INTO relation_members (relation_id,ref,ref_id,role,member_order) VALUES (?,?,?,?,?)',
+            cur.execute('INSERT INTO relation_members (relation_id,ref,ref_id,role,member_order) VALUES (?,?,?,?,?)',
                        (self.relation_id, attrs['type'], attrs['ref'], attrs['role'], self.relation_member_order))
 
     # call when an element ends
@@ -99,7 +99,7 @@ class OsmHandler(xml.sax.ContentHandler):
 
 def add_tables():
     """Create the tables in the database"""
-    db.executescript('''
+    cur.executescript('''
     CREATE TABLE nodes (
      node_id      INTEGER PRIMARY KEY,  -- node ID
      lon          REAL,                 -- longitude
@@ -137,7 +137,7 @@ def add_tables():
 
 def add_index():
     """Create the indexes in the database"""
-    db.executescript('''
+    cur.executescript('''
     CREATE INDEX node_tags__node_id            ON node_tags (node_id);
     CREATE INDEX node_tags__key                ON node_tags (key);
     CREATE INDEX way_tags__way_id              ON way_tags (way_id);
@@ -153,7 +153,7 @@ def add_index():
 
 def add_rtree():
     """Create the R*Tree indexes in the database"""
-    db.executescript('''
+    cur.executescript('''
     CREATE VIRTUAL TABLE rtree_way USING rtree(way_id, min_lat, max_lat, min_lon, max_lon);
     INSERT INTO rtree_way (way_id, min_lat, max_lat, min_lon, max_lon)
     SELECT way_nodes.way_id,min(nodes.lat),max(nodes.lat),min(nodes.lon),max(nodes.lon)
@@ -171,7 +171,7 @@ def add_rtree():
 
 def add_addr():
     """Create the address tables in the database"""
-    db.executescript('''
+    cur.executescript('''
     BEGIN TRANSACTION;
     /*
     ** Create address tables
@@ -327,8 +327,8 @@ def distance(lon1, lat1, lon2, lat2):
 
 def add_graph():
     """Create the graph table in the database"""
-    db.execute('BEGIN TRANSACTION')
-    db.execute('''
+    cur.execute('BEGIN TRANSACTION')
+    cur.execute('''
     CREATE TABLE graph (
      edge_id       INTEGER PRIMARY KEY,  -- edge ID
      start_node_id INTEGER,              -- edge start node ID
@@ -339,13 +339,13 @@ def add_graph():
     )
     ''')
     # Create a table with all nodes that are crossing points
-    db.execute('''
+    cur.execute('''
     CREATE TEMP TABLE highway_nodes_crossing
     (
      node_id INTEGER PRIMARY KEY
     )
     ''')
-    db.execute('''
+    cur.execute('''
     INSERT INTO highway_nodes_crossing
     SELECT node_id FROM
     (
@@ -364,7 +364,7 @@ def add_graph():
     edge_active = False
     start_node_id = -1
     dist = 0
-    db.execute('''
+    cur.execute('''
     SELECT
      wn.way_id,wn.node_id,
      ifnull(hnc.node_id,-1) AS node_id_crossing,
@@ -376,10 +376,10 @@ def add_graph():
     WHERE wt.key='highway'
     ORDER BY wn.way_id,wn.node_order
     ''')
-    for (way_id, node_id, node_id_crossing, lon, lat) in db.fetchall():
+    for (way_id, node_id, node_id_crossing, lon, lat) in cur.fetchall():
         # If a new way is active but there are still remnants of the previous way, create a new edge.
         if way_id != prev_way_id and edge_active:
-            db.execute('INSERT INTO graph (start_node_id,end_node_id,dist,way_id) VALUES (?,?,?,?)',
+            cur.execute('INSERT INTO graph (start_node_id,end_node_id,dist,way_id) VALUES (?,?,?,?)',
                        (start_node_id, prev_node_id, round(dist), prev_way_id))
             edge_active = False
         dist = dist + distance(prev_lon, prev_lat, lon, lat)
@@ -390,7 +390,7 @@ def add_graph():
             dist = 0
         if node_id_crossing > -1 and way_id == prev_way_id:
             if start_node_id != -1:
-                db.execute('INSERT INTO graph (start_node_id,end_node_id,dist,way_id) VALUES (?,?,?,?)',
+                cur.execute('INSERT INTO graph (start_node_id,end_node_id,dist,way_id) VALUES (?,?,?,?)',
                            (start_node_id, node_id, round(dist), way_id))
                 edge_active = False
             start_node_id = node_id
@@ -400,15 +400,15 @@ def add_graph():
         prev_way_id = way_id
         prev_node_id = node_id
     if edge_active:
-        db.execute('INSERT INTO graph (start_node_id,end_node_id,dist,way_id) VALUES (?,?,?,?)',
+        cur.execute('INSERT INTO graph (start_node_id,end_node_id,dist,way_id) VALUES (?,?,?,?)',
                    (start_node_id, node_id, round(dist), way_id))
-    db.execute('CREATE INDEX graph__way_id ON graph (way_id)')
-    db.execute('COMMIT TRANSACTION')
+    cur.execute('CREATE INDEX graph__way_id ON graph (way_id)')
+    cur.execute('COMMIT TRANSACTION')
 
 
 def main():
     """entry point"""
-    global db_connect, db
+    global con, cur
     if len(sys.argv) < 3:
         show_help()
         sys.exit(1)
@@ -431,11 +431,11 @@ def main():
                 print("abort - option '"+sys.argv[i]+"' unknown")
                 sys.exit(1)
     # connect to the database
-    db_connect = sqlite3.connect(sys.argv[1])
-    db = db_connect.cursor()   # new database cursor
+    con = sqlite3.connect(sys.argv[1])
+    cur = con.cursor()   # new database cursor
     # tuning database
-    db.execute('PRAGMA journal_mode = OFF')
-    db.execute('PRAGMA page_size = 65536')
+    cur.execute('PRAGMA journal_mode = OFF')
+    cur.execute('PRAGMA page_size = 65536')
     # create all tables
     add_tables()
     # create an XMLReader
@@ -451,8 +451,8 @@ def main():
     else:
         parser.parse(sys.argv[2])
     # write data to database
-    db_connect.commit()
-    # create index
+    con.commit()
+    # add additional data
     if opt_index:
         add_index()
     if opt_rtree:
@@ -461,7 +461,7 @@ def main():
         add_addr()
     if opt_graph:
         add_graph()
-    db_connect.commit()
+    con.commit()
 
 
 if __name__ == "__main__":

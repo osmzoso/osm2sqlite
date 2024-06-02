@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 """
 Classification of edges
-
-Hildastraße way 27648305:
-oneway            yes
-oneway:bicycle    no
 """
 import sys
 import sqlite3
@@ -73,14 +69,6 @@ def fill_graph_permit(cur):
         cur.execute('SELECT key,value FROM way_tags WHERE way_id=?', (way_id,))
         for (key, value) in cur.fetchall():
             tags.add(key + '=' + value)
-        #
-        # Bit 0: foot
-        # Bit 1: bike_gravel
-        # Bit 2: bike_road
-        # Bit 3: car
-        # Bit 4: bike_oneway
-        # Bit 5: car_oneway
-        #
         # 1. Set basic flags
         if tags_car.intersection(tags):
             permit = set_bit(permit, 3)
@@ -125,7 +113,13 @@ def fill_graph_permit(cur):
 def main():
     """entry point"""
     if len(sys.argv) != 2:
-        print('Fill field "permit" in table "graph".\n\n'
+        print('Set the bits in the field "permit" in an existing table "graph".\n\n'
+              'Bit 0: foot\n'
+              'Bit 1: bike_gravel\n'
+              'Bit 2: bike_road\n'
+              'Bit 3: car\n'
+              'Bit 4: bike_oneway\n'
+              'Bit 5: car_oneway\n\n'
               'Usage:\n'
               f'{sys.argv[0]} DATABASE')
         sys.exit(1)
