@@ -46,9 +46,9 @@ sqlite3_stmt *stmt_insert_nodes, *stmt_insert_node_tags, *stmt_insert_way_nodes,
              *stmt_insert_way_tags, *stmt_insert_relation_members, *stmt_insert_relation_tags;
 
 /*
-** Abort if a database error has occurred
+** Shows last result code and then aborts the program
 */
-void abort_db_error(int rc) {
+void abort_db_error() {
   fprintf(stderr, "abort osm2sqlite - (%i) %s - %s\n", rc, sqlite3_errstr(rc), sqlite3_errmsg(db));
   sqlite3_close(db);
   exit(EXIT_FAILURE);
@@ -93,7 +93,7 @@ void start_element_callback(void *user_data, const xmlChar *name, const xmlChar 
     if( rc==SQLITE_DONE ) {
       sqlite3_reset(stmt_insert_nodes);
     } else {
-      abort_db_error(rc);
+      abort_db_error();
     }
   } else if( !xmlStrcmp(name, (const xmlChar *) "way") ) {
     element_active = WAY;
@@ -102,7 +102,7 @@ void start_element_callback(void *user_data, const xmlChar *name, const xmlChar 
     element_active = RELATION;
     member_order = 0;
   } else if( !xmlStrcmp(name, (const xmlChar *) "tag") ) {
-    if( element_active == NODE ) {
+    if( element_active==NODE ) {
       sqlite3_bind_int64(stmt_insert_node_tags, 1, attrib_id);
       sqlite3_bind_text (stmt_insert_node_tags, 2, attrib_k, -1, NULL);
       sqlite3_bind_text (stmt_insert_node_tags, 3, attrib_v, -1, NULL);
@@ -110,10 +110,10 @@ void start_element_callback(void *user_data, const xmlChar *name, const xmlChar 
       if( rc==SQLITE_DONE ) {
         sqlite3_reset(stmt_insert_node_tags);
       } else {
-        abort_db_error(rc);
+        abort_db_error();
       }
     }
-    if( element_active == WAY ) {
+    if( element_active==WAY ) {
       sqlite3_bind_int64(stmt_insert_way_tags, 1, attrib_id);
       sqlite3_bind_text (stmt_insert_way_tags, 2, attrib_k, -1, NULL);
       sqlite3_bind_text (stmt_insert_way_tags, 3, attrib_v, -1, NULL);
@@ -121,10 +121,10 @@ void start_element_callback(void *user_data, const xmlChar *name, const xmlChar 
       if( rc==SQLITE_DONE ) {
         sqlite3_reset(stmt_insert_way_tags);
       } else {
-        abort_db_error(rc);
+        abort_db_error();
       }
     }
-    if( element_active == RELATION ) {
+    if( element_active==RELATION ) {
       sqlite3_bind_int64(stmt_insert_relation_tags, 1, attrib_id);
       sqlite3_bind_text (stmt_insert_relation_tags, 2, attrib_k, -1, NULL);
       sqlite3_bind_text (stmt_insert_relation_tags, 3, attrib_v, -1, NULL);
@@ -132,11 +132,11 @@ void start_element_callback(void *user_data, const xmlChar *name, const xmlChar 
       if( rc==SQLITE_DONE ) {
         sqlite3_reset(stmt_insert_relation_tags);
       } else {
-        abort_db_error(rc);
+        abort_db_error();
       }
     }
   } else if( !xmlStrcmp(name, (const xmlChar *) "nd") ) {
-    if( element_active == WAY ) {
+    if( element_active==WAY ) {
       node_order++;
       sqlite3_bind_int64(stmt_insert_way_nodes, 1, attrib_id);
       sqlite3_bind_int64(stmt_insert_way_nodes, 2, attrib_ref);
@@ -145,11 +145,11 @@ void start_element_callback(void *user_data, const xmlChar *name, const xmlChar 
       if( rc==SQLITE_DONE ) {
         sqlite3_reset(stmt_insert_way_nodes);
       } else {
-        abort_db_error(rc);
+        abort_db_error();
       }
     }
   } else if( !xmlStrcmp(name, (const xmlChar *) "member") ) {
-    if( element_active == RELATION ) {
+    if( element_active==RELATION ) {
       member_order++;
       sqlite3_bind_int64(stmt_insert_relation_members, 1, attrib_id);
       sqlite3_bind_text (stmt_insert_relation_members, 2, attrib_type, -1, NULL);
@@ -160,7 +160,7 @@ void start_element_callback(void *user_data, const xmlChar *name, const xmlChar 
       if( rc==SQLITE_DONE ) {
         sqlite3_reset(stmt_insert_relation_members);
       } else {
-        abort_db_error(rc);
+        abort_db_error();
       }
     }
   }
@@ -210,7 +210,7 @@ void add_tables() {
          "  value        TEXT                  -- tag value\n"
          " );\n",
          NULL, NULL, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
 }
 
 void create_prep_stmt() {
@@ -218,32 +218,32 @@ void create_prep_stmt() {
          db,
          "INSERT INTO nodes (node_id,lat,lon) VALUES (?1,?2,?3)",
          -1, &stmt_insert_nodes, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
   rc = sqlite3_prepare_v2(
          db,
          "INSERT INTO node_tags (node_id,key,value) VALUES (?1,?2,?3)",
          -1, &stmt_insert_node_tags, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
   rc = sqlite3_prepare_v2(
          db,
          "INSERT INTO way_nodes (way_id,node_id,node_order) VALUES (?1,?2,?3)",
          -1, &stmt_insert_way_nodes, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
   rc = sqlite3_prepare_v2(
          db,
          "INSERT INTO way_tags (way_id,key,value) VALUES (?1,?2,?3)",
          -1, &stmt_insert_way_tags, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
   rc = sqlite3_prepare_v2(
          db,
          "INSERT INTO relation_members (relation_id,ref,ref_id,role,member_order) VALUES (?1,?2,?3,?4,?5)",
          -1, &stmt_insert_relation_members, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
   rc = sqlite3_prepare_v2(
          db,
          "INSERT INTO relation_tags (relation_id,key,value) VALUES (?1,?2,?3)",
          -1, &stmt_insert_relation_tags, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
 }
 
 void destroy_prep_stmt() {
@@ -269,7 +269,7 @@ void add_index() {
          " CREATE INDEX relation_tags__relation_id    ON relation_tags (relation_id);"
          " CREATE INDEX relation_tags__key            ON relation_tags (key);",
          NULL, NULL, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
 }
 
 void add_rtree() {
@@ -291,7 +291,7 @@ void add_rtree() {
          " LEFT JOIN node_tags ON nodes.node_id=node_tags.node_id"
          " WHERE node_tags.node_id IS NOT NULL;",
          NULL, NULL, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
 }
 
 void add_addr() {
@@ -431,7 +431,7 @@ void add_addr() {
     " DROP TABLE tmp_addr;"
     " COMMIT TRANSACTION;",
     NULL, NULL, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
 }
 
 /* Calculates great circle distance between two coordinates in degrees */
@@ -448,7 +448,7 @@ double distance(double lon1, double lat1, double lon2, double lat2) {
 }
 
 void add_graph() {
-  sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+  rc = sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
   rc = sqlite3_exec(
          db,
          " CREATE TABLE graph (\n"
@@ -460,7 +460,7 @@ void add_graph() {
          "  permit        INTEGER DEFAULT 15    -- bit field access\n"
          " )\n",
          NULL, NULL, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
   /* Create a table with all nodes that are crossing points */
   rc = sqlite3_exec(
          db,
@@ -469,7 +469,7 @@ void add_graph() {
          "  node_id INTEGER PRIMARY KEY"
          " )",
          NULL, NULL, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
   rc = sqlite3_exec(
          db,
          " INSERT INTO highway_nodes_crossing"
@@ -482,7 +482,7 @@ void add_graph() {
          " )"
          " GROUP BY node_id HAVING count(*)>1",
          NULL, NULL, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
   /* */
   double prev_lon = 0;
   double prev_lat = 0;
@@ -497,7 +497,7 @@ void add_graph() {
          db,
          "INSERT INTO graph (start_node_id,end_node_id,dist,way_id) VALUES (?1,?2,?3,?4)",
          -1, &stmt_insert_graph, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
 
   sqlite3_stmt *stmt = NULL;
   rc = sqlite3_prepare_v2(
@@ -513,7 +513,7 @@ void add_graph() {
          " WHERE wt.key='highway'"
          " ORDER BY wn.way_id,wn.node_order",
          -1, &stmt, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
 
   int64_t way_id;
   int64_t node_id;
@@ -537,7 +537,7 @@ void add_graph() {
       if( rc==SQLITE_DONE ) {
         sqlite3_reset(stmt_insert_graph);
       } else {
-        abort_db_error(rc);
+        abort_db_error();
       }
       edge_active = 0;
     }
@@ -558,7 +558,7 @@ void add_graph() {
         if( rc==SQLITE_DONE ) {
           sqlite3_reset(stmt_insert_graph);
         } else {
-          abort_db_error(rc);
+          abort_db_error();
         }
         edge_active = 0;
       }
@@ -581,29 +581,29 @@ void add_graph() {
     if( rc==SQLITE_DONE ) {
       sqlite3_reset(stmt_insert_graph);
     } else {
-      abort_db_error(rc);
+      abort_db_error();
     }
   }
   rc = sqlite3_exec(db, "CREATE INDEX graph__way_id ON graph (way_id)", NULL, NULL, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
-  sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+  if( rc!=SQLITE_OK ) abort_db_error();
+  rc = sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+  if( rc!=SQLITE_OK ) abort_db_error();
 }
 
 /*
 ** Main
 */
 int main(int argc, char **argv) {
-  if( argc<3 ) {
-    show_help();
-    return EXIT_FAILURE;
-  }
-
-  /* check options */
   int opt_index = 1;
   int opt_rtree = 0;
   int opt_addr = 0;
   int opt_graph = 0;
   int i;
+
+  if( argc<3 ) {
+    show_help();
+    return EXIT_FAILURE;
+  }
   if( argc>3 ) {
     for(i=3; i < argc; i++) {
       if( strcmp("noindex", argv[i])==0 ) {
@@ -623,11 +623,11 @@ int main(int argc, char **argv) {
 
   /* Open database connection and create the tables */
   rc = sqlite3_open(argv[1], &db);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
   rc = sqlite3_exec(db, " PRAGMA journal_mode = OFF;"
                         " PRAGMA page_size = 65536;"
                         " BEGIN TRANSACTION;", NULL, NULL, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error(rc);
+  if( rc!=SQLITE_OK ) abort_db_error();
   add_tables();
   create_prep_stmt();
 
@@ -647,7 +647,8 @@ int main(int argc, char **argv) {
   /* Add additional data */
   if( opt_index ) add_index();
   if( opt_rtree ) add_rtree();
-  sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+  rc = sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+  if( rc!=SQLITE_OK ) abort_db_error();
   if( opt_addr ) add_addr();
   if( opt_graph ) add_graph();
 
