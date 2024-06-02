@@ -67,7 +67,7 @@ def show_relation(cur, relation_id):
 def main():
     "Check parameter"
     if len(sys.argv) != 4:
-        print('Show OSM data on stdout.\n'
+        print('Show OSM data on stdout.\n\n'
               'Usage:\n'
               f' {sys.argv[0]} DATABASE [node|way|relation] ID')
         sys.exit(1)

@@ -66,7 +66,8 @@ def check_addr_street_name(cur, postcode, html_filename):
 def main():
     """entry point"""
     if len(sys.argv) != 4:
-        print('Check if street names in addr:street have the same name in a neighbouring way.\n\n'
+        print('Check whether street names in addr:street have a way\n'
+              'with the same name in the neighborhood.\n\n'
               'Usage:\n'
               f'{sys.argv[0]} DATABASE POSTCODE HTML_FILENAME')
         sys.exit(1)

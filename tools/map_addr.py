@@ -63,8 +63,8 @@ def map_addr_html(cur, min_lon, min_lat, max_lon, max_lat, html_filename):
 def main():
     """entry point"""
     if len(sys.argv) != 7:
-        print('Creates a map of all addresses in a given area.\n'
-              'The addresses must be in table "addr_view".\n\n'
+        print('Creates an HTML file with a map of all addresses in a specific area.\n'
+              'The addresses must exist in the "addr_view" table.\n\n'
               'Usage:\n'
               f'{sys.argv[0]} DATABASE MIN_LON MIN_LAT MAX_LON MAX_LAT HTML_FILE')
         sys.exit(1)

@@ -65,3 +65,5 @@ m.add_rectangle(m.bbox['min_lon'], m.bbox['min_lat'], m.bbox['max_lon'], m.bbox[
 m.write_script_end()
 m.write_html_footer()
 del m
+
+print(f'Example file "{HTML_FILENAME}" created')

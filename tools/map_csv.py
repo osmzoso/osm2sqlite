@@ -53,7 +53,7 @@ def map_csv_html(csv_filename, html_filename):
 def main():
     """entry point"""
     if len(sys.argv) != 3:
-        print('Creates a map from a csv file containing waypoints (lon,lat)\n\n'
+        print('Creates an HTML file with a map from a CSV file containing waypoints (lon,lat).\n\n'
               'Usage:\n'
               f'{sys.argv[0]} CSV_FILE HTML_FILE')
         sys.exit(1)

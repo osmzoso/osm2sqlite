@@ -33,7 +33,7 @@ def gpx2csv(gpx_filename, csv_filename):
 def main():
     """entry point"""
     if len(sys.argv) != 3:
-        print('Converts a gpx file into a csv file.\n'
+        print('Converts a gpx file into a csv file.\n\n'
               'Usage:\n'
               f'{sys.argv[0]} GPX_FILE CSV_FILE')
         sys.exit(1)

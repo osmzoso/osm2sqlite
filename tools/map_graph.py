@@ -57,25 +57,32 @@ def html_map_table_graph(cur, min_lon, min_lat, max_lon, max_lat, permit, style,
     ''')
     m.write_script_start()
     cur.execute('''
-    SELECT way_id,start_node_id,end_node_id
+    SELECT way_id,start_node_id,end_node_id,
+           CASE
+             WHEN (?=2 AND permit&16=16) OR
+                  (?=4 AND permit&16=16) OR
+                  (?=8 AND permit&32=32) THEN 1
+             ELSE 0
+           END AS directed
     FROM graph
-    WHERE way_id IN (
-     SELECT way_id
-     FROM rtree_way
-     WHERE max_lon>=? AND min_lon<=?
-       AND max_lat>=? AND min_lat<=?
-    )
-    AND permit & ? != 0
-    ''', (min_lon, max_lon, min_lat, max_lat, permit))
-    for (way_id, start_node_id, end_node_id) in cur.fetchall():
+    WHERE permit & ? != 0 AND
+          way_id IN (
+                     SELECT way_id FROM rtree_way
+                     WHERE max_lon>=? AND min_lon<=?
+                       AND max_lat>=? AND min_lat<=?
+                    )
+    ''', (permit, permit, permit, permit, min_lon, max_lon, min_lat, max_lat))
+    for (way_id, start_node_id, end_node_id, directed) in cur.fetchall():
+        if directed:
+            m.set_property({'color': '#ff0000'})
+        else:
+            m.set_property({'color': '#0000ff'})
         if style == 'line':
             lon1, lat1 = node_point(cur, start_node_id)
             lon2, lat2 = node_point(cur, end_node_id)
-            m.set_property({'color': '#0000ff'})
             m.add_line(lon1, lat1, lon2, lat2)
         elif style == 'course':
             point_list = way_edge_points(cur, way_id, start_node_id, end_node_id)
-            m.set_property({'color': '#ff0000'})
             m.add_polyline(point_list)
     m.set_property(
       {'color': '#ff0000', 'opacity': 1.0, 'weight': 2, 'dasharray': '5 5',
@@ -89,7 +96,9 @@ def html_map_table_graph(cur, min_lon, min_lat, max_lon, max_lat, permit, style,
 def main():
     """entry point"""
     if len(sys.argv) != 9:
-        print('Creates a map with data from table "graph"\n\n'
+        print('Creates an HTML file with a map to display the data in the "graph" table.\n'
+              'PERMIT: 1 (foot), 2 (bike_gravel), 4 (bike_road) or 8 (car)\n'
+              'STYLE: "line" or "course"\n\n'
               'Usage:\n'
               f'{sys.argv[0]} DATABASE MIN_LON MIN_LAT MAX_LON MAX_LAT PERMIT STYLE HTML_FILE')
         sys.exit(1)

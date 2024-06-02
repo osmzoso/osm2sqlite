@@ -51,7 +51,7 @@ def map_gpx_html(gpx_filename, html_filename):
 def main():
     """entry point"""
     if len(sys.argv) < 3:
-        print('Creates a map with all paths from the specified GPX files.\n\n'
+        print('Creates an HTML file with a map of all paths from the specified GPX files.\n\n'
               'Usage:\n'
               f'{sys.argv[0]} GPX_FILES ... HTML_FILE')
         sys.exit(1)
