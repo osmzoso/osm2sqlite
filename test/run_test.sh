@@ -3,13 +3,13 @@ if [ $# = 0 ]
 then
     echo "error: no filename specified"
     echo "Usage:"
-    echo "$0 FILE_OSM_XML_BZ2 [nodelete]"
+    echo "$0 OSM_FILE [nodelete]"
     exit 1
 fi
-file_osm_xml_bz2=$1
+filename=$1
 
-./test1_read_data.sh $file_osm_xml_bz2
-./test2_compare_tables.py
+./test1_read_data.sh $filename
+./test2_compare_databases.py osm_c.db osm_py.db
 ./test3_table_graph.py osm_c.db
 sqlite3 < test4_diff_floating_point.sql
 

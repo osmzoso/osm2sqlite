@@ -24,7 +24,7 @@ EOF
 # create HTML file with a map of the routing graph
 min_lon=7.79
 min_lat=47.96
-max_lon=7.83
+max_lon=7.874
 max_lat=47.99
 ../tools/map_graph.py $db $min_lon $min_lat $max_lon $max_lat 255 line $result/tools_map_graph.html
 ../tools/map_graph.py $db $min_lon $min_lat $max_lon $max_lat 1 course $result/tools_map_graph_1_foot.html
