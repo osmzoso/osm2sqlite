@@ -258,12 +258,6 @@ def shortest_way(cur, lon_start, lat_start, lon_dest, lat_dest, permit, csvfile)
     # 4. Output the coordinates of the path
     #
     f.write(f'# distance : {distance} m\n')
-    # a) simple method, only start and end coordinates of the edge
-    # for graph_node in node_sequence:
-    #    cur.execute('SELECT node_id,lon,lat FROM subgraph_nodes WHERE no=?', (graph_node,))
-    #    (node_id, lon, lat) = cur.fetchone()
-    #    f.write(lon, lat)
-    # b) more sophisticated, all coordinates of the edge
     path_coordinates = []
     cur.execute('SELECT node_id,lon,lat FROM subgraph_nodes WHERE no=?', (node_sequence[0],))
     (first_node_id, lon, lat) = cur.fetchone()
@@ -288,9 +282,10 @@ def shortest_way(cur, lon_start, lat_start, lon_dest, lat_dest, permit, csvfile)
 def main():
     """entry point"""
     if len(sys.argv) != 8:
-        print('Calculate shortest way.\n\n'
+        print('Calculates shortest route.\n\n'
               'Usage:\n'
-              f'{sys.argv[0]} DATABASE LON_START LAT_START LON_DEST LAT_DEST PERMIT CSVFILE')
+              f'{sys.argv[0]} DATABASE LON_START LAT_START LON_DEST LAT_DEST PERMIT CSVFILE\n\n'
+              'PERMIT: 1 (foot), 2 (bike_gravel), 4 (bike_road) or 8 (car)')
         sys.exit(1)
     con = sqlite3.connect(sys.argv[1])  # database connection
     cur = con.cursor()                  # new database cursor
