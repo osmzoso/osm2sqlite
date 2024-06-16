@@ -352,21 +352,22 @@ converts the coordinate list in the CSV file into a GPX file.
 
 # 6. Tools
 
-## Convert CSV to GPX
+Directory **./tools** contains some tools.
 
-See scripts `convert_csv2gpx.py` and `convert_gpx2csv.py`.
-
-## Show data on a map with Leaflet
-
-Simple library "html_leaflet.py" for creating HTML files with
+`check_addr_street_name.py` checks if the addr:street name is identical with the street name.  
+`convert_csv2gpx.py` Convert CSV to GPX  
+`convert_gpx2csv.py` Convert GPX to CSV  
+`create_my_db.sh` Demo Workflow  
+`html_leaflet.py` Python modul for creating HTML files with
 [Leaflet.js 1.5.1](https://web.archive.org/web/20201202155513/https://leafletjs.com/reference-1.5.1.html).  
+`html_leaflet_demo.py` Shows the usage  
+`info.py` Show OSM data on stdout  
+`map_addr.py` Creates an HTML file with a map of all addresses in a specific area  
+`map_csv.py` Creates an HTML file with a map from a CSV file containing waypoints (lon,lat)  
+`map_gpx.py` Creates an HTML file with a map of all paths from the specified GPX files  
+`map_graph.py` Creates an HTML file with a map to display the data in the "graph" table  
 
-The script `html_leaflet_demo.py` shows the usage.
 
-## Check OSM data
-
-The script `./tools/check_addr_street_name.py` checks if the addr:street name is
-identical with the street name.
 # Appendix
 
 
