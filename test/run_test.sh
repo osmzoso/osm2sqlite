@@ -1,21 +1,16 @@
 #!/bin/bash
-if [ $# = 0 ]
-then
-    echo "error: no filename specified"
+if [ $# != 1 ]; then
+    echo "Test osm2sqlite - Read OSM file and compare the databases"
     echo "Usage:"
-    echo "$0 OSM_FILE [nodelete]"
+    echo "$0 OSM_FILE"
     exit 1
 fi
-filename=$1
+test_dir=$(dirname "$1")
+test_osm_file=$(basename "$1")
 
-./test1_read_data.sh $filename
-./test2_compare_databases.py osm_c.db osm_py.db
-./test3_table_graph.py osm_c.db
-sqlite3 < test4_diff_floating_point.sql
+echo "Test dir  : " $test_dir
+echo "Test file : " $test_osm_file
 
-# clean up
-if [ "$2" != "nodelete" ]; then
-    rm -f osm_c.db osm_py.db
-else
-    echo "Don't forget to delete the files 'osm_c.db' and 'osm_py.db'"
-fi
+./test1_read_data.sh $test_dir $test_osm_file
+./test2_compare_databases.py $test_dir/osm_c.db $test_dir/osm_py.db
+./test3_table_graph.py $test_dir/osm_c.db

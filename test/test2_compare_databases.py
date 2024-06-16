@@ -9,22 +9,30 @@ import sqlite3
 def compare_table(cur, table, columns):
     """Compares the specified columns of a table"""
     print(f'compare table "{table}" ', end='', flush=True)
-    diff1 = cur.execute(f'''
-    SELECT count(*) FROM
-    (
-      SELECT {columns} FROM db1.{table}
-      EXCEPT
-      SELECT {columns} FROM db2.{table}
-    )
-    ''').fetchone()[0]
-    diff2 = cur.execute(f'''
-    SELECT count(*) FROM
-    (
-      SELECT {columns} FROM db2.{table}
-      EXCEPT
-      SELECT {columns} FROM db1.{table}
-    )
-    ''').fetchone()[0]
+    try:
+        diff1 = cur.execute(f'''
+        SELECT count(*) FROM
+        (
+          SELECT {columns} FROM db1.{table}
+          EXCEPT
+          SELECT {columns} FROM db2.{table}
+        )
+        ''').fetchone()[0]
+    except:
+        print('\033[31m' + 'missing table?' + '\033[0m') 
+        return
+    try:
+        diff2 = cur.execute(f'''
+        SELECT count(*) FROM
+        (
+          SELECT {columns} FROM db2.{table}
+          EXCEPT
+          SELECT {columns} FROM db1.{table}
+        )
+        ''').fetchone()[0]
+    except:
+        print('\033[31m' + 'missing table?' + '\033[0m') 
+        return
     if diff1 == 0 and diff2 == 0:
         print('\033[32m' + 'OK' + '\033[0m')
     else:

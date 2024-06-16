@@ -2,10 +2,11 @@
 .print "Test4: Show floating point difference"
 .print "----------------------------------------------"
 .mode table
+.parameter set $dir './'
 .parameter set $limit 6
 
-ATTACH DATABASE './osm_c.db'  AS db_c;
-ATTACH DATABASE './osm_py.db' AS db_py;
+ATTACH DATABASE $dir||'osm_c.db'  AS db_c;
+ATTACH DATABASE $dir||'osm_py.db' AS db_py;
 
 --
 -- Diff lon
