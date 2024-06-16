@@ -19,9 +19,11 @@ The command `osm2sqlite output.db input.osm` reads the
 [OSM XML](https://wiki.openstreetmap.org/wiki/OSM_XML) file **input.osm** and
 creates in the database **output.db** the [tables and indexes](doc/2_tables.md).  
 
+The tables are described in the [documentation](doc/doc_osm2sqlite.md).
+
 OSM data can be obtained from a provider such as [Geofabrik](https://download.geofabrik.de).
 
-After reading in the data, additional data can be created with some [options](doc/3_options.md).
+After reading in the data, additional data can be created with some options.
 
 |[**Download the latest version**](https://github.com/osmzoso/osm2sqlite/releases/latest)|
 |----------------------------------------------------------------------------------------|
@@ -37,19 +39,6 @@ There are two programme versions:
 Time measurement for **saarland.osm (700 MB)**:  
 Python : 2 minutes 36 seconds  
 C      : 47 seconds  
-
----
-
-Directory [/doc](doc/) contains some documentation.  
-Directory [/queries](queries/) contains some perhaps useful queries.  
-Directory [/test](test/) contains testcases.  
-
-Directory [/doc](doc/osm2sqlite.html) contains the documentation.  
-
-[Documentation](https://html-preview.github.io/?url=https://github.com/bartaz/impress.js/blob/master/index.html#/bored)
-
-[Documentation](https://html-preview.github.io/?url=https://github.com/osmzoso/osm2sqlite/blob/master/doc/osm2sqlite.html)
-
 
 ---
 
