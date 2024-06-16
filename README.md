@@ -15,9 +15,12 @@ Options:
 When OSM_XML_FILE is -, read standard input.
 ```
 
-The command `osm2sqlite output.db input.osm` reads the
-[OSM XML](https://wiki.openstreetmap.org/wiki/OSM_XML) file **input.osm** and
-creates in the database **output.db** the tables.
+The command
+```
+osm2sqlite output.db input.osm
+```
+reads the [OSM XML](https://wiki.openstreetmap.org/wiki/OSM_XML) file **input.osm**
+and creates in the database **output.db** the tables.
 
 Some options can be used to create additional data.
 
@@ -42,8 +45,9 @@ C      : 47 seconds
 
 ---
 
-Compiling the C version on Linux for Windows, see file **cross_compile_windows.sh**.
-
----
-
-The bash script `example_db.sh` invokes the scripts to show the function.
+Compiling the C version on Linux:
+```
+make
+sudo make install
+```
+see also file **cross_compile_windows.sh**.
