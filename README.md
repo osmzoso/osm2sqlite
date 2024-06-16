@@ -48,7 +48,7 @@ Directory [/doc](doc/osm2sqlite.html) contains the documentation.
 
 [Documentation](https://html-preview.github.io/?url=https://github.com/bartaz/impress.js/blob/master/index.html#/bored)
 
-[Documentation](https://html-preview.github.io/?url=https://github.com/osmzoso/osm2sqlite/blob/master/osm2sqlite.html)
+[Documentation](https://html-preview.github.io/?url=https://github.com/osmzoso/osm2sqlite/blob/master/doc/osm2sqlite.html)
 
 
 ---
