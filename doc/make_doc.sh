@@ -11,13 +11,7 @@
 #
 pandoc \
  -V geometry:margin=0.6in \
- 1_osm2sqlite.md \
- 2_tables.md \
- 3_options.md \
- 4_mapdrawing.md \
- 5_routing.md \
- 6_tools.md \
- 9_appendix.md \
+ doc_osm2sqlite.md \
  --pdf-engine=xelatex \
  --toc \
  -o osm2sqlite.pdf
@@ -31,13 +25,7 @@ pandoc \
  --metadata title="osm2sqlite" \
  --toc \
  --css=custom.css \
- 1_osm2sqlite.md \
- 2_tables.md \
- 3_options.md \
- 4_mapdrawing.md \
- 5_routing.md \
- 6_tools.md \
- 9_appendix.md \
+ doc_osm2sqlite.md \
  -o osm2sqlite.html
 
 #
@@ -46,12 +34,6 @@ pandoc \
 rm osm2sqlite.1.gz
 pandoc \
  -s -f markdown -t man \
- 1_osm2sqlite.md \
- 2_tables.md \
- 3_options.md \
- 4_mapdrawing.md \
- 5_routing.md \
- 6_tools.md \
- 9_appendix.md \
+ doc_osm2sqlite.md \
  -o osm2sqlite.1
 gzip osm2sqlite.1
