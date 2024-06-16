@@ -44,6 +44,8 @@ Directory [/doc](doc/) contains some documentation.
 Directory [/queries](queries/) contains some perhaps useful queries.  
 Directory [/test](test/) contains testcases.  
 
+Directory [/doc](doc/osm2sqlite.html) contains the documentation.  
+
 ---
 
 Compiling the C version on Linux for Windows, see file **cross_compile_windows.sh**.
