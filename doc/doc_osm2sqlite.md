@@ -48,12 +48,6 @@ Convert myfile.osm.pbf to myfile.osm.bz2:
 
 The following tables and indexes are created in the database:
 
-eins|zwei|drei
-----|----|----
-aaa |bbb |ccd
-xxx |yyy |zzz
-
-
 #### Table "nodes"
 column       | type                | description
 -------------|---------------------|-------------------------------------
@@ -61,18 +55,9 @@ node_id      | INTEGER PRIMARY KEY | node ID
 lon          | REAL                | longitude
 lat          | REAL                | latitude
 
-
-
-```
+#### Table "node_tags"
 column       | type                | description
 -------------|---------------------|-------------------------------------
-
-Table "nodes":
-node_id      | INTEGER PRIMARY KEY | node ID
-lon          | REAL                | longitude
-lat          | REAL                | latitude
-
-Table "node_tags":
 node_id      | INTEGER             | node ID
 key          | TEXT                | tag key
 value        | TEXT                | tag value
@@ -80,6 +65,8 @@ value        | TEXT                | tag value
 - INDEX node_tags__key     ON node_tags (key)
 
 Table "way_nodes":
+column       | type                | description
+-------------|---------------------|-------------------------------------
 way_id       | INTEGER             | way ID
 node_id      | INTEGER             | node ID
 node_order   | INTEGER             | node order
@@ -87,6 +74,8 @@ node_order   | INTEGER             | node order
 - INDEX way_nodes__node_id ON way_nodes (node_id)
 
 Table "way_tags":
+column       | type                | description
+-------------|---------------------|-------------------------------------
 way_id       | INTEGER             | way ID
 key          | TEXT                | tag key
 value        | TEXT                | tag value
@@ -94,6 +83,8 @@ value        | TEXT                | tag value
 - INDEX way_tags__key      ON way_tags (key)
 
 Table "relation_members":
+column       | type                | description
+-------------|---------------------|-------------------------------------
 relation_id  | INTEGER             | relation ID
 ref          | TEXT                | reference ('node','way','relation')
 ref_id       | INTEGER             | node, way or relation ID
@@ -103,12 +94,13 @@ member_order | INTEGER             | member order
 - INDEX relation_members__ref_id      ON relation_members (ref_id)
 
 Table "relation_tags":
+column       | type                | description
+-------------|---------------------|-------------------------------------
 relation_id  | INTEGER             | relation ID
 key          | TEXT                | tag key
 value        | TEXT                | tag value
 - INDEX relation_tags__relation_id    ON relation_tags (relation_id)
 - INDEX relation_tags__key            ON relation_tags (key)
-```
 
 The database can be easily queried with the [SQLite CLI tool](https://www.sqlite.org/cli.html).
 
