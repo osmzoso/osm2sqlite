@@ -636,7 +636,7 @@ int main(int argc, char **argv) {
   sh.startElement = start_element_callback; /* register callback functions     */
   xmlParserCtxtPtr ctxt;                    /* create context                  */
   if( (ctxt = xmlCreateFileParserCtxt(argv[2]))==NULL ) {
-    fprintf(stderr, "SAX Error : creating context failed\n");
+    fprintf(stderr, "abort osm2sqlite - Error opening file %s\n", argv[2]);
     return EXIT_FAILURE;
   }
   xmlCtxtUseOptions(ctxt, XML_PARSE_NOENT); /* substitute entities, e.g. &amp; */
