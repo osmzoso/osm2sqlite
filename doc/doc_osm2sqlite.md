@@ -64,7 +64,7 @@ value        | TEXT                | tag value
 - INDEX node_tags__node_id ON node_tags (node_id)
 - INDEX node_tags__key     ON node_tags (key)
 
-Table "way_nodes":
+#### Table "way_nodes"
 column       | type                | description
 -------------|---------------------|-------------------------------------
 way_id       | INTEGER             | way ID
@@ -73,7 +73,7 @@ node_order   | INTEGER             | node order
 - INDEX way_nodes__way_id  ON way_nodes (way_id, node_order)
 - INDEX way_nodes__node_id ON way_nodes (node_id)
 
-Table "way_tags":
+#### Table "way_tags"
 column       | type                | description
 -------------|---------------------|-------------------------------------
 way_id       | INTEGER             | way ID
@@ -82,7 +82,7 @@ value        | TEXT                | tag value
 - INDEX way_tags__way_id   ON way_tags (way_id)
 - INDEX way_tags__key      ON way_tags (key)
 
-Table "relation_members":
+#### Table "relation_members"
 column       | type                | description
 -------------|---------------------|-------------------------------------
 relation_id  | INTEGER             | relation ID
@@ -93,7 +93,7 @@ member_order | INTEGER             | member order
 - INDEX relation_members__relation_id ON relation_members (relation_id, member_order)
 - INDEX relation_members__ref_id      ON relation_members (ref_id)
 
-Table "relation_tags":
+#### Table "relation_tags"
 column       | type                | description
 -------------|---------------------|-------------------------------------
 relation_id  | INTEGER             | relation ID
@@ -155,13 +155,11 @@ WHERE way_id=4872512;
 
 ## Option "addr"
 
-This option creates tables **addr_street** and **addr_housenumber** with addresses.  
+This option creates two tables with address data.  
 
-```
+#### Table "addr_street"
 column       | type                | description
 -------------|---------------------|-------------------------------------
-
-Table "addr_street":
 street_id    | INTEGER PRIMARY KEY | street ID
 postcode     | TEXT                | postcode
 city         | TEXT                | city
@@ -172,7 +170,9 @@ max_lon      | REAL                | boundingbox max. longitude
 max_lat      | REAL                | boundingbox max. latitude
 - INDEX addr_street_1 ON addr_street (postcode,city,street)
 
-Table "addr_housenumber":
+#### Table "addr_housenumber"
+column       | type                | description
+-------------|---------------------|-------------------------------------
 housenumber_id | INTEGER PRIMARY KEY | housenumber ID
 street_id      | INTEGER             | street ID
 housenumber    | TEXT                | housenumber
@@ -181,9 +181,8 @@ lat            | REAL                | latitude
 way_id         | INTEGER             | way ID
 node_id        | INTEGER             | node ID
 - INDEX addr_housenumber_1 ON addr_housenumber (street_id)
-```
 
-The view **addr_view** join the two tables.  
+The view **addr_view** join the two tables.
 
 
 ## Option "graph"
@@ -192,8 +191,7 @@ This option creates an additional table **graph** with the complete graph
 of all highways.  
 This data is required for routing purposes, for example.  
 
-```
-Table "graph":
+#### Table "graph"
 column          | type                | description
 ----------------|---------------------|-------------------------------------
 edge_id         | INTEGER PRIMARY KEY | edge ID
@@ -202,7 +200,6 @@ end_node_id     | INTEGER             | edge end node ID
 dist            | INTEGER             | distance in meters
 way_id          | INTEGER             | way ID
 permit          | INTEGER             | bit field access
-```
 
 Visualization of the table 'graph':  
 ![table_graph.jpg](table_graph.jpg)
