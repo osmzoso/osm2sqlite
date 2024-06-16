@@ -48,6 +48,21 @@ Convert myfile.osm.pbf to myfile.osm.bz2:
 
 The following tables and indexes are created in the database:
 
+eins|zwei|drei
+----|----|----
+aaa |bbb |ccd
+xxx |yyy |zzz
+
+
+#### Table "nodes"
+column       | type                | description
+-------------|---------------------|-------------------------------------
+node_id      | INTEGER PRIMARY KEY | node ID
+lon          | REAL                | longitude
+lat          | REAL                | latitude
+
+
+
 ```
 column       | type                | description
 -------------|---------------------|-------------------------------------
