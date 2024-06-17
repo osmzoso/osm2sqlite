@@ -14,8 +14,9 @@ blockquote {
 table, th, td {
  border: 1px solid;
  border-collapse: collapse;
-}
-td, th {
  padding-left: 5px;
  padding-right: 5px;
+}
+th {
+ background-color: #b1efff;
 }
