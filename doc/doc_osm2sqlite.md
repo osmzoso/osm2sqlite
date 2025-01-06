@@ -34,7 +34,7 @@ Example for reading an .osm.pbf file:
 <https://osmcode.org/osmium-tool/>
 
 Install osmium on Fedora Linux:  
-`sudo dnf install osmium-tool.x86_64`  
+`sudo dnf install osmium-tool`  
 
 [Compiled osmium.exe for Windows (without warranty)](https://github.com/pango3001/Osmium_1_14)
 
@@ -215,7 +215,7 @@ Bit 4 : 2^4 16  bike_oneway
 Bit 5 : 2^5 32  car_oneway  
 
 > This field is currently not yet filled, but there is a script that
-> fills this field, see **./src_py/fill_graph_permit.py**.
+> fills this field, see **./tools/fill_graph_permit.py**.
 
 Queries on how to determine a smaller subgraph from this table
 can be found in **./queries/graph_subgraph.sql**.
@@ -230,17 +230,17 @@ This option suppresses the creation of the indexes (not recommended).
 
 For map drawing R\*Tree indexes (see option **rtree**) and table **map_def** with
 map definitions (colors etc.) are required in the database.  
-(see **./src_py/map_def.sql**)  
+(see **./tools/draw_map_def.sql**)  
 
 Creation of the **map_def** table:  
-`sqlite3 ../freiburg.db < map_def.sql`  
+`sqlite3 ../freiburg.db < draw_map_def.sql`  
 
-## map.py
+## draw_map.py
 
 Example to generate a map with zoomlevel 16 and size 900 x 600px:  
-`./map.py ../freiburg.db 7.800 47.979 16 900 600 map_zoom16.svg`  
+`./draw_map.py ../freiburg.db 7.800 47.979 16 900 600 map_zoom16.svg`  
 
-Converting SVG to PNG with "inkscape":  
+Converting SVG to PNG with **inkscape**:  
 `inkscape map_zoom16.svg -o map_zoom16.png`
 
 ## Map projection
@@ -252,7 +252,6 @@ This format is also described under the name [EPSG:4326](https://epsg.io/4326).
 In order to draw a map, the coordinates of a spherical surface must
 be mapped onto a plane surface.  
 The [Mercator projection](https://en.wikipedia.org/wiki/Mercator_projection) is usually used for this.  
-(see **./src_py/proj.py**)  
 
 In principle, the Mercator projection cannot be used to display
 coordinates near the poles.  
@@ -282,26 +281,27 @@ The conversion of Web Mercator coordinates into pixel coordinates is relatively 
 Defined pixel sizes (zoomlevel) of a square world map:  
 ```
 zoomlevel   size_world_map_in_pixel     meter_per_pixel
-    0              256 x 256               156543.03      
-    1              512 x 512                78271.52      
-    2             1024 x 1024               39135.76      
-    3             2048 x 2048               19567.88      
-    4             4096 x 4096               9783.94       
-    5             8192 x 8192               4891.97       
-    6            16384 x 16384              2445.98       
-    7            32768 x 32768              1222.99       
-    8            65536 x 65536               611.50       
-    9           131072 x 131072              305.75       
-   10           262144 x 262144              152.87       
-   11           524288 x 524288              76.44        
-   12          1048576 x 1048576             38.22        
-   13          2097152 x 2097152             19.11        
-   14          4194304 x 4194304              9.55        
-   15          8388608 x 8388608              4.78        
-   16         16777216 x 16777216             2.39        
-   17         33554432 x 33554432             1.19        
-   18         67108864 x 67108864             0.60        
-   19        134217728 x 134217728            0.30        
+    0              256 x 256               156543.03
+    1              512 x 512                78271.52
+    2             1024 x 1024               39135.76
+    3             2048 x 2048               19567.88
+    4             4096 x 4096                9783.94
+    5             8192 x 8192                4891.97
+    6            16384 x 16384               2445.98
+    7            32768 x 32768               1222.99
+    8            65536 x 65536                611.50
+    9           131072 x 131072               305.75
+   10           262144 x 262144               152.87
+   11           524288 x 524288                76.44
+   12          1048576 x 1048576               38.22
+   13          2097152 x 2097152               19.11
+   14          4194304 x 4194304                9.55
+   15          8388608 x 8388608                4.78
+   16         16777216 x 16777216               2.39
+   17         33554432 x 33554432               1.19
+   18         67108864 x 67108864               0.60
+   19        134217728 x 134217728              0.30
+   20        268435456 x 268435456              0.15
 ```
 
 ## Drawing the map
@@ -332,22 +332,22 @@ are required for the calculation of shortest paths.
 Calculates shortest route.
 
 Usage:
-./src_py/route.py DATABASE LON_START LAT_START LON_DEST LAT_DEST PERMIT CSVFILE
+./tools/route.py DATABASE LON_START LAT_START LON_DEST LAT_DEST PERMIT CSVFILE
 
 PERMIT: 1 (foot), 2 (bike_gravel), 4 (bike_road) or 8 (car)
 ```
 
-As an example, the  
+As an example, the command  
 `./route.py freiburg.db 7.853 47.995 7.862 47.995 1 route.csv`  
-command calculates the shortest route for pedestrians and saves a list of
+calculates the shortest route for pedestrians and saves a list of
 the route coordinates in the *route.csv* file.
 
-Command  
-`./tools/map_csv.py route.csv route.html`  
+The command  
+`./tools/html_leaflet_csv.py route.csv route.html`  
 creates an HTML file with an interactive map of the route.  
 ![routing_path.jpg](routing_path.jpg)  
 
-Command  
+The command  
 `./tools/convert_csv2gpx.py route.csv route.gpx`  
 converts the coordinate list in the CSV file into a GPX file.
 
@@ -356,18 +356,22 @@ converts the coordinate list in the CSV file into a GPX file.
 
 Directory **./tools** contains some tools.
 
+`0_create_my_db.sh` Demo Workflow  
 `check_addr_street_name.py` checks if the addr:street name is identical with the street name.  
 `convert_csv2gpx.py` Convert CSV to GPX  
 `convert_gpx2csv.py` Convert GPX to CSV  
-`create_my_db.sh` Demo Workflow  
+`draw_map.py` Draw a simple map  
+`draw_map_zoomlevel.py` Show map size for each zoomlevel  
+`fill_graph_permit.py` Fill field 'permit' in table 'graph'   
+`html_leaflet_addr.py` Creates an HTML file with a map of all addresses in a specific area  
+`html_leaflet_csv.py` Creates an HTML file with a map from a CSV file containing waypoints (lon,lat)  
+`html_leaflet_demo.py` Shows the usage of html_leaflet.py  
+`html_leaflet_gpx.py` Creates an HTML file with a map of all paths from the specified GPX files  
+`html_leaflet_graph.py` Creates an HTML file with a map to display the data in the "graph" table  
 `html_leaflet.py` Python modul for creating HTML files with
 [Leaflet.js 1.5.1](https://web.archive.org/web/20201202155513/https://leafletjs.com/reference-1.5.1.html).  
-`html_leaflet_demo.py` Shows the usage  
 `info.py` Show OSM data on stdout  
-`map_addr.py` Creates an HTML file with a map of all addresses in a specific area  
-`map_csv.py` Creates an HTML file with a map from a CSV file containing waypoints (lon,lat)  
-`map_gpx.py` Creates an HTML file with a map of all paths from the specified GPX files  
-`map_graph.py` Creates an HTML file with a map to display the data in the "graph" table  
+`route.py` Find shortest way  
 
 
 # Appendix
