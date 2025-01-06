@@ -28,26 +28,14 @@ The tables are described in the [documentation](doc/doc_osm2sqlite.md).
 
 OSM data can be obtained from a provider such as [Geofabrik](https://download.geofabrik.de).
 
-|[**Download the latest version**](https://github.com/osmzoso/osm2sqlite/releases/latest)|
-|----------------------------------------------------------------------------------------|
-
----
-
-## Miscellaneous
-
 There are two programme versions:  
-- a version in Python as a prototype (./test/osm2sqlite.py)  
-- a version in C (./src)  
+- a Python version in a single file as a prototype (./test/osm2sqlite.py)  
+- a version in C (./src), see [compilation notes](doc/compile-osm2sqlite.md)  
 
 Time measurement for **saarland.osm (700 MB)**:  
 Python : 2 minutes 36 seconds  
 C      : 47 seconds  
 
----
+|[**Download the latest version**](https://github.com/osmzoso/osm2sqlite/releases/latest)|
+|----------------------------------------------------------------------------------------|
 
-Compiling the C version on Linux:
-```
-make
-sudo make install
-```
-see also file **./doc/compile-osm2sqlite.md**.
