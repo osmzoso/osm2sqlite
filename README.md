@@ -36,7 +36,7 @@ OSM data can be obtained from a provider such as [Geofabrik](https://download.ge
 ## Miscellaneous
 
 There are two programme versions:  
-- a version in Python as a prototype (./src_py)  
+- a version in Python as a prototype (./test/osm2sqlite.py)  
 - a version in C (./src)  
 
 Time measurement for **saarland.osm (700 MB)**:  
@@ -50,4 +50,4 @@ Compiling the C version on Linux:
 make
 sudo make install
 ```
-see also file **cross_compile_windows.sh**.
+see also file **./doc/compile-osm2sqlite.md**.
