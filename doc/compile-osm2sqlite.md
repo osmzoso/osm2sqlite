@@ -17,7 +17,12 @@ The dynamic libs are in the following directory:
 /usr/lib64/libxml2.so.2
 ```
 
-A simple `make` should do the job.
+Compilation and installation in /usr/bin:
+```
+cd ./src
+make
+sudo make install
+```
 
 Show shared object dependencies for osm2sqlite: `ldd osm2sqlite`
 
