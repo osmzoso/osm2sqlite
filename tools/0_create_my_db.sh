@@ -16,13 +16,13 @@ cdate=$(date '+%Y%m%d')
 rm -f $db
 osmium cat $osm_pbf -f osm -o - | osm2sqlite $db - addr rtree graph
 # createi the table 'map_def' in the database
-sqlite3 $db < draw_map_def.sql
+sqlite3 $db < drawmap_def.sql
 # fill field 'permit' in table 'graph' 
 ./fill_graph_permit.py $db
 #
 # Draw a simple map
 #
-./draw_map.py $db 7.807 47.982 16 1300 900 $result/$cdate-map_zoom16.svg
+./drawmap.py $db 7.807 47.982 16 1300 900 $result/$cdate-map_zoom16.svg
 #
 # Find the shortest route
 #
