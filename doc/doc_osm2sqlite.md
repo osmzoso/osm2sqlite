@@ -29,10 +29,6 @@ The tool **osmium** can convert .osm.pbf files to .osm.
 Example for reading an .osm.pbf file:  
 `osmium cat freiburg.osm.pbf -f osm -o - | osm2sqlite freiburg.db -`
 
-## Install osmium
-
-<https://osmcode.org/osmium-tool/>
-
 Install osmium on Fedora Linux:  
 `sudo dnf install osmium-tool`  
 
@@ -44,6 +40,8 @@ Convert .osm.pbf to osm, output to stdout:
 
 Convert myfile.osm.pbf to myfile.osm.bz2:  
 `osmium cat myfile.osm.pbf -o myfile.osm.bz2`
+
+<https://osmcode.org/osmium-tool/>
 
 
 # 2. Tables
@@ -230,15 +228,15 @@ This option suppresses the creation of the indexes (not recommended).
 
 For map drawing R\*Tree indexes (see option **rtree**) and table **map_def** with
 map definitions (colors etc.) are required in the database.  
-(see **./tools/draw_map_def.sql**)  
+(see **./tools/drawmap_def.sql**)  
 
 Creation of the **map_def** table:  
-`sqlite3 ../freiburg.db < draw_map_def.sql`  
+`sqlite3 ../freiburg.db < drawmap_def.sql`  
 
-## draw_map.py
+## drawmap.py
 
 Example to generate a map with zoomlevel 16 and size 900 x 600px:  
-`./draw_map.py ../freiburg.db 7.800 47.979 16 900 600 map_zoom16.svg`  
+`./drawmap.py ../freiburg.db 7.800 47.979 16 900 600 map_zoom16.svg`  
 
 Converting SVG to PNG with **inkscape**:  
 `inkscape map_zoom16.svg -o map_zoom16.png`
@@ -360,8 +358,8 @@ Directory **./tools** contains some tools.
 `check_addr_street_name.py` checks if the addr:street name is identical with the street name.  
 `convert_csv2gpx.py` Convert CSV to GPX  
 `convert_gpx2csv.py` Convert GPX to CSV  
-`draw_map.py` Draw a simple map  
-`draw_map_zoomlevel.py` Show map size for each zoomlevel  
+`drawmap.py` Draw a simple map  
+`drawmap_zoomlevel.py` Show map size for each zoomlevel  
 `fill_graph_permit.py` Fill field 'permit' in table 'graph'   
 `html_leaflet_addr.py` Creates an HTML file with a map of all addresses in a specific area  
 `html_leaflet_csv.py` Creates an HTML file with a map from a CSV file containing waypoints (lon,lat)  
