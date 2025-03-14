@@ -9,9 +9,7 @@ import html_leaflet
 
 def map_gpx_html(gpx_filename, html_filename):
     """Create map from GPX files"""
-    # https://www.graphviz.org/doc/info/colors.html
-    # color_scheme = ['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e', '#e6ab02', '#a6761d']
-    color_scheme = ['#e60000', '#e67300', '#e6e600', '#73e600', '#00e6e6', '#0073e6', '#0000e6']
+    color_scheme = ['#ff0000', '#0000ff', '#ff00ff', '#ff8000', '#00bfff']
     color_number = 0
     m = html_leaflet.Leaflet(html_filename)
     m.write_html_header('Map GPX Files')

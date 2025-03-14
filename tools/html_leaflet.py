@@ -62,11 +62,8 @@ class Leaflet:
         self.file.close()
 
     def write_html_header(self, title):
-        """Write HTML header with link to Leaflet 1.5.1 and a simple CSS."""
-        # Leaflet 1.5.1
-        # https://leafletjs.com/reference-1.5.1.html
-        # Documentation: https://web.archive.org/web/20201202155513/https://leafletjs.com/reference-1.5.1.html
-        # https://leafletjs.com/examples/quick-start/
+        """Write HTML header with link to Leaflet 1.9.4 and a simple CSS."""
+        # https://leafletjs.com/
         self.file.write(f'''<!DOCTYPE html>
 <html>
 <head>
@@ -74,8 +71,8 @@ class Leaflet:
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js" integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og==" crossorigin=""></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 ''')
         self.file.write('''
 <style>
@@ -216,7 +213,7 @@ function onMapClick(e) {{
      ' Leaflet version: ' + L.version
       );
     //
-    var popuptext = '<pre>Länge  : '+lon+'&deg;<br>Breite : '+lat+'&deg;<br>';
+    var popuptext = '<pre>lon (x) : '+lon+'<br>lat (y) : '+lat+'<br>';
     popup.setLatLng(e.latlng).setContent(popuptext).openOn(mymap);
 }}
 mymap.on('click', onMapClick);
