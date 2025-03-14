@@ -228,15 +228,13 @@ This option suppresses the creation of the indexes (not recommended).
 
 For map drawing R\*Tree indexes (see option **rtree**) and table **map_def** with
 map definitions (colors etc.) are required in the database.  
-(see **./tools/drawmap_def.sql**)  
 
-Creation of the **map_def** table:  
-`sqlite3 ../freiburg.db < drawmap_def.sql`  
+Creation of the **map_def** table: `sqlite3 ../freiburg.db < ./tools/map_def.sql`  
 
-## drawmap.py
+## map.py
 
 Example to generate a map with zoomlevel 16 and size 900 x 600px:  
-`./drawmap.py ../freiburg.db 7.800 47.979 16 900 600 map_zoom16.svg`  
+`./map.py ../freiburg.db 7.800 47.979 16 900 600 map_zoom16.svg`  
 
 Converting SVG to PNG with **inkscape**:  
 `inkscape map_zoom16.svg -o map_zoom16.png`
@@ -358,8 +356,7 @@ Directory **./tools** contains some tools.
 `check_addr_street_name.py` checks if the addr:street name is identical with the street name.  
 `convert_csv2gpx.py` Convert CSV to GPX  
 `convert_gpx2csv.py` Convert GPX to CSV  
-`drawmap.py` Draw a simple map  
-`drawmap_zoomlevel.py` Show map size for each zoomlevel  
+`map.py` Draw a simple map  
 `fill_graph_permit.py` Fill field 'permit' in table 'graph'   
 `html_leaflet_addr.py` Creates an HTML file with a map of all addresses in a specific area  
 `html_leaflet_csv.py` Creates an HTML file with a map from a CSV file containing waypoints (lon,lat)  
@@ -367,7 +364,7 @@ Directory **./tools** contains some tools.
 `html_leaflet_gpx.py` Creates an HTML file with a map of all paths from the specified GPX files  
 `html_leaflet_graph.py` Creates an HTML file with a map to display the data in the "graph" table  
 `html_leaflet.py` Python modul for creating HTML files with
-[Leaflet.js 1.5.1](https://web.archive.org/web/20201202155513/https://leafletjs.com/reference-1.5.1.html).  
+[Leaflet.js](https://leafletjs.com/reference.html).  
 `info.py` Show OSM data on stdout  
 `route.py` Find shortest way  
 

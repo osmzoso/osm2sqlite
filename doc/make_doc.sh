@@ -31,7 +31,7 @@ pandoc \
 #
 # manpage
 #
-rm osm2sqlite.1.gz
+rm -f osm2sqlite.1.gz
 pandoc \
  -s -f markdown -t man \
  doc_osm2sqlite.md \
