@@ -1,7 +1,7 @@
 /*
 ** osm2sqlite - Reads OpenStreetMap XML data into a SQLite database
 **
-** Copyright (C) 2022-2024 Herbert Gläser
+** Copyright (C) 2022-2025 Herbert Gläser
 **
 */
 #include <stdlib.h>
@@ -20,7 +20,7 @@
 
 void show_help() {
   printf(
-  "osm2sqlite 0.9.3\n"
+  "osm2sqlite 0.9.4\n"
   "\n"
   "Reads OpenStreetMap XML data into a SQLite database.\n"
   "\n"
@@ -651,6 +651,8 @@ int main(int argc, char **argv) {
   if( rc!=SQLITE_OK ) abort_db_error();
   if( opt_addr ) add_addr();
   if( opt_graph ) add_graph();
+  rc = sqlite3_exec(db, "ANALYZE", NULL, NULL, NULL);
+  if( rc!=SQLITE_OK ) abort_db_error();
 
   /* Close database connection */
   destroy_prep_stmt();
