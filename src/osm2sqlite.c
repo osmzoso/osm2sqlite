@@ -24,7 +24,7 @@ void show_help() {
   "\n"
   "Reads OpenStreetMap XML data into a SQLite database.\n"
   "\n"
-  "Usage:\nosm2sqlite SQLITE_DATABASE OSM_XML_FILE [OPTION]...\n"
+  "Usage:\nosm2sqlite DATABASE OSM_FILE [OPTION]...\n"
   "\n"
   "Options:\n"
   "  rtree         Add R*Tree indexes\n"
@@ -32,7 +32,7 @@ void show_help() {
   "  graph         Add graph table\n"
   "  noindex       Do not create indexes (not recommended)\n"
   "\n"
-  "When OSM_XML_FILE is -, read standard input.\n"
+  "When OSM_FILE is -, read standard input.\n"
   );
   printf("\n(SQLite %s is used)\n\n", sqlite3_libversion());
 }
