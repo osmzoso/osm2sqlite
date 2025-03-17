@@ -20,7 +20,7 @@ def show_help():
           'Reads OpenStreetMap XML data into a SQLite database.\n'
           '\n'
           'Usage:\n'
-          f'{sys.argv[0]} SQLITE_DATABASE OSM_XML_FILE [OPTION]...\n'
+          f'{sys.argv[0]} DATABASE OSM_FILE [OPTION]...\n'
           '\n'
           'Options:\n'
           '  rtree         Add R*Tree indexes\n'
@@ -28,7 +28,7 @@ def show_help():
           '  graph         Add graph table\n'
           '  noindex       Do not create indexes (not recommended)\n'
           '\n'
-          'When OSM_XML_FILE is -, read standard input.')
+          'When OSM_FILE is -, read standard input.')
     print('\n(SQLite '+sqlite3.sqlite_version+' is used)\n')
 
 
