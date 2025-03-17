@@ -4,7 +4,7 @@ A simple command line tool for reading OpenStreetMap XML data into a SQLite data
 
 ```
 Usage:
-osm2sqlite SQLITE_DATABASE OSM_XML_FILE [OPTION]...
+osm2sqlite DATABASE OSM_FILE [OPTION]...
 
 Options:
   rtree         Add R*Tree indexes
@@ -12,7 +12,7 @@ Options:
   graph         Add graph table
   noindex       Do not create indexes (not recommended)
 
-When OSM_XML_FILE is -, read standard input.
+When OSM_FILE is -, read standard input.
 ```
 
 The command
@@ -29,10 +29,10 @@ The tables are described in the [documentation](doc/doc_osm2sqlite.md).
 OSM data can be obtained from a provider such as [Geofabrik](https://download.geofabrik.de).
 
 There are two program versions:  
-- a Python version in a single file ./test/osm2sqlite.py as a prototype  
-- a version in C in ./src, see [compilation notes](doc/compile-osm2sqlite.md)  
+- a Python version in a single file as a prototype (see ./tools/osm2sqlite.py)  
+- a version in C in ./src (see [compilation notes](doc/compile-osm2sqlite.md))  
 
-Time measurement for **saarland.osm (700 MB)**:  
+Runtime for a 700 MByte OSM file:  
 Python : 2 minutes 36 seconds  
 C      : 47 seconds  
 
