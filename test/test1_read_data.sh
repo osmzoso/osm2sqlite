@@ -23,15 +23,15 @@ extension="${test_osm_file##*.}"
 if [ "$extension" == "bz2" ]; then
     echo "bz2 extension"
     echo "read .osm.bz2 file with C version in database 'osm_c.db'..."
-    time bzip2 -c -d $test_dir/$test_osm_file | ../src/osm2sqlite $test_dir/osm_c.db - addr graph rtree
+    time bzip2 -c -d $test_dir/$test_osm_file | ../src/osm2sqlite $test_dir/osm_c.db read - addr graph rtree
     echo "read .osm.bz2 file with Python version in database 'osm_py.db'..."
-    time bzip2 -c -d $test_dir/$test_osm_file | ../tools/osm2sqlite.py $test_dir/osm_py.db - addr graph rtree
+    time bzip2 -c -d $test_dir/$test_osm_file | ../tools/osm2sqlite.py $test_dir/osm_py.db read - addr graph rtree
 elif [ "$extension" == "pbf" ]; then
     echo "pbf extension"
     echo "read .osm.pbf file with C version in database 'osm_c.db'..."
-    time osmium cat $test_dir/$test_osm_file -f osm -o - | ../src/osm2sqlite $test_dir/osm_c.db - addr graph rtree
+    time osmium cat $test_dir/$test_osm_file -f osm -o - | ../src/osm2sqlite $test_dir/osm_c.db read - addr graph rtree
     echo "read .osm.pbf file with Python version in database 'osm_py.db'..."
-    time osmium cat $test_dir/$test_osm_file -f osm -o - | ../tools/osm2sqlite.py $test_dir/osm_py.db - addr graph rtree
+    time osmium cat $test_dir/$test_osm_file -f osm -o - | ../tools/osm2sqlite.py $test_dir/osm_py.db read - addr graph rtree
 else
     echo "unknown extension"
 fi

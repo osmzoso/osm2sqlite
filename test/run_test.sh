@@ -1,6 +1,7 @@
 #!/bin/bash
 if [ $# != 1 ]; then
-    echo "Test osm2sqlite - Read OSM file and compare the databases"
+    echo "Test osm2sqlite C version and Python version"
+    echo "Read OSM file (.osm.bz2 or .osm.pbf) and compare the databases"
     echo "Usage:"
     echo "$0 OSM_FILE"
     exit 1
