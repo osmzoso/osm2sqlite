@@ -24,17 +24,17 @@ void show_help() {
   "\n"
   "Reads OpenStreetMap XML data into a SQLite database.\n"
   "\n"
-  "Usage:\nosm2sqlite DATABASE OSM_FILE [OPTION]...\n"
+  "Usage:\nosm2sqlite DATABASE [OPTION ...]\n"
   "\n"
   "Options:\n"
-  "  rtree         Add R*Tree indexes\n"
-  "  addr          Add address tables\n"
-  "  graph         Add graph table\n"
-  "  noindex       Do not create indexes (not recommended)\n"
+  "  read FILE    Reads FILE into the database\n"
+  "               (When FILE is -, read stdin)\n"
+  "  rtree        Add R*Tree indexes\n"
+  "  addr         Add address tables\n"
+  "  graph        Add graph table\n"
   "\n"
-  "When OSM_FILE is -, read standard input.\n"
   );
-  printf("\n(SQLite %s is used)\n\n", sqlite3_libversion());
+  printf("(SQLite %s is used)\n\n", sqlite3_libversion());
 }
 
 /*
@@ -164,6 +164,25 @@ void start_element_callback(void *user_data, const xmlChar *name, const xmlChar 
       }
     }
   }
+}
+
+int read_osm_file(char *filename) {
+  /* Read XML data with SAX parser */
+  xmlSAXHandler sh = { 0 };                 /* initialize all fields to zero   */
+  sh.startElement = start_element_callback; /* register callback functions     */
+  xmlParserCtxtPtr ctxt;                    /* create context                  */
+  if( (ctxt = xmlCreateFileParserCtxt(filename))==NULL ) {
+    fprintf(stderr, "abort osm2sqlite - Error opening file %s\n", filename);
+    return EXIT_FAILURE;
+  }
+  xmlCtxtUseOptions(ctxt, XML_PARSE_NOENT); /* substitute entities, e.g. &amp; */
+  ctxt->sax = &sh;                          /* register sax handler in context */
+  xmlParseDocument(ctxt);                   /* read and parse the XML document */
+  if( !ctxt->wellFormed ) {
+    fprintf(stderr, "XML document isn't well formed\n");
+    return EXIT_FAILURE;
+  }
+  return EXIT_SUCCESS;
 }
 
 /*
@@ -594,69 +613,37 @@ void add_graph() {
 ** Main
 */
 int main(int argc, char **argv) {
-  int opt_index = 1;
-  int opt_rtree = 0;
-  int opt_addr = 0;
-  int opt_graph = 0;
-  int i;
-
-  if( argc<3 ) {
+  if( argc==1 ) {
     show_help();
     return EXIT_FAILURE;
   }
-  if( argc>3 ) {
-    for(i=3; i < argc; i++) {
-      if( strcmp("noindex", argv[i])==0 ) {
-        opt_index = 0;
-      } else if( strcmp("rtree", argv[i])==0 ) {
-        opt_rtree = 1;
-      } else if( strcmp("addr", argv[i])==0 ) {
-        opt_addr = 1;
-      } else if( strcmp("graph", argv[i])==0 ) {
-        opt_graph = 1;
-      } else {
-        fprintf(stderr, "abort - option '%s' unknown\n", argv[i]);
-        return EXIT_FAILURE;
-      }
+  rc = sqlite3_open(argv[1], &db);  /* Open database connection */
+  if( rc!=SQLITE_OK ) abort_db_error();
+  int i = 2;
+  while( i<argc ) {
+    if( strcmp("read", argv[i])==0 && argc>=i+2 ) {
+      rc = sqlite3_exec(db, " PRAGMA journal_mode = OFF;"
+                            " PRAGMA page_size = 65536;"
+                            " BEGIN TRANSACTION;", NULL, NULL, NULL);
+      if( rc!=SQLITE_OK ) abort_db_error();
+      add_tables();
+      create_prep_stmt();
+      read_osm_file(argv[i+1]);
+      destroy_prep_stmt();
+      add_index();
+      rc = sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+      if( rc!=SQLITE_OK ) abort_db_error();
+      i++;
     }
+    else if( strcmp("rtree", argv[i])==0 ) add_rtree();
+    else if( strcmp("addr", argv[i])==0 ) add_addr();
+    else if( strcmp("graph", argv[i])==0 ) add_graph();
+    else fprintf(stderr, "osm2sqlite - Parameter error: '%s'?\n", argv[i]);
+    i++;
   }
-
-  /* Open database connection and create the tables */
-  rc = sqlite3_open(argv[1], &db);
-  if( rc!=SQLITE_OK ) abort_db_error();
-  rc = sqlite3_exec(db, " PRAGMA journal_mode = OFF;"
-                        " PRAGMA page_size = 65536;"
-                        " BEGIN TRANSACTION;", NULL, NULL, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error();
-  add_tables();
-  create_prep_stmt();
-
-  /* Read XML data with SAX parser */
-  xmlSAXHandler sh = { 0 };                 /* initialize all fields to zero   */
-  sh.startElement = start_element_callback; /* register callback functions     */
-  xmlParserCtxtPtr ctxt;                    /* create context                  */
-  if( (ctxt = xmlCreateFileParserCtxt(argv[2]))==NULL ) {
-    fprintf(stderr, "abort osm2sqlite - Error opening file %s\n", argv[2]);
-    return EXIT_FAILURE;
-  }
-  xmlCtxtUseOptions(ctxt, XML_PARSE_NOENT); /* substitute entities, e.g. &amp; */
-  ctxt->sax = &sh;                          /* register sax handler in context */
-  xmlParseDocument(ctxt);                   /* read and parse the XML document */
-  if( !ctxt->wellFormed ) fprintf(stderr, "XML document isn't well formed\n");
-
-  /* Add additional data */
-  if( opt_index ) add_index();
-  if( opt_rtree ) add_rtree();
-  rc = sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
-  if( rc!=SQLITE_OK ) abort_db_error();
-  if( opt_addr ) add_addr();
-  if( opt_graph ) add_graph();
   rc = sqlite3_exec(db, "ANALYZE", NULL, NULL, NULL);
   if( rc!=SQLITE_OK ) abort_db_error();
-
-  /* Close database connection */
-  destroy_prep_stmt();
-  sqlite3_close(db);
+  sqlite3_close(db);  /* Close database connection */
 
   return EXIT_SUCCESS;
 }
