@@ -4,8 +4,8 @@ A simple command line tool for reading
 [OpenStreetMap XML data](https://wiki.openstreetmap.org/wiki/OSM_XML)
 into a SQLite database.
 
-Read simple XML file **test.osm** into database **test.db**:  
-`osm2sqlite test.db test.osm`  
+Read simple XML file **country.osm** into database **test.db**:  
+`osm2sqlite test.db read country.osm`  
 
 OSM data can be obtained from a provider such as [Geofabrik](https://download.geofabrik.de).
 
@@ -16,8 +16,8 @@ The OSM XML data is provided as bzip2 compressed data.
 To avoid unpacking the bzip2 file, the tool can read from stdin.
 
 Examples for reading .osm.bz2 files:  
-`7z e -so ../germany.osm.bz2 | osm2sqlite germany.db -`  
-`bzip2 -c -d ../germany.osm.bz2 | osm2sqlite germany.db -`  
+`7z e -so ../germany.osm.bz2 | osm2sqlite germany.db read -`  
+`bzip2 -c -d ../germany.osm.bz2 | osm2sqlite germany.db read -`  
 
 > The .osm.bz2 format is [deprecated](https://download.geofabrik.de/bz2.html).  
 > In future, only .osm.pbf files will be provided from Geofabrik.
@@ -27,7 +27,7 @@ Examples for reading .osm.bz2 files:
 The tool **osmium** can convert .osm.pbf files to .osm.
 
 Example for reading an .osm.pbf file:  
-`osmium cat freiburg.osm.pbf -f osm -o - | osm2sqlite freiburg.db -`
+`osmium cat country.osm.pbf -f osm -o - | osm2sqlite country.db read -`
 
 Install osmium on Fedora Linux:  
 `sudo dnf install osmium-tool`  
@@ -219,11 +219,6 @@ Queries on how to determine a smaller subgraph from this table
 can be found in **./queries/graph_subgraph.sql**.
 
 
-## Option "noindex"
-
-This option suppresses the creation of the indexes (not recommended).
-
-
 # 4. Map Drawing
 
 For map drawing R\*Tree indexes (see option **rtree**) and table **map_def** with
@@ -276,7 +271,7 @@ The conversion of Web Mercator coordinates into pixel coordinates is relatively 
 
 Defined pixel sizes (zoomlevel) of a square world map:  
 ```
-zoomlevel   size_world_map_in_pixel     meter_per_pixel
+zoomlevel       pixel_world_map          meters_pixel
     0              256 x 256               156543.03
     1              512 x 512                78271.52
     2             1024 x 1024               39135.76
