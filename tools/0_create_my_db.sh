@@ -14,7 +14,7 @@ cdate=$(date '+%Y%m%d')
 #  - create addr tables, R*Tree indexes and table 'graph'
 #
 rm -f $db
-osmium cat $osm_pbf -f osm -o - | osm2sqlite $db - addr rtree graph
+osmium cat $osm_pbf -f osm -o - | osm2sqlite $db read - addr rtree graph
 # create the table 'map_def' in the database
 sqlite3 $db < map_def.sql
 # fill field 'permit' in table 'graph' 
