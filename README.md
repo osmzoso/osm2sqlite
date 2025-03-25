@@ -28,8 +28,8 @@ The tables are described in the [documentation](doc/doc_osm2sqlite.md).
 OSM data can be obtained from a provider such as [Geofabrik](https://download.geofabrik.de).
 
 There are two program versions:  
-- a Python version in a single file as a prototype
-- a version in C
+- a Python version in a single file as a prototype  
+- a version in C  
 (see ./tools/osm2sqlite.py and [compilation notes](doc/compile-osm2sqlite.md))  
 
 Runtime for a 700 MByte OSM file:  
