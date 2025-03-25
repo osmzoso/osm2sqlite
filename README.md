@@ -4,15 +4,14 @@ A simple command line tool for reading OpenStreetMap XML data into a SQLite data
 
 ```
 Usage:
-osm2sqlite DATABASE OSM_FILE [OPTION]...
+osm2sqlite DATABASE [OPTION ...]
 
 Options:
-  rtree         Add R*Tree indexes
-  addr          Add address tables
-  graph         Add graph table
-  noindex       Do not create indexes (not recommended)
-
-When OSM_FILE is -, read standard input.
+  read FILE    Reads FILE into the database
+               (When FILE is -, read stdin)
+  rtree        Add R*Tree indexes
+  addr         Add address tables
+  graph        Add graph table
 ```
 
 The command
