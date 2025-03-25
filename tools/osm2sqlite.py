@@ -20,16 +20,16 @@ def show_help():
           'Reads OpenStreetMap XML data into a SQLite database.\n'
           '\n'
           'Usage:\n'
-          f'{sys.argv[0]} DATABASE OSM_FILE [OPTION]...\n'
+          f'{sys.argv[0]} DATABASE [OPTION ...]\n'
           '\n'
           'Options:\n'
-          '  rtree         Add R*Tree indexes\n'
-          '  addr          Add address tables\n'
-          '  graph         Add graph table\n'
-          '  noindex       Do not create indexes (not recommended)\n'
-          '\n'
-          'When OSM_FILE is -, read standard input.')
-    print('\n(SQLite '+sqlite3.sqlite_version+' is used)\n')
+          '  read FILE    Reads FILE into the database\n'
+          '               (When FILE is -, read stdin)\n'
+          '  rtree        Add R*Tree indexes\n'
+          '  addr         Add address tables\n'
+          '  graph        Add graph table\n'
+          )
+    print('(SQLite '+sqlite3.sqlite_version+' is used)\n')
 
 
 class OsmHandler(xml.sax.ContentHandler):
@@ -95,6 +95,24 @@ class OsmHandler(xml.sax.ContentHandler):
             self.element_relation_active = False
             self.relation_id = -1
             self.relation_member_order = 0
+
+
+def read_osm_file(filename):
+    """Read OSM XML file"""
+    # create an XMLReader
+    parser = xml.sax.make_parser()
+    # turn off namespaces
+    parser.setFeature(xml.sax.handler.feature_namespaces, 0)
+    # override the default ContentHandler
+    handler = OsmHandler()
+    parser.setContentHandler(handler)
+    # parse osm xml data
+    if filename == '-':
+        parser.parse(sys.stdin)
+    else:
+        parser.parse(filename)
+    # write data to database
+    con.commit()
 
 
 def add_tables():
@@ -407,62 +425,34 @@ def add_graph():
 
 
 def main():
-    """entry point"""
+    """Main function: entry point for execution"""
     global con, cur
-    if len(sys.argv) < 3:
+    if len(sys.argv) == 1:
         show_help()
         sys.exit(1)
-    # check options
-    opt_index = True
-    opt_rtree = False
-    opt_addr = False
-    opt_graph = False
-    if len(sys.argv) > 3:
-        for i in range(3, len(sys.argv)):
-            if sys.argv[i] == 'noindex':
-                opt_index = False
-            elif sys.argv[i] == 'rtree':
-                opt_rtree = True
-            elif sys.argv[i] == 'addr':
-                opt_addr = True
-            elif sys.argv[i] == 'graph':
-                opt_graph = True
-            else:
-                print("abort - option '"+sys.argv[i]+"' unknown")
-                sys.exit(1)
-    # connect to the database
-    con = sqlite3.connect(sys.argv[1])
-    cur = con.cursor()   # new database cursor
-    # tuning database
-    cur.execute('PRAGMA journal_mode = OFF')
-    cur.execute('PRAGMA page_size = 65536')
-    # create all tables
-    add_tables()
-    # create an XMLReader
-    parser = xml.sax.make_parser()
-    # turn off namespaces
-    parser.setFeature(xml.sax.handler.feature_namespaces, 0)
-    # override the default ContentHandler
-    handler = OsmHandler()
-    parser.setContentHandler(handler)
-    # parse osm xml data
-    if sys.argv[2] == '-':
-        parser.parse(sys.stdin)
-    else:
-        parser.parse(sys.argv[2])
-    # write data to database
-    con.commit()
-    # add additional data
-    if opt_index:
-        add_index()
-    if opt_rtree:
-        add_rtree()
-    if opt_addr:
-        add_addr()
-    if opt_graph:
-        add_graph()
+    con = sqlite3.connect(sys.argv[1])  # open database connection
+    cur = con.cursor()                  # new database cursor
+    i = 2
+    while i < len(sys.argv):
+        if sys.argv[i] == 'read':
+            cur.execute('PRAGMA journal_mode = OFF')
+            cur.execute('PRAGMA page_size = 65536')
+            add_tables()
+            read_osm_file(sys.argv[i+1])
+            add_index()
+            i += 1
+        elif sys.argv[i] == 'rtree':
+            add_rtree()
+        elif sys.argv[i] == 'addr':
+            add_addr()
+        elif sys.argv[i] == 'graph':
+            add_graph()
+        else:
+            print("osm2sqlite.py - Parameter error: '"+sys.argv[i]+"'?")
+        i += 1
     cur.execute('ANALYZE')
-    con.commit()
+    con.commit()                        # commit
+    con.close()                         # close database connection
 
 
 if __name__ == '__main__':
