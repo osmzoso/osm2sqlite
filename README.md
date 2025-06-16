@@ -31,7 +31,7 @@ There are two program versions:
 - a Python version in a single file as a prototype
 - a version in C
 
-(see ./tools/osm2sqlite.py and [compilation notes](doc/compile-osm2sqlite.md))
+(see ./tools/osm2sqlite.py and [compiling annotations](doc/compiling_annotations.md))
 
 Runtime for a 700 MByte OSM file:  
 Python : 2 minutes 36 seconds  
