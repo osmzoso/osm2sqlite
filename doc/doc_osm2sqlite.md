@@ -26,20 +26,21 @@ Examples for reading .osm.bz2 files:
 
 The tool **osmium** can convert .osm.pbf files to .osm.
 
-Example for reading an .osm.pbf file:  
-`osmium cat country.osm.pbf -f osm -o - | osm2sqlite country.db read -`
+Example for reading an .osm.pbf file into a SQLite database:  
+`osmium cat country.osm.pbf -f osm -o - | osm2sqlite country.db read -`  
 
 Install osmium on Fedora Linux:  
 `sudo dnf install osmium-tool`  
 
-[Compiled osmium.exe for Windows (without warranty)](https://github.com/pango3001/Osmium_1_14)
+[Compiled osmium.exe for Windows (without warranty)](https://github.com/pango3001/Osmium_1_14)  
 
-Convert .osm.pbf to osm, output to stdout:   
+Convert .osm.pbf to osm, output to stdout:  
 `osmium cat myfile.osm.pbf --output-format=osm --output=- | less -S`  
 `osmium cat myfile.osm.pbf -f osm -o - | less -S`  
 
-Convert myfile.osm.pbf to myfile.osm.bz2:  
-`osmium cat myfile.osm.pbf -o myfile.osm.bz2`
+Convert .osm.pbf to .osm.bz2: `osmium cat myfile.osm.pbf -o myfile.osm.bz2`  
+
+Convert .osm.pbf to .osm: `osmium cat myfile.osm.pbf -o myfile.osm`  
 
 <https://osmcode.org/osmium-tool/>
 
@@ -331,7 +332,7 @@ PERMIT: 1 (foot), 2 (bike_gravel), 4 (bike_road) or 8 (car)
 As an example, the command  
 `./route.py freiburg.db 7.853 47.995 7.862 47.995 1 route.csv`  
 calculates the shortest route for pedestrians and saves a list of
-the route coordinates in the *route.csv* file.
+coordinates in the file *route.csv*.
 
 The command  
 `./tools/html_leaflet_csv.py route.csv route.html`  

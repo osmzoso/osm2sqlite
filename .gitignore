@@ -3,3 +3,7 @@
 #
 src/osm2sqlite
 src/osm2sqlite.exe
+#
+doc/osm2sqlite.1.gz
+doc/osm2sqlite.html
+doc/osm2sqlite.pdf
