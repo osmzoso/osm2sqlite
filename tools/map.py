@@ -163,45 +163,45 @@ def multipolygon_outer_ways(cur, relation_id, swap_nodes):
     polygon_closed = False
     if start_node == prev_node:
         polygon_closed = True
-    # if the polygon is closed then fill table 'multipolygon_nodes'
-    cur.execute('DROP TABLE IF EXISTS multipolygon_nodes')
-    cur.execute('CREATE TEMP TABLE multipolygon_nodes (node_id INTEGER)')
-    if polygon_closed:
-        prev_node_id = -1
-        cur.execute('''
-        SELECT way_id,way_reversed
-        FROM multipolygon_outer_ways
-        ORDER BY member_order
-        ''')
-        for (way_id, way_reversed) in cur.fetchall():
-            query = '''
-            SELECT node_id
-            FROM way_nodes
-            WHERE way_id=?
-            ORDER BY node_order
-            '''
-            if way_reversed:
-                query += ' DESC'
-            cur.execute(query, (way_id,))
-            for (node_id,) in cur.fetchall():
-                if node_id != prev_node_id and prev_node_id != -1:
-                    cur.execute('INSERT INTO multipolygon_nodes VALUES (?)', (node_id,))
-                prev_node_id = node_id
     #
     return polygon_closed
 
 
-def multipolygon(cur, relation_id):
+def multipolygon_nodes(cur, relation_id):
     """
-    Creates a temporary table 'multipolygon_nodes'
-    with all nodes of the outer ways.
-    If the outer ring is not closed, it returns False.
+    Creates a temporary table 'multipolygon_nodes'.
+    The table contains all nodes of the outer ways.
+    Return value is the number of nodes.
+    If the number is zero then the outer ring is not closed.
     """
-    if multipolygon_outer_ways(cur, relation_id, False):
-        return True
-    if multipolygon_outer_ways(cur, relation_id, True):
-        return True
-    return False
+    cur.execute('DROP TABLE IF EXISTS multipolygon_nodes')
+    cur.execute('CREATE TEMP TABLE multipolygon_nodes (node_id INTEGER)')
+    if not multipolygon_outer_ways(cur, relation_id, False):
+        if not multipolygon_outer_ways(cur, relation_id, True):
+            return 0
+    prev_node_id = -1
+    number_nodes = 0
+    cur.execute('''
+    SELECT way_id,way_reversed
+    FROM multipolygon_outer_ways
+    ORDER BY member_order
+    ''')
+    for (way_id, way_reversed) in cur.fetchall():
+        query = '''
+        SELECT node_id
+        FROM way_nodes
+        WHERE way_id=?
+        ORDER BY node_order
+        '''
+        if way_reversed:
+            query += ' DESC'
+        cur.execute(query, (way_id,))
+        for (node_id,) in cur.fetchall():
+            if node_id != prev_node_id and prev_node_id != -1:
+                cur.execute('INSERT INTO multipolygon_nodes VALUES (?)', (node_id,))
+                number_nodes += 1
+            prev_node_id = node_id
+    return number_nodes
 
 
 #

@@ -20,9 +20,12 @@ def check_outer_ring_not_closed(cur):
     ''')
     for (relation_id,) in cur.fetchall():
         number_multipolygons += 1
-        if not map.multipolygon(cur, relation_id):
+        number_nodes = map.multipolygon_nodes(cur, relation_id)
+        print(f'relation {relation_id:>10} : {number_nodes:>10} nodes', end='')
+        if number_nodes == 0:
             ring_not_closed += 1
-            print(f'relation {relation_id} : outer ring not closed')
+            print(' -> outer ring not closed', end='')
+        print()
     print(f'Number of multipolygons : {number_multipolygons}\n'
           f'Outer ring not closed   : {ring_not_closed}\n')
 
