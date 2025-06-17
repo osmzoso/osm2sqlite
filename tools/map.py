@@ -107,6 +107,103 @@ def pixel_boundingbox(lon, lat, pixel_world_map, size_x_px, size_y_px):
     return min_x_px, min_y_px, max_x_px, max_y_px
 
 
+def multipolygon_outer_ways(cur, relation_id, swap_nodes):
+    """
+    Determines all outer ways of a multipolygon.
+    The direction of the first way must be specified as the 'swap_nodes' parameter.
+    The result is written to the temporary table 'multipolygon_outer_ways'.
+    It then checks whether the ways form a closed circle.
+    The return value of this function is the result of this check.
+    If the circle is closed, the temporary table 'multipolygon_nodes' is created.
+    """
+    cur.execute('DROP TABLE IF EXISTS multipolygon_outer_ways')
+    cur.execute('''
+    CREATE TEMP TABLE multipolygon_outer_ways (
+     member_order  INTEGER,
+     way_id        INTEGER,
+     first_node    INTEGER,
+     last_node     INTEGER,
+     way_reversed  INTEGER
+    );
+    ''')
+    start_node = -1
+    prev_node = -1
+    cur.execute('''
+    SELECT DISTINCT member_order,way_id,
+     first_value(node_id) OVER (PARTITION BY way_id) AS first_node,
+     last_value(node_id) OVER (PARTITION BY way_id) AS last_node
+    FROM (
+      SELECT rm.member_order,wn.way_id,wn.node_id
+      FROM relation_members AS rm
+      LEFT JOIN way_nodes AS wn ON rm.ref_id=wn.way_id
+      WHERE rm.relation_id=? AND ref='way' AND rm.role='outer'
+      ORDER BY wn.node_order
+    )
+    ORDER BY member_order
+    ''', (relation_id,))
+    for (member_order, way_id, first_node, last_node) in cur.fetchall():
+        if prev_node == -1:
+            if not swap_nodes:
+                start_node = first_node
+                prev_node = last_node
+            else:
+                start_node = last_node
+                prev_node = first_node
+        else:
+            if first_node == prev_node:
+                swap_nodes = False
+                prev_node = last_node
+            else:
+                swap_nodes = True
+                prev_node = first_node
+        #
+        cur.execute('INSERT INTO multipolygon_outer_ways VALUES (?,?,?,?,?)',
+                    (member_order, way_id, first_node, last_node, swap_nodes))
+    # check if polygon is closed
+    polygon_closed = False
+    if start_node == prev_node:
+        polygon_closed = True
+    # if the polygon is closed then fill table 'multipolygon_nodes'
+    cur.execute('DROP TABLE IF EXISTS multipolygon_nodes')
+    cur.execute('CREATE TEMP TABLE multipolygon_nodes (node_id INTEGER)')
+    if polygon_closed:
+        prev_node_id = -1
+        cur.execute('''
+        SELECT way_id,way_reversed
+        FROM multipolygon_outer_ways
+        ORDER BY member_order
+        ''')
+        for (way_id, way_reversed) in cur.fetchall():
+            query = '''
+            SELECT node_id
+            FROM way_nodes
+            WHERE way_id=?
+            ORDER BY node_order
+            '''
+            if way_reversed:
+                query += ' DESC'
+            cur.execute(query, (way_id,))
+            for (node_id,) in cur.fetchall():
+                if node_id != prev_node_id and prev_node_id != -1:
+                    cur.execute('INSERT INTO multipolygon_nodes VALUES (?)', (node_id,))
+                prev_node_id = node_id
+    #
+    return polygon_closed
+
+
+def multipolygon(cur, relation_id):
+    """
+    Creates a temporary table 'multipolygon_nodes'
+    with all nodes of the outer ways.
+    If the outer ring is not closed, it returns False.
+    """
+    if multipolygon_outer_ways(cur, relation_id, False):
+        return True
+    if multipolygon_outer_ways(cur, relation_id, True):
+        return True
+    return False
+
+
 #
 #
 #
