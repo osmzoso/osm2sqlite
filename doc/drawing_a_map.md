@@ -1,8 +1,5 @@
 # Drawing a map
 
-
-# 4. Map Drawing
-
 For map drawing R\*Tree indexes (see option **rtree**) and table **map_def** with
 map definitions (colors etc.) are required in the database.  
 
@@ -92,5 +89,4 @@ Layer 8: Superordinate roads (Bundesstr. Autobahn)
 Layer 9: Bridges, Trees, POI  
 Layer 10: Powerline  
 Layer 99: Unknown Ways (red)  
-
 
