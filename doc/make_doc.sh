@@ -6,6 +6,8 @@
 # see https://jeromebelleman.gitlab.io/posts/publishing/manpages/
 #
 
+mkdir -p bld
+
 #
 # PDF
 #
@@ -14,7 +16,7 @@ pandoc \
  osm2sqlite.md \
  --pdf-engine=xelatex \
  --toc \
- -o osm2sqlite.pdf
+ -o ./bld/osm2sqlite.pdf
 
 #
 # HTML
@@ -26,14 +28,14 @@ pandoc \
  --toc \
  --css=custom.css \
  osm2sqlite.md \
- -o osm2sqlite.html
+ -o ./bld/osm2sqlite.html
 
 #
 # manpage
 #
-rm -f osm2sqlite.1.gz
+rm -f ./bld/osm2sqlite.1.gz
 pandoc \
  -s -f markdown -t man \
  osm2sqlite.md \
- -o osm2sqlite.1
-gzip osm2sqlite.1
+ -o ./bld/osm2sqlite.1
+gzip ./bld/osm2sqlite.1
