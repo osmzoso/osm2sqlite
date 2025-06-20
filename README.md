@@ -19,7 +19,7 @@ The command
 osm2sqlite test.db read country.osm
 ```
 reads the [OSM XML](https://wiki.openstreetmap.org/wiki/OSM_XML) file **country.osm**
-and creates in the database **test.db** the tables.
+and creates the tables in the **test.db** database.
 
 Some options can be used to create additional data.
 
@@ -34,6 +34,9 @@ There are two program versions:
 Runtime for a 700 MByte OSM file:  
 Python : 2 minutes 36 seconds  
 C      : 47 seconds  
+
+The ./tools directory contains tests for [drawing a map](doc/drawing_a_map.md)
+and for [routing](doc/routing.md).
 
 |[**Download the latest version**](https://github.com/osmzoso/osm2sqlite/releases/latest)|
 |----------------------------------------------------------------------------------------|

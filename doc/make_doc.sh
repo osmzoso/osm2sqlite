@@ -11,7 +11,7 @@
 #
 pandoc \
  -V geometry:margin=0.6in \
- doc_osm2sqlite.md \
+ osm2sqlite.md \
  --pdf-engine=xelatex \
  --toc \
  -o osm2sqlite.pdf
@@ -25,7 +25,7 @@ pandoc \
  --metadata title="osm2sqlite" \
  --toc \
  --css=custom.css \
- doc_osm2sqlite.md \
+ osm2sqlite.md \
  -o osm2sqlite.html
 
 #
@@ -34,6 +34,6 @@ pandoc \
 rm -f osm2sqlite.1.gz
 pandoc \
  -s -f markdown -t man \
- doc_osm2sqlite.md \
+ osm2sqlite.md \
  -o osm2sqlite.1
 gzip osm2sqlite.1
