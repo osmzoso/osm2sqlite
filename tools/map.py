@@ -114,7 +114,6 @@ def multipolygon_outer_ways(cur, relation_id, swap_nodes):
     The result is written to the temporary table 'multipolygon_outer_ways'.
     It then checks whether the ways form a closed circle.
     The return value of this function is the result of this check.
-    If the circle is closed, the temporary table 'multipolygon_nodes' is created.
     """
     cur.execute('DROP TABLE IF EXISTS multipolygon_outer_ways')
     cur.execute('''
@@ -167,15 +166,15 @@ def multipolygon_outer_ways(cur, relation_id, swap_nodes):
     return polygon_closed
 
 
-def multipolygon_nodes(cur, relation_id):
+def multipolygon_outer_nodes(cur, relation_id):
     """
-    Creates a temporary table 'multipolygon_nodes'.
+    Creates a temporary table 'multipolygon_outer_nodes'.
     The table contains all nodes of the outer ways.
     Return value is the number of nodes.
     If the number is zero then the outer ring is not closed.
     """
-    cur.execute('DROP TABLE IF EXISTS multipolygon_nodes')
-    cur.execute('CREATE TEMP TABLE multipolygon_nodes (node_id INTEGER)')
+    cur.execute('DROP TABLE IF EXISTS multipolygon_outer_nodes')
+    cur.execute('CREATE TEMP TABLE multipolygon_outer_nodes (node_id INTEGER)')
     if not multipolygon_outer_ways(cur, relation_id, False):
         if not multipolygon_outer_ways(cur, relation_id, True):
             return 0
@@ -198,7 +197,8 @@ def multipolygon_nodes(cur, relation_id):
         cur.execute(query, (way_id,))
         for (node_id,) in cur.fetchall():
             if node_id != prev_node_id and prev_node_id != -1:
-                cur.execute('INSERT INTO multipolygon_nodes VALUES (?)', (node_id,))
+                cur.execute('INSERT INTO multipolygon_outer_nodes VALUES (?)',
+                            (node_id,))
                 number_nodes += 1
             prev_node_id = node_id
     return number_nodes
@@ -371,6 +371,30 @@ def draw_map(cur, lon, lat, zoomlevel, width, height, outfile, show_unknown=True
                 f.write(f'" style="fill:none;stroke:{stroke};stroke-width:{width};stroke-linecap:round;stroke-dasharray:{dash}" />\n')
             elif opcode == 'area':
                 f.write(f'Z" style="fill:{fill};stroke:{stroke};stroke-width:{width}" />\n')
+        if opcode == 'area_mp' and ref == 'relation':
+            # outer
+            if multipolygon_outer_nodes(cur, ref_id) > 0:
+                f.write(f'<path id="{ref}_{ref_id}" d="')
+                command = 'M'
+                cur.execute('''
+                SELECT n.lon,n.lat
+                FROM multipolygon_outer_nodes AS mn
+                LEFT JOIN nodes AS n ON mn.node_id=n.node_id
+                ORDER BY mn.rowid
+                ''')
+                for (lon, lat) in cur.fetchall():
+                    x, y = spherical_to_pixel(lon, lat, pixel_world_map)
+                    x -= x1
+                    y -= y1
+                    y = height - y
+                    f.write(f'{command}{x} {y} ')
+                    if command == 'M':
+                        command = 'L'
+                f.write(f'Z" style="fill:{fill};stroke:{stroke};stroke-width:{width}" />\n')
+                # inner
+                # TODO
+                #f.write(f'    <!-- TEST \n')  # TEST
+                #f.write(f'    -->\n')  # TEST
         if opcode == 'point' and ref == 'node':
             cur.execute('SELECT lon,lat FROM nodes WHERE node_id=?', (ref_id,))
             lon, lat = cur.fetchone()

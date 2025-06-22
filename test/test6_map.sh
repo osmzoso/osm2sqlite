@@ -9,8 +9,8 @@ sqlite3 $db < ../tools/map_def.sql
 
 rm -f $test_dir/test_map_*.*
 
-lon=7.854
-lat=47.994
+lon=7.825
+lat=47.990
 time ../tools/map.py $db $lon $lat 16 900 600 $test_dir/test_map_zoom16.svg
 time ../tools/map.py $db $lon $lat 17 900 600 $test_dir/test_map_zoom17.svg
 time ../tools/map.py $db $lon $lat 18 900 600 $test_dir/test_map_zoom18.svg

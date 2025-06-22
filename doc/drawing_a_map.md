@@ -90,3 +90,28 @@ Layer 9: Bridges, Trees, POI
 Layer 10: Powerline  
 Layer 99: Unknown Ways (red)  
 
+## Multipolygon
+
+To represent larger areas, several ways can be connected to one area
+using a relation.  
+If the area is open inside, this can be specified using inner ways.  
+Inner ways are almost always just single ways.  
+
+<https://wiki.openstreetmap.org/wiki/DE:Relation:multipolygon>  
+<https://wiki.openstreetmap.org/wiki/Multipolygon_Examples>  
+<https://wiki.openstreetmap.org/wiki/Relation:multipolygon/Algorithm>  
+<https://postgis.net/docs/ST_MakePolygon.html>  
+
+## POI
+
+Examples:
+```
+tourism=gallery
+shop=hairdresser
+amenity=cafe
+```
+
+Display point of interest only in larger zoom level:  
+Zoomlevel 17: show as a small dot  
+Zommlevel 18,19: show as a symbol  
+
