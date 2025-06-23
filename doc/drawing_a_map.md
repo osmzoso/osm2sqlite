@@ -1,14 +1,16 @@
 # Drawing a map
 
+## map.py
+
+Example to generate a map with zoomlevel 16 and size 900 x 600px:  
+`./tools/map.py ../freiburg.db 7.800 47.979 16 900 600 map_zoom16.svg`  
+
 For map drawing R\*Tree indexes (see option **rtree**) and table **map_def** with
 map definitions (colors etc.) are required in the database.  
 
 Creation of the **map_def** table: `sqlite3 ../freiburg.db < ./tools/map_def.sql`  
 
-## map.py
-
-Example to generate a map with zoomlevel 16 and size 900 x 600px:  
-`./tools/map.py ../freiburg.db 7.800 47.979 16 900 600 map_zoom16.svg`  
+Valid zoomlevel: 16, 17, 18, 19  
 
 Converting SVG to PNG with **inkscape**:  
 `inkscape map_zoom16.svg -o map_zoom16.png`

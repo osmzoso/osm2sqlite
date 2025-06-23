@@ -390,11 +390,33 @@ def draw_map(cur, lon, lat, zoomlevel, width, height, outfile, show_unknown=True
                     f.write(f'{command}{x} {y} ')
                     if command == 'M':
                         command = 'L'
-                f.write(f'Z" style="fill:{fill};stroke:{stroke};stroke-width:{width}" />\n')
+                f.write('Z ')
                 # inner
-                # TODO
-                #f.write(f'    <!-- TEST \n')  # TEST
-                #f.write(f'    -->\n')  # TEST
+                cur.execute('''
+                SELECT ref_id AS way_id
+                FROM relation_members
+                WHERE relation_id=? AND ref='way' AND role='inner'
+                ''', (ref_id,))
+                for (way_id,) in cur.fetchall():
+                    command = 'M'
+                    cur.execute('''
+                    SELECT n.lon,n.lat
+                    FROM way_nodes AS wn
+                    LEFT JOIN nodes AS n ON wn.node_id=n.node_id
+                    WHERE wn.way_id=?
+                    ORDER BY wn.node_order
+                    ''', (way_id,))
+                    for (lon, lat) in cur.fetchall():
+                        x, y = spherical_to_pixel(lon, lat, pixel_world_map)
+                        x -= x1
+                        y -= y1
+                        y = height - y
+                        f.write(f'{command}{x} {y} ')
+                        if command == 'M':
+                            command = 'L'
+                    f.write('Z ')
+                #
+                f.write(f'" style="fill:{fill};stroke:{stroke};stroke-width:{width}" fill-rule="evenodd" />\n')
         if opcode == 'point' and ref == 'node':
             cur.execute('SELECT lon,lat FROM nodes WHERE node_id=?', (ref_id,))
             lon, lat = cur.fetchone()
