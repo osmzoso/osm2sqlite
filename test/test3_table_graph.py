@@ -52,9 +52,9 @@ def check_table_graph():
     return errors
 
 
-print("----------------------------------------------")
-print('Test3: Check table "graph"')
-print("----------------------------------------------")
+print("-----------------------------------------------")
+print('Test 3: Check table "graph"')
+print("-----------------------------------------------")
 # database connection
 print('check table "graph" ', end='', flush=True)
 db_connect = sqlite3.connect(sys.argv[1])

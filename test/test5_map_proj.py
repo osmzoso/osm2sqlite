@@ -8,6 +8,10 @@ import sys
 sys.path.append('../tools')
 import map
 
+print("-----------------------------------------------")
+print("Test 5: map projection")
+print("-----------------------------------------------")
+
 SPATIALITE = "/usr/lib64/mod_spatialite.so"
 
 db = sqlite3.connect(":memory:")

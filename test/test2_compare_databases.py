@@ -42,9 +42,9 @@ def compare_table(cur, table, columns):
 
 def compare_osm2sqlite_db(db1, db2):
     """Establishing database connection, compare each table"""
-    print("----------------------------------------------\n"
-          "Test2: Compare two databases\n"
-          "----------------------------------------------\n"
+    print("-----------------------------------------------\n"
+          "Test 2: Compare two databases\n"
+          "-----------------------------------------------\n"
           f"db1 : {db1}\ndb2 : {db2}")
     con = sqlite3.connect(":memory:")
     cur = con.cursor()
