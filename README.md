@@ -28,7 +28,7 @@ Some options can be used to create additional data.
 OSM data can be obtained from a provider such as [Geofabrik](https://download.geofabrik.de).
 
 There are two program versions:  
-- a version in Python in a single file as a prototype (see ./tools/osm2sqlite.py)
+- a prototype in Python (see ./test/osm2sqlite.py)
 - a version in C (see [compiling annotations](doc/compiling_annotations.md))
 
 Runtime for a 700 MByte OSM file:  

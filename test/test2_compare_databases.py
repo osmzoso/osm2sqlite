@@ -19,7 +19,7 @@ def compare_table(cur, table, columns):
         )
         ''').fetchone()[0]
     except:
-        print('\033[31m' + 'missing table?' + '\033[0m') 
+        print('\033[31m' + 'missing table?' + '\033[0m')
         return
     try:
         diff2 = cur.execute(f'''
@@ -31,7 +31,7 @@ def compare_table(cur, table, columns):
         )
         ''').fetchone()[0]
     except:
-        print('\033[31m' + 'missing table?' + '\033[0m') 
+        print('\033[31m' + 'missing table?' + '\033[0m')
         return
     if diff1 == 0 and diff2 == 0:
         print('\033[32m' + 'OK' + '\033[0m')
@@ -43,9 +43,9 @@ def compare_table(cur, table, columns):
 def compare_osm2sqlite_db(db1, db2):
     """Establishing database connection, compare each table"""
     print("----------------------------------------------\n"
-          "Test2: Compare osm2sqlite databases\n"
+          "Test2: Compare two databases\n"
           "----------------------------------------------\n"
-          f"Compare databases '{db1}' (db1) and '{db2}' (db2):")
+          f"db1 : {db1}\ndb2 : {db2}")
     con = sqlite3.connect(":memory:")
     cur = con.cursor()
     cur.execute(f"ATTACH DATABASE '{db1}' AS db1")

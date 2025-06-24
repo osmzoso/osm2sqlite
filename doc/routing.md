@@ -1,8 +1,5 @@
 # Routing
 
-Table **graph** (see option **graph**) and R\*Tree **rtree_way** (see option **rtree**)  
-are required for the calculation of shortest paths.
-
 ## route.py
 
 ```
@@ -13,6 +10,9 @@ Usage:
 
 PERMIT: 1 (foot), 2 (bike_gravel), 4 (bike_road) or 8 (car)
 ```
+
+Table **graph** (see option **graph**) and R\*Tree **rtree_way** (see option **rtree**)  
+are required for the calculation of shortest paths.
 
 As an example, the command  
 `./route.py freiburg.db 7.853 47.995 7.862 47.995 1 route.csv`  
