@@ -21,7 +21,7 @@ osm2sqlite test.db read country.osm
 reads the [OSM XML](https://wiki.openstreetmap.org/wiki/OSM_XML) file **country.osm**
 and writes the data to in the **test.db** database.
 
-The tables are described in the [documentation](doc/osm2sqlite.md).
+The tables created are described in the [documentation](doc/osm2sqlite.md).
 
 Some options can be used to create additional data.
 
