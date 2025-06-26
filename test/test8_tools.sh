@@ -1,11 +1,19 @@
 #!/bin/bash
-#
-# Test ./tools
-#
+if [ $# != 1 ]; then
+    echo "Test tools"
+    echo "Usage:"
+    echo "$0 TEST_DIR"
+    exit 1
+fi
 db=$HOME/osm/database/freiburg-regbez-latest.db
-test_dir=$HOME/osm/test
+test_dir=$1
 
-rm -f $test_dir/*
+echo "-----------------------------------------------"
+echo "Test 8: tools"
+echo "-----------------------------------------------"
+echo "database: $db"
+
+#rm -f $test_dir/*
 
 #
 # Convert

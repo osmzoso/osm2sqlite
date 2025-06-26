@@ -20,4 +20,5 @@ echo "Test file : " $test_osm_file
 ./test5_map_proj.py
 ./test6_map.sh $test_dir
 ./test7_route.sh $test_dir
+./test8_tools.sh $test_dir
 
