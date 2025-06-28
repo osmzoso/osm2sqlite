@@ -251,7 +251,7 @@ def show_zoomlevel():
     print(f'lat_dms: {lat_dms} -> check:', dms_to_dec(lat_dms))
 
 
-def draw_map(cur, lon, lat, zoomlevel, width, height, outfile, show_unknown=True):
+def draw_map(cur, lon, lat, zoomlevel, width, height, outfile):
     """
     Draw a map in SVG format.
     A table 'map_def' is required in the database.
@@ -435,7 +435,7 @@ def main():
     if len(sys.argv) == 1:
         print('Creates a simple map. Output is in SVG format.\n'
               'Usage:\n'
-              f'{sys.argv[0]} DATABASE LON LAT ZOOMLEVEL WIDTH HEIGHT OUTFILE [debug]\n'
+              f'{sys.argv[0]} DATABASE LON LAT ZOOMLEVEL WIDTH HEIGHT OUTFILE\n'
               f'{sys.argv[0]} zoomlevel\n')
         sys.exit(1)
     if len(sys.argv) >= 8:
@@ -447,10 +447,7 @@ def main():
         width = int(sys.argv[5])
         height = int(sys.argv[6])
         outfile = sys.argv[7]
-        show_unknown = False
-        if len(sys.argv) == 9 and sys.argv[8] == 'debug':
-            show_unknown = True
-        draw_map(cur, lon, lat, zoomlevel, width, height, outfile, show_unknown)
+        draw_map(cur, lon, lat, zoomlevel, width, height, outfile)
     if len(sys.argv) == 2 and sys.argv[1] == 'zoomlevel':
         show_zoomlevel()
 

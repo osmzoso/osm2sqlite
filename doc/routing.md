@@ -15,7 +15,7 @@ Table **graph** (see option **graph**) and R\*Tree **rtree_way** (see option **r
 are required for the calculation of shortest paths.
 
 As an example, the command  
-`./route.py freiburg.db 7.853 47.995 7.862 47.995 1 route.csv`  
+`./tools/route.py freiburg.db 7.853 47.995 7.862 47.995 1 route.csv`  
 calculates the shortest route for pedestrians and saves a list of
 coordinates in the file *route.csv*.
 
