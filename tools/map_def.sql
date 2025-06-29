@@ -38,7 +38,8 @@ INSERT INTO map_def VALUES (16,'way','landuse','allotments',        2,'area',0,'
 INSERT INTO map_def VALUES (16,'way','leisure','park',              2,'area',0,'#c8facc','none','');
 INSERT INTO map_def VALUES (16,'way','landuse','cemetery',          2,'area',0,'#aacbaf','none','');
 INSERT INTO map_def VALUES (16,'way','landuse','recreation_ground', 2,'area',1,'#dffce2','#9dd5a1','');
-INSERT INTO map_def VALUES (16,'way','amenity','%',                 2,'area',0,'#eeeeee','none','');
+INSERT INTO map_def VALUES (16,'way','amenity','school',            2,'area',0,'#ffffe5','none','');
+INSERT INTO map_def VALUES (16,'way','amenity','parking',           3,'area',1,'#eeeeee','#dddddd','');
 INSERT INTO map_def VALUES (16,'way','landuse','construction',      2,'area',0,'#c7c7b4','none','');
 INSERT INTO map_def VALUES (16,'way','landuse','brownfield',        2,'area',0,'#c7c7b4','none','');
 INSERT INTO map_def VALUES (16,'way','leisure','playground',        3,'area',1,'#dffce2','#a1dea6','');
@@ -114,7 +115,8 @@ INSERT INTO map_def VALUES (17,'way','landuse','allotments',        2,'area',0,'
 INSERT INTO map_def VALUES (17,'way','leisure','park',              2,'area',0,'#c8facc','none','');
 INSERT INTO map_def VALUES (17,'way','landuse','cemetery',          2,'area',0,'#aacbaf','none','');
 INSERT INTO map_def VALUES (17,'way','landuse','recreation_ground', 2,'area',1,'#dffce2','#9dd5a1','');
-INSERT INTO map_def VALUES (17,'way','amenity','%',                 2,'area',0,'#eeeeee','none','');
+INSERT INTO map_def VALUES (17,'way','amenity','school',            2,'area',0,'#ffffe5','none','');
+INSERT INTO map_def VALUES (17,'way','amenity','parking',           3,'area',1,'#eeeeee','#dddddd','');
 INSERT INTO map_def VALUES (17,'way','landuse','construction',      2,'area',0,'#c7c7b4','none','');
 INSERT INTO map_def VALUES (17,'way','landuse','brownfield',        2,'area',0,'#c7c7b4','none','');
 INSERT INTO map_def VALUES (17,'way','leisure','playground',        3,'area',1,'#dffce2','#a1dea6','');
@@ -192,7 +194,8 @@ INSERT INTO map_def VALUES (18,'way','landuse','allotments',        2,'area',0,'
 INSERT INTO map_def VALUES (18,'way','leisure','park',              2,'area',0,'#c8facc','none','');
 INSERT INTO map_def VALUES (18,'way','landuse','cemetery',          2,'area',0,'#aacbaf','none','');
 INSERT INTO map_def VALUES (18,'way','landuse','recreation_ground', 2,'area',1,'#dffce2','#9dd5a1','');
-INSERT INTO map_def VALUES (18,'way','amenity','%',                 2,'area',0,'#eeeeee','none','');
+INSERT INTO map_def VALUES (18,'way','amenity','school',            2,'area',0,'#ffffe5','none','');
+INSERT INTO map_def VALUES (18,'way','amenity','parking',           3,'area',1,'#eeeeee','#dddddd','');
 INSERT INTO map_def VALUES (18,'way','landuse','construction',      2,'area',0,'#c7c7b4','none','');
 INSERT INTO map_def VALUES (18,'way','landuse','brownfield',        2,'area',0,'#c7c7b4','none','');
 INSERT INTO map_def VALUES (18,'way','leisure','playground',        3,'area',1,'#dffce2','#a1dea6','');
@@ -270,7 +273,8 @@ INSERT INTO map_def VALUES (19,'way','landuse','allotments',        2,'area',0,'
 INSERT INTO map_def VALUES (19,'way','leisure','park',              2,'area',0,'#c8facc','none','');
 INSERT INTO map_def VALUES (19,'way','landuse','cemetery',          2,'area',0,'#aacbaf','none','');
 INSERT INTO map_def VALUES (19,'way','landuse','recreation_ground', 2,'area',1,'#dffce2','#9dd5a1','');
-INSERT INTO map_def VALUES (19,'way','amenity','%',                 2,'area',0,'#eeeeee','none','');
+INSERT INTO map_def VALUES (19,'way','amenity','school',            2,'area',0,'#ffffe5','none','');
+INSERT INTO map_def VALUES (19,'way','amenity','parking',           3,'area',1,'#eeeeee','#dddddd','');
 INSERT INTO map_def VALUES (19,'way','landuse','construction',      2,'area',0,'#c7c7b4','none','');
 INSERT INTO map_def VALUES (19,'way','landuse','brownfield',        2,'area',0,'#c7c7b4','none','');
 INSERT INTO map_def VALUES (19,'way','leisure','playground',        3,'area',1,'#dffce2','#a1dea6','');
